@@ -548,6 +548,7 @@ end) = struct
           when
             Id.equal m n &&
             not (Id.Set.mem n (Topconstr.free_vars_of_constr_expr e2)) ->
+        (* not terminated... *)
         return (hov 0 (keyword "fun" ++ spc () ++ str "'p => e ..."),llambda)
       | CLambdaN _ ->
         let (bl,a) = extract_lam_binders a in
