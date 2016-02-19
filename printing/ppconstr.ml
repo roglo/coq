@@ -540,6 +540,7 @@ end) = struct
           lprod
         )
       | CLambdaN _ ->
+let _ = Printf.eprintf "*** CLambdaN\n%!" in
         let (bl,a) = extract_lam_binders a in
         return (
           hov 0 (
