@@ -486,6 +486,7 @@ let print_instance sigma cb =
   else mt()
 				
 let print_constant with_values sep sp =
+let _ = Printf.eprintf "print_constant\n%!" in
   let cb = Global.lookup_constant sp in
   let val_0 = Global.body_of_constant_body cb in
   let typ = Declareops.type_of_constant cb in
@@ -507,11 +508,12 @@ let print_constant with_values sep sp =
 	str" ]" ++
 	Printer.pr_universe_ctx sigma univs
     | _ ->
-	print_basename sp ++ print_instance sigma cb ++ str sep ++ cut () ++
-	(if with_values then print_typed_body env sigma (val_0,typ) else pr_ltype typ)++
+	print_basename sp ++ print_instance sigma cb ++ str sep ++ cut () ++ Pp.str "[[[" ++
+	(if with_values then print_typed_body env sigma (val_0,typ) else pr_ltype typ)++ Pp.str "]]]" ++
         Printer.pr_universe_ctx sigma univs)
 
 let gallina_print_constant_with_infos sp =
+let _ = Printf.eprintf "gallina_print_constant_with_infos\n%!" in
   print_constant true " = " sp ++
   with_line_skip (print_name_infos (ConstRef sp))
 
@@ -707,8 +709,13 @@ let print_sec_context sec =
 let print_sec_context_typ sec =
   print_context false None (read_sec_context sec)
 
-let print_any_name = function
-  | Term (ConstRef sp) -> print_constant_with_infos sp
+let obj_string x =
+  if Obj.is_block (Obj.repr x) then
+    "tag = " ^ string_of_int (Obj.tag (Obj.repr x))
+  else "int_val = " ^ string_of_int (Obj.magic x)
+
+let print_any_name = function n -> let _ = Printf.eprintf "print_any_name %s\n%!" (obj_string n) in match n with
+  | Term (ConstRef sp) -> let _ = Printf.eprintf "prettyp.ml 1\n%!" in print_constant_with_infos sp
   | Term (IndRef (sp,_)) -> print_inductive sp
   | Term (ConstructRef ((sp,_),_)) -> print_inductive sp
   | Term (VarRef sp) -> print_section_variable sp
@@ -733,6 +740,7 @@ let print_name = function
         (Term (Notation.interp_notation_as_global_reference loc (fun _ -> true)
                ntn sc))
   | AN ref ->
+let _ = Printf.eprintf "print_name AN\n%!" in
       print_any_name (locate_any_name ref)
 
 let print_opaque_name qid =

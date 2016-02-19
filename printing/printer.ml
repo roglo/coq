@@ -46,7 +46,10 @@ let get_current_context () =
 let pr_constr_core goal_concl_style env sigma t =
   pr_constr_expr (extern_constr goal_concl_style env sigma t)
 let pr_lconstr_core goal_concl_style env sigma t =
+let _ = Printf.eprintf "enter pr_lconstr_core\n%!" in
+let r =
   pr_lconstr_expr (extern_constr goal_concl_style env sigma t)
+in let _ = Printf.eprintf "exit pr_lconstr_core\n%!" in r
 
 let pr_lconstr_env env = pr_lconstr_core false env
 let pr_constr_env env = pr_constr_core false env
