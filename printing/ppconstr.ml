@@ -545,7 +545,7 @@ let _ = Printf.eprintf "*** CLambdaN\n%!" in
         return (
           hov 0 (
             hov 2 (pr_delimited_binders pr_fun spc
-                     (pr mt ltop) bl) ++
+                     (pr mt ltop) bl) ++ Pp.str "fuck" ++
               pr_fun_sep ++ pr spc ltop a),
           llambda
         )
