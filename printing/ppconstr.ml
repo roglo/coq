@@ -72,6 +72,11 @@ end) = struct
 
   open Notation
 
+let obj_string x =
+  if Obj.is_block (Obj.repr x) then
+    "tag = " ^ string_of_int (Obj.tag (Obj.repr x))
+  else "int_val = " ^ string_of_int (Obj.magic x)
+
   let print_hunks n pr pr_binders (terms, termlists, binders) unps =
     let env = ref terms and envlist = ref termlists and bll = ref binders in
     let pop r = let a = List.hd !r in r := List.tl !r; a in
@@ -80,7 +85,7 @@ end) = struct
        The following function enforces a very precise order of
        evaluation of sub-components.
        Do not modify it unless you know what you are doing! *)
-    let rec aux = function
+    let rec aux = function (**) u -> let _ = Printf.eprintf "print_hunks %s\n%!" (match u with [] -> "[]" | u :: _ -> obj_string u) in match u with (**)
       | [] ->
         mt ()
       | UnpMetaVar (_, prec) as unp :: l ->
@@ -510,11 +515,6 @@ end) = struct
         pr sep (latom,E) a
       | _ ->
         pr sep inherited a
-
-let obj_string x =
-  if Obj.is_block (Obj.repr x) then
-    "tag = " ^ string_of_int (Obj.tag (Obj.repr x))
-  else "int_val = " ^ string_of_int (Obj.magic x)
 
   let pr pr sep inherited a =
     let return (cmds, prec) = (tag_constr_expr a cmds, prec) in
