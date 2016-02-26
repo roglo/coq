@@ -645,6 +645,7 @@ let _ = Printf.eprintf "*** CProdN non\n%!" in
           latom
         )
       | CCases (_,LetPatternStyle,rtntypopt,[c,as_clause,in_clause],[(_,[(loc,[p])],b)]) ->
+let _ = Printf.eprintf "*** CCases let\n%!" in
         return (
           hv 0 (
             keyword "let" ++ spc () ++ str"'" ++
