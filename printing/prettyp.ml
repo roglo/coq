@@ -707,11 +707,6 @@ let print_sec_context sec =
 let print_sec_context_typ sec =
   print_context false None (read_sec_context sec)
 
-let obj_string x =
-  if Obj.is_block (Obj.repr x) then
-    "tag = " ^ string_of_int (Obj.tag (Obj.repr x))
-  else "int_val = " ^ string_of_int (Obj.magic x)
-
 let print_any_name = function
   | Term (ConstRef sp) -> print_constant_with_infos sp
   | Term (IndRef (sp,_)) -> print_inductive sp
