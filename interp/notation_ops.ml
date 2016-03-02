@@ -688,11 +688,6 @@ let does_not_come_from_already_eta_expanded_var =
   (* checked). *)
   function GVar _ -> false | _ -> true
 
-let obj_string x =
-  if Obj.is_block (Obj.repr x) then
-    "tag = " ^ string_of_int (Obj.tag (Obj.repr x))
-  else "int_val = " ^ string_of_int (Obj.magic x)
-
 let rec match_ inner u alp (tmetas,blmetas as metas) sigma a1 a2 =
   match (a1,a2) with
 
@@ -711,9 +706,8 @@ let rec match_ inner u alp (tmetas,blmetas as metas) sigma a1 a2 =
   | GProd (_,Name p,bk,t1,GCases (l,LetPatternStyle,None,[(GVar(loc,e),pp)],cc)),
     NBinderList (x,_,NProd (Name id2,_,b2),termin) when p = e ->
 let _ = Printf.eprintf "notation_ops GProd yes\n%!" in
-let na1 = Name p in
-let b1 =  GCases (l,LetPatternStyle,None,[(GVar(loc,e),pp)],cc) in
-      let (decls,b) = match_iterated_binders false [(na1,bk,None,t1)] b1 in
+let b1 = GCases (l,LetPatternStyle,None,[(GVar(loc,e),pp)],cc) in
+      let (decls,b) = match_iterated_binders false [(Name p,bk,None,t1)] b1 in
       (* TODO: address the possibility that termin is a Prod itself *)
       match_in u alp metas (bind_binder sigma x decls) b termin
   | GProd (_,na1,bk,t1,b1), NBinderList (x,_,NProd (Name id2,_,b2),termin)
