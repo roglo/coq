@@ -708,16 +708,15 @@ let rec match_ inner u alp (tmetas,blmetas as metas) sigma a1 a2 =
       let (decls,b) = match_iterated_binders true [(na1,bk,None,t1)] b1 in
       (* TODO: address the possibility that termin is a Lambda itself *)
       match_in u alp metas (bind_binder sigma x decls) b termin
-  | GProd (_,Name p1,bk,t1,GCases (l,LetPatternStyle,None,tur,cc)), NBinderList (x,_,NProd (Name id2,_,b2),termin) ->
-let _ = Printf.eprintf "notation_ops GProd yes p1 \"%s\"\n%!" (Id.to_string p1) in
+  | GProd (_,Name p1,bk,t1,GCases (l,LetPatternStyle,None,[(GVar(loc,id),pp)],cc)), NBinderList (x,_,NProd (Name id2,_,b2),termin) when p1 = id ->
+let _ = Printf.eprintf "notation_ops GProd yes\n%!" in
 let na1 = Name p1 in
-let b1 =  GCases (l,LetPatternStyle,None,tur,cc) in
+let b1 =  GCases (l,LetPatternStyle,None,[(GVar(loc,id),pp)],cc) in
       let (decls,b) = match_iterated_binders false [(na1,bk,None,t1)] b1 in
       (* TODO: address the possibility that termin is a Prod itself *)
       match_in u alp metas (bind_binder sigma x decls) b termin
   | GProd (_,na1,bk,t1,b1), NBinderList (x,_,NProd (Name id2,_,b2),termin)
       when na1 != Anonymous ->
-let _ = Printf.eprintf "notation_ops GProd no\n%!" in
       let (decls,b) = match_iterated_binders false [(na1,bk,None,t1)] b1 in
       (* TODO: address the possibility that termin is a Prod itself *)
       match_in u alp metas (bind_binder sigma x decls) b termin
