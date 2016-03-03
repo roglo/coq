@@ -1115,13 +1115,7 @@ GEXTEND Gram
 	 -> VernacSyntaxExtension (local,(s,l))
 
      | IDENT "Number"; IDENT "Notation"; f = constr; g = constr; ":"; sc = IDENT ->
-(*
-         Notation.declare_numeral_interpreter sc
-          (nat_path,datatypes_module_name)
-          nat_of_int
-          ([GRef (Loc.ghost,glob_S,None); GRef (Loc.ghost,glob_O,None)], uninterp_nat, true)
-*)
-         failwith "Number Notation not yet implemented"
+	 VernacNumberNotation (f, g, sc)
 
      (* "Print" "Grammar" should be here but is in "command" entry in order
         to factorize with other "Print"-based vernac entries *)
