@@ -1877,13 +1877,15 @@ let interp ?proof ~loc locality poly c =
   | VernacNotationAddFormat(n,k,v) ->
       Metasyntax.add_notation_extra_printing_rule n k v
   | VernacNumberNotation (f,g,sc) ->
-(*
       Notation.declare_numeral_interpreter sc
+        (failwith "Number Notation not yet implemented 2")
+        (failwith "Number Notation not yet implemented 1")
+        (failwith "Number Notation not yet implemented")
+(*
         (nat_path,datatypes_module_name)
         nat_of_int
         ([GRef (Loc.ghost,glob_S,None); GRef (Loc.ghost,glob_O,None)], uninterp_nat, true)
 *)
-      failwith "Number Notation not yet implemented"
 
   (* Gallina *)
   | VernacDefinition (k,lid,d) -> vernac_definition locality poly k lid d
