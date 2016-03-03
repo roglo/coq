@@ -712,7 +712,7 @@ let rec match_ inner u alp (tmetas,blmetas as metas) sigma a1 a2 =
     NBinderList (x,_,NProd (Name id2,_,b2),(NVar v as termin)) when p = e ->
 let _ = Printf.eprintf "notation_ops GProd v %s\n%!" (Id.to_string v) in
 let p = Id.of_string_soft ("'" ^ "(a, b)") in
-      match_in u alp metas (bind_binder sigma x [(Name p,bk,None,t1)]) (*b1*)t termin
+      match_in u alp metas (bind_binder sigma x [(Name p,bk,None,t1)]) t termin
   | GProd (_,na1,bk,t1,b1), NBinderList (x,_,NProd (Name id2,_,b2),termin)
       when na1 != Anonymous ->
       let (decls,b) = match_iterated_binders false [(na1,bk,None,t1)] b1 in
