@@ -1844,6 +1844,11 @@ let vernac_load interp fname =
   try while true do interp (snd (parse_sentence input)) done
   with End_of_input -> ()
 
+let obj_string x =
+  if Obj.is_block (Obj.repr x) then
+    "tag = " ^ string_of_int (Obj.tag (Obj.repr x))
+  else "int_val = " ^ string_of_int (Obj.magic x)
+
 
 (* "locality" is the prefix "Local" attribute, while the "local" component
  * is the outdated/deprecated "Local" attribute of some vernacular commands
@@ -1877,8 +1882,9 @@ let interp ?proof ~loc locality poly c =
   | VernacNotationAddFormat(n,k,v) ->
       Metasyntax.add_notation_extra_printing_rule n k v
   | VernacNumberNotation (ty,f,g,sc) ->
-      begin match try Some (Nametab.locate (qualid_of_ident (Id.of_string ty))) with Not_found -> None with
-      | Some g ->
+      let qid = qualid_of_ident (Id.of_string ty) in
+      begin match try Some (Nametab.locate qid) with Not_found -> None with
+      | Some (IndRef _ as g) ->
           let path = Nametab.path_of_global g in
 let _ = Printf.eprintf "path(%s)=\"%s\"\n%!" ty (string_of_path path) in
 (*
@@ -1893,9 +1899,14 @@ let _ = Printf.eprintf "datatypes_module_name (for nat)=\"%s\"\n%!" (fst (List.f
           let inpat = failwith "Number Notation not yet interpreted 2" in
           Notation.declare_numeral_interpreter sc dir interp
             (patl, uninterp, inpat)
-      | None -> Printf.eprintf "*** %s not found\n%!" ty
+      | Some _ | None -> Printf.eprintf "*** %s not found\n%!" ty
       end
 (*
+      | IDENT "Print"; qid = smart_global -> VernacPrint (PrintName qid)
+PrintName (AN (Ident (loc, Id.of_string ty)))
+  | PrintName qid -> dump_global qid; msg_notice (print_name qid)
+      print_any_name g
+
       Notation.declare_numeral_interpreter "nat_scope"
         (nat_path,datatypes_module_name)
         nat_of_int
