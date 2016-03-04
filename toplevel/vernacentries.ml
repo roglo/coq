@@ -1877,6 +1877,7 @@ let interp ?proof ~loc locality poly c =
   | VernacNotationAddFormat(n,k,v) ->
       Metasyntax.add_notation_extra_printing_rule n k v
   | VernacNumberNotation (ty,f,g,sc) ->
+let _ = Printf.eprintf "nat_path=\"%s\"\ndatatypes_module_name=\"%s\"\n%!" (Libnames.string_of_path Coqlib.nat_path) (fst (List.fold_left (fun (s,sep) t -> s^sep^t,"/") ("","") Coqlib.datatypes_module_name)) in
       let dir = failwith "Number Notation not yet interpreted" in
       let interp : Loc.t -> Bigint.bigint -> Glob_term.glob_constr = failwith "Number Notation not yet interpreted" in
       let patl = failwith "Number Notation not yet interpreted" in
