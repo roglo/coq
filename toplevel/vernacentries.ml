@@ -1884,12 +1884,13 @@ let interp ?proof ~loc locality poly c =
   | VernacNumberNotation (ty,f,g,sc) ->
       let qid = qualid_of_ident (Id.of_string ty) in
       begin match try Some (Nametab.locate qid) with Not_found -> None with
-      | Some (IndRef _ as g) ->
+      | Some (IndRef (sp, _) as g) ->
           let path = Nametab.path_of_global g in
 let _ = Printf.eprintf "path(%s)=\"%s\"\n%!" ty (string_of_path path) in
 (*
 let _ = Printf.eprintf "datatypes_module_name (for nat)=\"%s\"\n%!" (fst (List.fold_left (fun (s,sep) t -> s^sep^t,"/") ("","") Coqlib.datatypes_module_name)) in
 *)
+let _ = msg_notice (Prettyp.default_object_pr.print_inductive sp) in
           let dir = (path,[]) in
           let interp (loc : Loc.t) (bi : Bigint.bigint) : Glob_term.glob_constr =
             failwith "Number Notation (interp) not yet interpreted"
@@ -1905,7 +1906,8 @@ let _ = Printf.eprintf "datatypes_module_name (for nat)=\"%s\"\n%!" (fst (List.f
       | IDENT "Print"; qid = smart_global -> VernacPrint (PrintName qid)
 PrintName (AN (Ident (loc, Id.of_string ty)))
   | PrintName qid -> dump_global qid; msg_notice (print_name qid)
-      print_any_name g
+      print_any_name (Term g)
+let _ = Prettyp.gallina_print_inductive sp in
 
       Notation.declare_numeral_interpreter "nat_scope"
         (nat_path,datatypes_module_name)
