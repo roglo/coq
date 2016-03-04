@@ -1876,7 +1876,7 @@ let interp ?proof ~loc locality poly c =
       vernac_notation locality local c infpl sc
   | VernacNotationAddFormat(n,k,v) ->
       Metasyntax.add_notation_extra_printing_rule n k v
-  | VernacNumberNotation (f,g,sc) ->
+  | VernacNumberNotation (ty,f,g,sc) ->
       let dir = failwith "Number Notation not yet interpreted" in
       let interp : Loc.t -> Bigint.bigint -> Glob_term.glob_constr = failwith "Number Notation not yet interpreted" in
       let patl = failwith "Number Notation not yet interpreted" in
