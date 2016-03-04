@@ -1885,10 +1885,12 @@ let _ = Printf.eprintf "path(%s)=\"%s\"\n%!" ty (string_of_path path) in
 let _ = Printf.eprintf "datatypes_module_name (for nat)=\"%s\"\n%!" (fst (List.fold_left (fun (s,sep) t -> s^sep^t,"/") ("","") Coqlib.datatypes_module_name)) in
 *)
           let dir = (path,[]) in
-          let interp : Loc.t -> Bigint.bigint -> Glob_term.glob_constr = failwith "Number Notation not yet interpreted" in
-          let patl = failwith "Number Notation not yet interpreted 1" in
-          let uninterp = failwith "Number Notation not yet interpreted 2" in
-          let inpat = failwith "Number Notation not yet interpreted 3" in
+          let interp (loc : Loc.t) (bi : Bigint.bigint) : Glob_term.glob_constr =
+            failwith "Number Notation (interp) not yet interpreted"
+          in
+          let patl = failwith "Number Notation not yet interpreted" in
+          let uninterp = failwith "Number Notation not yet interpreted 1" in
+          let inpat = failwith "Number Notation not yet interpreted 2" in
           Notation.declare_numeral_interpreter sc dir interp
             (patl, uninterp, inpat)
       | None -> Printf.eprintf "*** %s not found\n%!" ty
