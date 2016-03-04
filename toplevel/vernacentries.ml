@@ -1888,7 +1888,7 @@ let _ = Printf.eprintf "datatypes_module_name (for nat)=\"%s\"\n%!" (fst (List.f
           let interp (loc : Loc.t) (bi : Bigint.bigint) : Glob_term.glob_constr =
             failwith "Number Notation (interp) not yet interpreted"
           in
-          let patl = failwith "Number Notation not yet interpreted" in
+          let patl : Glob_term.glob_constr list = failwith "Number Notation not yet interpreted" in
           let uninterp = failwith "Number Notation not yet interpreted 1" in
           let inpat = failwith "Number Notation not yet interpreted 2" in
           Notation.declare_numeral_interpreter sc dir interp
