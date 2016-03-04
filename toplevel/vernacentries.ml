@@ -1877,14 +1877,31 @@ let interp ?proof ~loc locality poly c =
   | VernacNotationAddFormat(n,k,v) ->
       Metasyntax.add_notation_extra_printing_rule n k v
   | VernacNumberNotation (ty,f,g,sc) ->
+      begin match try Some (Nametab.locate (qualid_of_ident (Id.of_string ty))) with Not_found -> None with
+      | Some g ->
+          let path = Nametab.path_of_global g in
+          let dir = (path,failwith "Number Notation not yet interpreted") in
+          let interp : Loc.t -> Bigint.bigint -> Glob_term.glob_constr = failwith "Number Notation not yet interpreted" in
+          let patl = failwith "Number Notation not yet interpreted" in
+          let uninterp = failwith "Number Notation not yet interpreted" in
+          let inpat = failwith "Number Notation not yet interpreted" in
+          Notation.declare_numeral_interpreter sc dir interp
+            (patl, uninterp, inpat)
+      | None -> Printf.eprintf "*** %s not found\n%!" ty
+      end;
+(*
 let _ = Printf.eprintf "nat_path=\"%s\"\ndatatypes_module_name=\"%s\"\n%!" (Libnames.string_of_path Coqlib.nat_path) (fst (List.fold_left (fun (s,sep) t -> s^sep^t,"/") ("","") Coqlib.datatypes_module_name)) in
-      let dir = failwith "Number Notation not yet interpreted" in
-      let interp : Loc.t -> Bigint.bigint -> Glob_term.glob_constr = failwith "Number Notation not yet interpreted" in
-      let patl = failwith "Number Notation not yet interpreted" in
-      let uninterp = failwith "Number Notation not yet interpreted" in
-      let inpat = failwith "Number Notation not yet interpreted" in
-      Notation.declare_numeral_interpreter sc dir interp
-        (patl, uninterp, inpat)
+	  VernacPrint (PrintAbout (qid,None))
+          VernacPrint (msg_notice (print_about_hyp_globs qid None)
+  ref = Ident (loc,id)
+  qid = AN ref
+      print_about_any (loc_of_reference ref) (locate_any_name ref)
+locate_any_name ref =
+  let qid = qualid_of_ident id in
+  Term (Nametab.locate qid)
+
+Term (IndRef xxx) -> string_of_path (Nametab.path_of_global (IndRef (MutInd.t * int)))
+*)
 (*
       Notation.declare_numeral_interpreter "nat_scope"
         (nat_path,datatypes_module_name)
