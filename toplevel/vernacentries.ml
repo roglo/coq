@@ -1890,20 +1890,7 @@ let _ = Printf.eprintf "datatypes_module_name (for nat)=\"%s\"\n%!" (fst (List.f
           Notation.declare_numeral_interpreter sc dir interp
             (patl, uninterp, inpat)
       | None -> Printf.eprintf "*** %s not found\n%!" ty
-      end;
-(*
-let _ = Printf.eprintf "nat_path=\"%s\"\ndatatypes_module_name=\"%s\"\n%!" (Libnames.string_of_path Coqlib.nat_path) (fst (List.fold_left (fun (s,sep) t -> s^sep^t,"/") ("","") Coqlib.datatypes_module_name)) in
-	  VernacPrint (PrintAbout (qid,None))
-          VernacPrint (msg_notice (print_about_hyp_globs qid None)
-  ref = Ident (loc,id)
-  qid = AN ref
-      print_about_any (loc_of_reference ref) (locate_any_name ref)
-locate_any_name ref =
-  let qid = qualid_of_ident id in
-  Term (Nametab.locate qid)
-
-Term (IndRef xxx) -> string_of_path (Nametab.path_of_global (IndRef (MutInd.t * int)))
-*)
+      end
 (*
       Notation.declare_numeral_interpreter "nat_scope"
         (nat_path,datatypes_module_name)
