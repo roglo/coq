@@ -1890,7 +1890,8 @@ let _ = Printf.eprintf "path(%s)=\"%s\"\n%!" ty (string_of_path path) in
 (*
 let _ = Printf.eprintf "datatypes_module_name (for nat)=\"%s\"\n%!" (fst (List.fold_left (fun (s,sep) t -> s^sep^t,"/") ("","") Coqlib.datatypes_module_name)) in
 *)
-let _ = msg_notice (Prettyp.default_object_pr.print_inductive sp) in
+let env = Global.env () in
+let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp (Environ.lookup_mind sp env)) in
           let dir = (path,[]) in
           let interp (loc : Loc.t) (bi : Bigint.bigint) : Glob_term.glob_constr =
             failwith "Number Notation (interp) not yet interpreted"
