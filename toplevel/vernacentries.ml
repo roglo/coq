@@ -1880,6 +1880,8 @@ let interp ?proof ~loc locality poly c =
       begin match try Some (Nametab.locate (qualid_of_ident (Id.of_string ty))) with Not_found -> None with
       | Some g ->
           let path = Nametab.path_of_global g in
+let _ = Printf.eprintf "path(%s)=\"%s\"\n%!" ty (string_of_path path) in
+let _ = Printf.eprintf "datatypes_module_name (for nat)=\"%s\"\n%!" (fst (List.fold_left (fun (s,sep) t -> s^sep^t,"/") ("","") Coqlib.datatypes_module_name)) in
           let dir = (path,failwith "Number Notation not yet interpreted") in
           let interp : Loc.t -> Bigint.bigint -> Glob_term.glob_constr = failwith "Number Notation not yet interpreted" in
           let patl = failwith "Number Notation not yet interpreted" in
