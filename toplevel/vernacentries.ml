@@ -1892,11 +1892,14 @@ let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp (Environ.lookup_min
           let dir = (path,[]) in
           let interp (loc : Loc.t) (bi : Bigint.bigint) : Glob_term.glob_constr =
 let _ = Printf.eprintf "*** big int %s\n%!" (Bigint.to_string bi) in
-(* récupérer le type de f et vérifier qu'il est de type bigint -> ty *)
+(* récupérer le type de f et vérifier qu'il est de type bigint -> ty
+   faut peut être voir si y a pas des fonctions pour "unifier" avec bigint -> ty
+ *)
+
 let _ : unit = vernac_check_may_eval None None f in
 (*
 let vernac_check_may_eval (redexp := None) (glopt := None) rc =
-  let (sigma, env) = get_current_context_of_args glopt in
+  let (sigma, env) = get_current_context () in
   let sigma', c = interp_open_constr env sigma rc in
   let sigma' = Evarconv.consider_remaining_unif_problems env sigma' in
   Evarconv.check_problems_are_solved env sigma';
