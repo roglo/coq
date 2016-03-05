@@ -1887,18 +1887,17 @@ let interp ?proof ~loc locality poly c =
       | Some (IndRef (sp, _) as g) ->
           let path = Nametab.path_of_global g in
 let _ = Printf.eprintf "path(%s)=\"%s\"\n%!" ty (string_of_path path) in
-(*
-let _ = Printf.eprintf "datatypes_module_name (for nat)=\"%s\"\n%!" (fst (List.fold_left (fun (s,sep) t -> s^sep^t,"/") ("","") Coqlib.datatypes_module_name)) in
-*)
 let env = Global.env () in
 let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp (Environ.lookup_mind sp env)) in
           let dir = (path,[]) in
           let interp (loc : Loc.t) (bi : Bigint.bigint) : Glob_term.glob_constr =
             failwith "Number Notation (interp) not yet interpreted"
           in
-          let patl : Glob_term.glob_constr list = failwith "Number Notation not yet interpreted" in
-          let uninterp = failwith "Number Notation not yet interpreted 1" in
-          let inpat = failwith "Number Notation not yet interpreted 2" in
+          let patl : Glob_term.glob_constr list = [] in
+          let uninterp (c : Glob_term.glob_constr) : Bigint.bigint option =
+            failwith "Number Notation (uninterp) not yet interpreted"
+          in
+          let inpat : bool = false in
           Notation.declare_numeral_interpreter sc dir interp
             (patl, uninterp, inpat)
       | Some _ | None -> Printf.eprintf "*** %s not found\n%!" ty
