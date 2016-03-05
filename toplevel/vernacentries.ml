@@ -1892,6 +1892,13 @@ let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp (Environ.lookup_min
           let dir = (path,[]) in
           let interp (loc : Loc.t) (bi : Bigint.bigint) : Glob_term.glob_constr =
 let _ = Printf.eprintf "*** big int %s\n%!" (Bigint.to_string bi) in
+let _ : unit = vernac_check_may_eval (Some (Genredexpr.CbvVm None)) None f in
+(*
+begin match try Some (Nametab.locate (f : Constrexpr.constr_expr)) with Not_found -> None with
+| Some _ -> Printf.eprintf "*** f found\n%!"
+| None -> Printf.eprintf "*** f not found!!!\n%!"
+end;
+*)
 (*
     executes 'Compute bi'
     raises Stack overflow, because the evaluator calls the present function
