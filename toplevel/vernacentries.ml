@@ -1903,11 +1903,9 @@ let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp (Environ.lookup_min
       | Some _ | None -> Printf.eprintf "*** %s not found\n%!" ty
       end
 (*
-      | IDENT "Print"; qid = smart_global -> VernacPrint (PrintName qid)
-PrintName (AN (Ident (loc, Id.of_string ty)))
-  | PrintName qid -> dump_global qid; msg_notice (print_name qid)
-      print_any_name (Term g)
-let _ = Prettyp.gallina_print_inductive sp in
+      | IDENT "Compute"; c = lconstr ->
+	  fun g -> VernacCheckMayEval (Some (Genredexpr.CbvVm None), g, c)
+vernac_check_may_eval redexp glopt rc
 
       Notation.declare_numeral_interpreter "nat_scope"
         (nat_path,datatypes_module_name)
