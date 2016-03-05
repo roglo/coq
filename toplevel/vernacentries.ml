@@ -1893,18 +1893,28 @@ let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp (Environ.lookup_min
           let interp (loc : Loc.t) (bi : Bigint.bigint) : Glob_term.glob_constr =
 let _ = Printf.eprintf "*** big int %s\n%!" (Bigint.to_string bi) in
 (* récupérer le type de f et vérifier qu'il est de type bigint -> ty *)
-let _ : unit = vernac_check_may_eval (Some (Genredexpr.CbvVm None)) None f in
+let _ : unit = vernac_check_may_eval None None f in
 (*
-begin match try Some (Nametab.locate (f : Constrexpr.constr_expr)) with Not_found -> None with
-| Some _ -> Printf.eprintf "*** f found\n%!"
-| None -> Printf.eprintf "*** f not found!!!\n%!"
-end;
-*)
-(*
-    executes 'Compute bi'
-    raises Stack overflow, because the evaluator calls the present function
-    should compute "f bi", not "bi"...
-let _ : unit = vernac_check_may_eval (Some (Genredexpr.CbvVm None)) None (CPrim (loc, Numeral bi)) in
+let vernac_check_may_eval (redexp := None) (glopt := None) rc =
+  let (sigma, env) = get_current_context_of_args glopt in
+  let sigma', c = interp_open_constr env sigma rc in
+  let sigma' = Evarconv.consider_remaining_unif_problems env sigma' in
+  Evarconv.check_problems_are_solved env sigma';
+  let sigma',nf = Evarutil.nf_evars_and_universes sigma' in
+  let pl, uctx = Evd.universe_context sigma' in
+  let env = Environ.push_context uctx (Evarutil.nf_env_evar sigma' env) in
+  let c = nf c in
+  let j =
+    if Evarutil.has_undefined_evars sigma' c then
+      Evarutil.j_nf_evar sigma' (Retyping.get_judgment_of env sigma' c)
+    else
+      Arguments_renaming.rename_typing env c in
+...
+  j.uj_type
+
+let gallina_print_eval red_fun env sigma _ {uj_val=trm;uj_type=typ} =
+  let ntrm = red_fun env sigma trm in
+  (str "     = " ++ gallina_print_typed_value_in_env env sigma (ntrm,typ))
 *)
             failwith "Number Notation (interp) not yet interpreted"
           in
