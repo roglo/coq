@@ -454,17 +454,25 @@ let new_type_evar env evdref loc =
 
 let (f_genarg_interp, genarg_interp_hook) = Hook.make ()
 
+let obj_string x =
+  if Obj.is_block (Obj.repr x) then
+    "tag = " ^ string_of_int (Obj.tag (Obj.repr x))
+  else "int_val = " ^ string_of_int (Obj.magic x)
+
 (* [pretype tycon env evdref lvar lmeta cstr] attempts to type [cstr] *)
 (* in environment [env], with existential variables [evdref] and *)
 (* the type constraint tycon *)
 
 let rec pretype k0 resolve_tc (tycon : type_constraint) env evdref (lvar : ltac_var_map) t =
+let _ = Printf.eprintf "*** pretype %s\n%!" (obj_string t) in
   let inh_conv_coerce_to_tycon = inh_conv_coerce_to_tycon resolve_tc in
   let pretype_type = pretype_type k0 resolve_tc in
   let pretype = pretype k0 resolve_tc in
   let open Context.Rel.Declaration in
+let r =
   match t with
   | GRef (loc,ref,u) ->
+let _ = Printf.eprintf "... GRef %s\n%!" (match ref with ConstructRef ((mi,_),_) -> MutInd.to_string mi | _ -> "_") in
       inh_conv_coerce_to_tycon loc env evdref
 	(pretype_ref loc evdref env ref u)
 	tycon
@@ -602,6 +610,7 @@ let rec pretype k0 resolve_tc (tycon : type_constraint) env evdref (lvar : ltac_
       inh_conv_coerce_to_tycon loc env evdref j tycon
 
   | GApp (loc,f,args) ->
+let _ = Printf.eprintf "... GApp\n%!" in
     let fj = pretype empty_tycon env evdref lvar f in
     let floc = loc_of_glob_constr f in
     let length = List.length args in
@@ -948,6 +957,8 @@ let rec pretype k0 resolve_tc (tycon : type_constraint) env evdref (lvar : ltac_
 	let v = mkCast (cj.uj_val, k, tval) in
 	  { uj_val = v; uj_type = tval }
     in inh_conv_coerce_to_tycon loc env evdref cj tycon
+in
+let _ = Printf.eprintf "*** pretype ok\n%!" in r
 
 and pretype_instance k0 resolve_tc env evdref lvar loc hyps evk update =
   let f decl (subst,update) =
@@ -1009,16 +1020,19 @@ and pretype_type k0 resolve_tc valcon env evdref lvar = function
                 (loc_of_glob_constr c) env !evdref tj.utj_val v
 
 let ise_pretype_gen flags env sigma lvar kind c =
+let _ = Printf.eprintf "*** ise_pretype_gen\n%!" in
   let evdref = ref sigma in
   let k0 = Context.Rel.length (rel_context env) in
   let c' = match kind with
     | WithoutTypeConstraint ->
+let _ = Printf.eprintf "*** 1.5\n%!" in
         (pretype k0 flags.use_typeclasses empty_tycon env evdref lvar c).uj_val
     | OfType exptyp ->
 	(pretype k0 flags.use_typeclasses (mk_tycon exptyp) env evdref lvar c).uj_val
     | IsType ->
 	(pretype_type k0 flags.use_typeclasses empty_valcon env evdref lvar c).utj_val 
   in
+let _ = Printf.eprintf "*** 2\n%!" in
   process_inference_flags flags env sigma (!evdref,c')
 
 let default_inference_flags fail = {
@@ -1080,6 +1094,7 @@ let understand
   ise_pretype_gen_ctx flags env sigma empty_lvar expected_type c
 
 let understand_tcc ?(flags=all_no_fail_flags) env sigma ?(expected_type=WithoutTypeConstraint) c =
+let _ = Printf.eprintf "*** understand tcc\n%!" in
   ise_pretype_gen flags env sigma empty_lvar expected_type c
 
 let understand_tcc_evars ?(flags=all_no_fail_flags) env evdref ?(expected_type=WithoutTypeConstraint) c =

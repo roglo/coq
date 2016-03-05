@@ -1844,11 +1844,6 @@ let vernac_load interp fname =
   try while true do interp (snd (parse_sentence input)) done
   with End_of_input -> ()
 
-let obj_string x =
-  if Obj.is_block (Obj.repr x) then
-    "tag = " ^ string_of_int (Obj.tag (Obj.repr x))
-  else "int_val = " ^ string_of_int (Obj.magic x)
-
 
 (* "locality" is the prefix "Local" attribute, while the "local" component
  * is the outdated/deprecated "Local" attribute of some vernacular commands
@@ -1894,10 +1889,17 @@ let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp (Environ.lookup_min
 let _ = Printf.eprintf "*** big int %s\n%!" (Bigint.to_string bi) in
 (* récupérer le type de f et vérifier qu'il est de type bigint -> ty
    faut peut être voir si y a pas des fonctions pour "unifier" avec bigint -> ty
+*)
+(*
+Bon. Chuis en train de voir par où ça passe si on tape :
+     Check S true.
  *)
 
 let _ : unit = vernac_check_may_eval None None f in
 (*
+let _ = pretype k0 resolve_tc tycon env evdref lvar t in
+    let fj = pretype empty_tycon env evdref lvar f in
+
 let vernac_check_may_eval (redexp := None) (glopt := None) rc =
   let (sigma, env) = get_current_context () in
   let sigma', c = interp_open_constr env sigma rc in
