@@ -1891,6 +1891,12 @@ let env = Global.env () in
 let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp (Environ.lookup_mind sp env)) in
           let dir = (path,[]) in
           let interp (loc : Loc.t) (bi : Bigint.bigint) : Glob_term.glob_constr =
+(*
+    executes 'Compute bi'
+    raises Stack overflow, I don't know why...
+    I have to understand how it works...
+let _ : unit = vernac_check_may_eval (Some (Genredexpr.CbvVm None)) None (CPrim (loc, Numeral bi)) in
+*)
             failwith "Number Notation (interp) not yet interpreted"
           in
           let patl : Glob_term.glob_constr list = [] in
