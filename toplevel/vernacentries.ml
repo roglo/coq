@@ -1881,7 +1881,6 @@ let interp ?proof ~loc locality poly c =
       begin match try Some (Nametab.locate qid) with Not_found -> None with
       | Some (IndRef (sp, _) as g) ->
           let path = Nametab.path_of_global g in
-let _ = Printf.eprintf "path(%s)=\"%s\"\n%!" ty (string_of_path path) in
 let env = Global.env () in
 let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp (Environ.lookup_mind sp env)) in
           let dir = (path,[]) in

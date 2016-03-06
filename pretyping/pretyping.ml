@@ -1095,7 +1095,9 @@ let understand
 
 let understand_tcc ?(flags=all_no_fail_flags) env sigma ?(expected_type=WithoutTypeConstraint) c =
 let _ = Printf.eprintf "*** understand tcc\n%!" in
+let r =
   ise_pretype_gen flags env sigma empty_lvar expected_type c
+in let _ = Printf.eprintf "*** exit understand tcc\n%!" in r
 
 let understand_tcc_evars ?(flags=all_no_fail_flags) env evdref ?(expected_type=WithoutTypeConstraint) c =
   let sigma, c = ise_pretype_gen flags env !evdref empty_lvar expected_type c in
