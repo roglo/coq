@@ -70,12 +70,8 @@ let _ =
     ([GRef (Loc.ghost,glob_S,None); GRef (Loc.ghost,glob_O,None)], uninterp_nat, true)
 
 (*
-ConstRef (Constant.make (Id.of_string "bigint"))
-*)
-(*
 Parameter bigint : Type.
 *)
-
 let _ =
   Vernacentries.interp
     (Loc.ghost,
@@ -84,3 +80,9 @@ let _ =
         Vernacexpr.DefaultInline,
         [(false, ([((Loc.ghost, Names.Id.of_string "bigint"), None)],
           Constrexpr.CSort (Loc.ghost, Misctypes.GType [])))]))
+(*
+Parameter is_pos_or_zero : bigint -> bool
+*)
+(*
+ is_pos_or_zero
+*)
