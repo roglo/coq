@@ -1886,14 +1886,10 @@ let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp (Environ.lookup_min
           let dir = (path,[]) in
           let interp (loc : Loc.t) (bi : Bigint.bigint) : Glob_term.glob_constr =
 let _ = Printf.eprintf "*** big int %s\n%!" (Bigint.to_string bi) in
-(* récupérer le type de f et vérifier qu'il est de type bigint -> ty
-   faut peut être voir si y a pas des fonctions pour "unifier" avec bigint -> ty
-*)
 (*
-Bon. Chuis en train de voir par où ça passe si on tape :
-     Check S true.
- *)
-
+loops...
+let _ : unit = vernac_check_may_eval None None (CApp(loc,(None,f),[(CPrim(loc,Numeral bi),None)])) in
+*)
 let _ : unit = vernac_check_may_eval None None f in
 (*
 let _ = pretype k0 resolve_tc tycon env evdref lvar t in
