@@ -68,3 +68,19 @@ let _ =
     (nat_path,datatypes_module_name)
     nat_of_int
     ([GRef (Loc.ghost,glob_S,None); GRef (Loc.ghost,glob_O,None)], uninterp_nat, true)
+
+(*
+ConstRef (Constant.make (Id.of_string "bigint"))
+*)
+(*
+Parameter bigint : Type.
+*)
+
+let _ =
+  Vernacentries.interp
+    (Loc.ghost,
+     Vernacexpr.VernacAssumption
+       ((None, Decl_kinds.Definitional),
+        Vernacexpr.DefaultInline,
+        [(false, ([((Loc.ghost, Names.Id.of_string "bigint"), None)],
+          Constrexpr.CSort (Loc.ghost, Misctypes.GType [])))]))
