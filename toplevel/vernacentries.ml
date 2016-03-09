@@ -1886,36 +1886,7 @@ let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp (Environ.lookup_min
           let dir = (path,[]) in
           let interp (loc : Loc.t) (bi : Bigint.bigint) : Glob_term.glob_constr =
 let _ = Printf.eprintf "*** big int %s\n%!" (Bigint.to_string bi) in
-(*
-loops...
-let _ : unit = vernac_check_may_eval None None (CApp(loc,(None,f),[(CPrim(loc,Numeral bi),None)])) in
-*)
 let _ : unit = vernac_check_may_eval None None f in
-(*
-let _ = pretype k0 resolve_tc tycon env evdref lvar t in
-    let fj = pretype empty_tycon env evdref lvar f in
-
-let vernac_check_may_eval (redexp := None) (glopt := None) rc =
-  let (sigma, env) = get_current_context () in
-  let sigma', c = interp_open_constr env sigma rc in
-  let sigma' = Evarconv.consider_remaining_unif_problems env sigma' in
-  Evarconv.check_problems_are_solved env sigma';
-  let sigma',nf = Evarutil.nf_evars_and_universes sigma' in
-  let pl, uctx = Evd.universe_context sigma' in
-  let env = Environ.push_context uctx (Evarutil.nf_env_evar sigma' env) in
-  let c = nf c in
-  let j =
-    if Evarutil.has_undefined_evars sigma' c then
-      Evarutil.j_nf_evar sigma' (Retyping.get_judgment_of env sigma' c)
-    else
-      Arguments_renaming.rename_typing env c in
-...
-  j.uj_type
-
-let gallina_print_eval red_fun env sigma _ {uj_val=trm;uj_type=typ} =
-  let ntrm = red_fun env sigma trm in
-  (str "     = " ++ gallina_print_typed_value_in_env env sigma (ntrm,typ))
-*)
             failwith "Number Notation (interp) not yet interpreted"
           in
           let patl : Glob_term.glob_constr list = [] in
@@ -1927,16 +1898,6 @@ let gallina_print_eval red_fun env sigma _ {uj_val=trm;uj_type=typ} =
             (patl, uninterp, inpat)
       | Some _ | None -> Printf.eprintf "*** %s not found\n%!" ty
       end
-(*
-      | IDENT "Compute"; c = lconstr ->
-	  fun g -> VernacCheckMayEval (Some (Genredexpr.CbvVm None), g, c)
-vernac_check_may_eval redexp glopt rc
-
-      Notation.declare_numeral_interpreter "nat_scope"
-        (nat_path,datatypes_module_name)
-        nat_of_int
-        ([GRef (Loc.ghost,glob_S,None); GRef (Loc.ghost,glob_O,None)], uninterp_nat, true)
-*)
 
   (* Gallina *)
   | VernacDefinition (k,lid,d) -> vernac_definition locality poly k lid d

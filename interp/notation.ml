@@ -435,7 +435,6 @@ let find_prim_token g loc p sc =
   g (interp ()), ((dirpath (fst spdir),DirPath.empty),"")
 
 let interp_prim_token_gen g loc p local_scopes =
-let _ = Printf.eprintf "interp_prim_token_gen\n%!" in
   let scopes = make_current_scopes local_scopes in
   let p_as_ntn = try notation_of_prim_token p with Not_found -> "" in
   try find_interpretation p_as_ntn (find_prim_token g loc p) scopes
