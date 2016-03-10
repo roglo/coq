@@ -1879,14 +1879,14 @@ let interp ?proof ~loc locality poly c =
   | VernacNumberNotation (ty,f,g,sc) ->
       let qid = qualid_of_ident (Id.of_string ty) in
       begin match try Some (Nametab.locate qid) with Not_found -> None with
-      | Some (IndRef (sp, _) as g) ->
-          let path = Nametab.path_of_global g in
+      | Some (IndRef (sp, _) as ir) ->
+          let path = Nametab.path_of_global ir in
 let env = Global.env () in
 let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp (Environ.lookup_mind sp env)) in
           let dir = (path,[]) in
           let interp (loc : Loc.t) (bi : Bigint.bigint) : Glob_term.glob_constr =
 let _ = Printf.eprintf "*** big int %s\n%!" (Bigint.to_string bi) in
-let _ : unit = vernac_check_may_eval None None f in
+let _ : unit = vernac_check_may_eval None None (CCast(loc,f,CastConv g)) in
             failwith "Number Notation (interp) not yet interpreted"
           in
           let patl : Glob_term.glob_constr list = [] in
