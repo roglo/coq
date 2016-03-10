@@ -1886,11 +1886,15 @@ let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp (Environ.lookup_min
           let dir = (path,[]) in
           let interp (loc : Loc.t) (bi : Bigint.bigint) : Glob_term.glob_constr =
 let _ = Printf.eprintf "*** big int %s\n%!" (Bigint.to_string bi) in
-            let bt =
-              ([(loc, Anonymous)], Default Implicit,
-               CRef (Ident (loc, Id.of_string "bigint"), None)) in
-            let c = CProdN (loc, [bt], CRef (Qualid (loc, qid), None)) in
-            let _ = vernac_check_may_eval None None (CCast(loc, f, CastConv c)) in
+            let _ =
+              let crb = CRef (Ident (loc, Id.of_string "bigint"), None) in
+              let b_b = ([(loc, Anonymous)], Default Implicit, crb) in
+              let cro = CRef (Ident (loc, Id.of_string "option"), None) in
+              let crq = CRef (Qualid (loc, qid), None) in
+              let caoq = CApp (loc, (None, cro), [(crq, None)]) in
+              vernac_check_may_eval None None
+                (CCast (loc, f, CastConv (CProdN (loc, [b_b], caoq))))
+            in
             failwith "Number Notation (interp) not yet interpreted"
           in
           let patl : Glob_term.glob_constr list = [] in
