@@ -1880,22 +1880,22 @@ let interp ?proof ~loc locality poly c =
       let qid = qualid_of_ident (Id.of_string ty) in
       begin match try Some (Nametab.locate qid) with Not_found -> None with
       | Some (IndRef (sp, _) as ir) ->
+          let _ =
+            (* checking "f" is of type "bigint -> option ty" *)
+            let crb = CRef (Ident (loc, Id.of_string "bigint"), None) in
+            let b_b = ([(loc, Anonymous)], Default Implicit, crb) in
+            let cro = CRef (Ident (loc, Id.of_string "option"), None) in
+            let crq = CRef (Qualid (loc, qid), None) in
+            let caoq = CApp (loc, (None, cro), [(crq, None)]) in
+            vernac_check_may_eval None None
+              (CCast (loc, f, CastConv (CProdN (loc, [b_b], caoq))))
+          in
           let path = Nametab.path_of_global ir in
 let env = Global.env () in
 let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp (Environ.lookup_mind sp env)) in
           let dir = (path,[]) in
           let interp (loc : Loc.t) (bi : Bigint.bigint) : Glob_term.glob_constr =
 let _ = Printf.eprintf "*** big int %s\n%!" (Bigint.to_string bi) in
-            (* checking "f" is of type "bigint -> option ty" *)
-            let _ =
-              let crb = CRef (Ident (loc, Id.of_string "bigint"), None) in
-              let b_b = ([(loc, Anonymous)], Default Implicit, crb) in
-              let cro = CRef (Ident (loc, Id.of_string "option"), None) in
-              let crq = CRef (Qualid (loc, qid), None) in
-              let caoq = CApp (loc, (None, cro), [(crq, None)]) in
-              vernac_check_may_eval None None
-                (CCast (loc, f, CastConv (CProdN (loc, [b_b], caoq))))
-            in
 (* loops...
             let _ =
               vernac_check_may_eval None None (CApp (loc, (None, f), [(CPrim (loc, Numeral bi), None)]))
