@@ -105,9 +105,7 @@ let print_one_inductive env sigma mib ((_,i) as ind) =
   brk(0,2) ++ print_constructors envpar sigma mip.mind_consnames cstrtypes
 
 let print_mutual_inductive env mind mib =
-let _ = Printf.eprintf "*** print_mutual_inductive\n%!" in
-  let inds = List.init (Array.length mib.mind_packets) (fun x -> (mind, x))
-  in
+  let inds = List.init (Array.length mib.mind_packets) (fun x -> (mind, x)) in
   let keyword =
     let open Decl_kinds in
     match mib.mind_finite with

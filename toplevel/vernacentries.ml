@@ -1896,11 +1896,11 @@ let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp (Environ.lookup_min
           let dir = (path,[]) in
           let interp (loc : Loc.t) (bi : Bigint.bigint) : Glob_term.glob_constr =
 let _ = Printf.eprintf "*** big int %s\n%!" (Bigint.to_string bi) in
-(* loops...
+(* loops... *)
             let _ =
               vernac_check_may_eval None None (CApp (loc, (None, f), [(CPrim (loc, Numeral bi), None)]))
             in
- *)
+(* *)
             failwith "Number Notation (interp) not yet interpreted"
           in
           let patl : Glob_term.glob_constr list = [] in
