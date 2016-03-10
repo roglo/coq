@@ -1886,6 +1886,7 @@ let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp (Environ.lookup_min
           let dir = (path,[]) in
           let interp (loc : Loc.t) (bi : Bigint.bigint) : Glob_term.glob_constr =
 let _ = Printf.eprintf "*** big int %s\n%!" (Bigint.to_string bi) in
+            (* checking "f" is of type "bigint -> option ty" *)
             let _ =
               let crb = CRef (Ident (loc, Id.of_string "bigint"), None) in
               let b_b = ([(loc, Anonymous)], Default Implicit, crb) in
