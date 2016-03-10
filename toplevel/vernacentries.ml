@@ -1896,6 +1896,11 @@ let _ = Printf.eprintf "*** big int %s\n%!" (Bigint.to_string bi) in
               vernac_check_may_eval None None
                 (CCast (loc, f, CastConv (CProdN (loc, [b_b], caoq))))
             in
+(* loops...
+            let _ =
+              vernac_check_may_eval None None (CApp (loc, (None, f), [(CPrim (loc, Numeral bi), None)]))
+            in
+ *)
             failwith "Number Notation (interp) not yet interpreted"
           in
           let patl : Glob_term.glob_constr list = [] in
