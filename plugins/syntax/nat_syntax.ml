@@ -74,18 +74,27 @@ let _ =
 (* Inductive positive' : Set :=
     xI' : positive' -> positive' | xO' : positive' -> positive' | xH' : positive' *)
 let _ =
+  let identref s = (Loc.ghost, Names.Id.of_string s) in
+  let cref s = Constrexpr.CRef (Libnames.Ident (identref s), None) in
+  let arrow x y =
+    Constrexpr.CProdN
+      (Loc.ghost,
+       [([(Loc.ghost, Names.Anonymous)],
+         Constrexpr.Default Decl_kinds.Implicit, x)],
+       y)
+  in
   Vernacentries.interp
     (Loc.ghost,
      Vernacexpr.VernacInductive
        (false, Decl_kinds.Finite,
-        [(((false, ((Loc.ghost, Names.Id.of_string "positive'"), None)), [],
+        [(((false, (identref "positive'", None)), [],
             Some (Constrexpr.CSort (Loc.ghost, Misctypes.GSet)),
             Vernacexpr.Inductive_kw,
             Vernacexpr.Constructors
               [(false,
-                ((Loc.ghost, Names.Id.of_string "xI'"),
-                 Constrexpr.CRef
-                   (Libnames.Ident
-                      (Loc.ghost, Names.Id.of_string "positive'"),
-                    None)))]),
+                (identref "xI'", arrow (cref "positive'") (cref "positive'")));
+               (false,
+                (identref "xO'", arrow (cref "positive'") (cref "positive'")));
+               (false,
+                (identref "xH'", cref "positive'"))]),
          [])]))
