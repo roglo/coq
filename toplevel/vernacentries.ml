@@ -1904,7 +1904,7 @@ let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp (Environ.lookup_min
           in
           let interp (loc : Loc.t) (bi : Bigint.bigint) : Glob_term.glob_constr =
             let () =
-              vernac_check_may_eval None None (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)]))
+              vernac_check_may_eval (Some (Genredexpr.CbvVm None)) None (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)]))
             in
             failwith "Number Notation (interp) not yet interpreted"
           in
