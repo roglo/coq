@@ -81,17 +81,11 @@ let _ =
         [(((false, ((Loc.ghost, Names.Id.of_string "positive'"), None)), [],
             Some (Constrexpr.CSort (Loc.ghost, Misctypes.GSet)),
             Vernacexpr.Inductive_kw,
-            Vernacexpr.Constructors []),
-          [])]))
-
-(*
-Parameter bigint : Type.
-let _ =
-  Vernacentries.interp
-    (Loc.ghost,
-     Vernacexpr.VernacAssumption
-       ((None, Decl_kinds.Definitional),
-        Vernacexpr.DefaultInline,
-        [(false, ([((Loc.ghost, Names.Id.of_string "bigint"), None)],
-          Constrexpr.CSort (Loc.ghost, Misctypes.GType [])))]))
-*)
+            Vernacexpr.Constructors
+              [(false,
+                ((Loc.ghost, Names.Id.of_string "xI'"),
+                 Constrexpr.CRef
+                   (Libnames.Ident
+                      (Loc.ghost, Names.Id.of_string "positive'"),
+                    None)))]),
+         [])]))
