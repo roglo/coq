@@ -1891,16 +1891,16 @@ let interp ?proof ~loc locality poly c =
               (CCast (loc, f, CastConv (CProdN (loc, [b_b], caoq))))
           in
           let path = Nametab.path_of_global ir in
+(*
 let env = Global.env () in
 let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp (Environ.lookup_mind sp env)) in
-          let dir = (path,[]) in
+*)
+          let dir = (path, []) in
           let interp (loc : Loc.t) (bi : Bigint.bigint) : Glob_term.glob_constr =
-let _ = Printf.eprintf "*** big int %s\n%!" (Bigint.to_string bi) in
-(* loops... *)
+            let z'_of_bigint loc bi = failwith "z'_of_bigint not yet implemented" in
             let _ =
-              vernac_check_may_eval None None (CApp (loc, (None, f), [(CPrim (loc, Numeral bi), None)]))
+              vernac_check_may_eval None None (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)]))
             in
-(* *)
             failwith "Number Notation (interp) not yet interpreted"
           in
           let patl : Glob_term.glob_constr list = [] in
