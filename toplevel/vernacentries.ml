@@ -1895,10 +1895,15 @@ let interp ?proof ~loc locality poly c =
 let env = Global.env () in
 let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp (Environ.lookup_mind sp env)) in
 *)
-          let dir = (path, []) in
+          let identref loc s = (loc, Names.Id.of_string s) in
+          let z'_of_bigint dloc n =
+            if not (Bigint.equal n Bigint.zero) then
+              failwith "z'_of_bigint (not zero) not yet implemented"
+            else
+              CRef (Ident (identref dloc "Z0'"), None)
+          in
           let interp (loc : Loc.t) (bi : Bigint.bigint) : Glob_term.glob_constr =
-            let z'_of_bigint loc bi = failwith "z'_of_bigint not yet implemented" in
-            let _ =
+            let () =
               vernac_check_may_eval None None (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)]))
             in
             failwith "Number Notation (interp) not yet interpreted"
@@ -1908,6 +1913,7 @@ let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp (Environ.lookup_min
             failwith "Number Notation (uninterp) not yet interpreted"
           in
           let inpat : bool = false in
+          let dir = (path, []) in
           Notation.declare_numeral_interpreter sc dir interp
             (patl, uninterp, inpat)
       | Some _ | None -> Printf.eprintf "*** %s not found\n%!" ty

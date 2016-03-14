@@ -110,7 +110,7 @@ let _ =
             Vernacexpr.Inductive_kw,
             Vernacexpr.Constructors
               [(false,
-                (identref "Z0''", cref "Z'"));
+                (identref "Z0'", cref "Z'"));
                (false,
                 (identref "Zpos'", arrow (cref "positive'") (cref "Z'")));
                (false,
