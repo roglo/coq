@@ -44,6 +44,8 @@ let nat_of_int dloc n =
       user_err_loc (dloc, "nat_of_int",
         str "Cannot interpret a negative number as a number of type nat")
 
+(*
+
 (************************************************************************)
 (* Printing via scopes *)
 
@@ -63,7 +65,6 @@ let uninterp_nat p =
 (************************************************************************)
 (* Declare the primitive parsers and printers *)
 
-(*
 let _ =
   Notation.declare_numeral_interpreter "nat_scope"
     (nat_path,datatypes_module_name)
