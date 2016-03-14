@@ -71,9 +71,21 @@ let _ =
     ([GRef (Loc.ghost,glob_S,None); GRef (Loc.ghost,glob_O,None)], uninterp_nat, true)
 *)
 
+(* Inductive positive' : Set :=
+    xI' : positive' -> positive' | xO' : positive' -> positive' | xH' : positive' *)
+let _ =
+  Vernacentries.interp
+    (Loc.ghost,
+     Vernacexpr.VernacInductive
+       (false, Decl_kinds.Finite,
+        [(((false, ((Loc.ghost, Names.Id.of_string "positive'"), None)), [],
+            Some (Constrexpr.CSort (Loc.ghost, Misctypes.GSet)),
+            Vernacexpr.Inductive_kw,
+            Vernacexpr.Constructors []),
+          [])]))
+
 (*
 Parameter bigint : Type.
-*)
 let _ =
   Vernacentries.interp
     (Loc.ghost,
@@ -82,9 +94,4 @@ let _ =
         Vernacexpr.DefaultInline,
         [(false, ([((Loc.ghost, Names.Id.of_string "bigint"), None)],
           Constrexpr.CSort (Loc.ghost, Misctypes.GType [])))]))
-(*
-Parameter is_pos_or_zero : bigint -> bool
-*)
-(*
- is_pos_or_zero
 *)

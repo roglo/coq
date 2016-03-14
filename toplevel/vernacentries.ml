@@ -1881,8 +1881,8 @@ let interp ?proof ~loc locality poly c =
       begin match try Some (Nametab.locate qid) with Not_found -> None with
       | Some (IndRef (sp, _) as ir) ->
           let _ =
-            (* checking "f" is of type "bigint -> option ty" *)
-            let crb = CRef (Ident (loc, Id.of_string "bigint"), None) in
+            (* checking "f" is of type "Z' -> option ty" *)
+            let crb = CRef (Ident (loc, Id.of_string "Z'"), None) in
             let b_b = ([(loc, Anonymous)], Default Implicit, crb) in
             let cro = CRef (Ident (loc, Id.of_string "option"), None) in
             let crq = CRef (Qualid (loc, qid), None) in

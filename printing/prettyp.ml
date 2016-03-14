@@ -458,7 +458,6 @@ let assumptions_for_print lna =
 (* *)
 
 let gallina_print_inductive sp =
-let _ = Printf.eprintf "**** gallina_print_inductive\n%!" in
   let env = Global.env() in
   let mib = Environ.lookup_mind sp env in
   let mipv = mib.mind_packets in
