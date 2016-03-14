@@ -83,7 +83,7 @@ let _ =
          Constrexpr.Default Decl_kinds.Implicit, x)],
        y)
   in
-  Vernacentries.interp
+  Vernacentries.interp ~verbosely:false
     (Loc.ghost,
      Vernacexpr.VernacInductive
        (false, Decl_kinds.Finite,
