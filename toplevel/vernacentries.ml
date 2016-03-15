@@ -1992,7 +1992,16 @@ let interp ?proof ~loc locality poly c =
             mip.Declarations.mind_consnames
           in
           let uninterp (c : Glob_term.glob_constr) : Bigint.bigint option =
-            failwith "Number Notation (uninterp) not yet interpreted"
+            let rec glop c =
+              match c with
+              | Glob_term.GApp (loc, gc1, [gc2]) ->
+                  let c1 = glop gc1 in
+                  failwith "ouaip c1 c2"
+              | Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None) ->
+                  failwith "agaga"
+              | c -> failwith (Printf.sprintf "uninterp glob_constr %s" (obj_string c))
+            in
+            glop c
           in
           let path = Nametab.path_of_global ir in
           let dir = (path, []) in
