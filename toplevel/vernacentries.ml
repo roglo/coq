@@ -1940,29 +1940,41 @@ let interp ?proof ~loc locality poly c =
           let z'_of_bigint dloc n =
             if not (Bigint.equal n Bigint.zero) then
               let (s, n) =
-                if Bigint.is_pos_or_zero n then ("Zpos'", n) else ("Zneg'", Bigint.neg n)
+                if Bigint.is_pos_or_zero n then ("Zpos'", n)
+                else ("Zneg'", Bigint.neg n)
               in
               let sgn = CRef (Ident (identref dloc s), None) in
               CApp (dloc, (None, sgn), [(pos'_of_bigint dloc n, None)])
             else
               CRef (Ident (identref dloc "Z0'"), None)
           in
-          let interp (loc : Loc.t) (bi : Bigint.bigint) : Glob_term.glob_constr =
-            let t = vernac_check_eval (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)])) in
+          let interp loc bi =
+            let t =
+              vernac_check_eval
+                (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)]))
+            in
             match t with
             | CApp (_, _, [(ce, _)]) ->
-                let rec glop = function
+                let rec glob_term_of_constr_expr = function
                   | CApp (loc, (pf, ce), ceel) ->
-                      let c1 = glop ce in
-                      Glob_term.GApp (loc, c1, List.map (fun (ce, _) -> glop ce) ceel)
+                      let c1 = glob_term_of_constr_expr ce in
+                      Glob_term.GApp
+                        (loc, c1,
+                         List.map (fun (ce, _) -> glob_term_of_constr_expr ce)
+                           ceel)
                   | CRef (Qualid (loc, qi), None) ->
                       let qis = string_of_qualid qi in
-                      let inds = List.init (Array.length mib.Declarations.mind_packets) (fun x -> (sp, x)) in
-		      let mip = mib.Declarations.mind_packets.(snd (List.hd inds)) in
+                      let inds =
+                        List.init (Array.length mib.Declarations.mind_packets)
+                          (fun x -> (sp, x))
+                      in
+		      let mip =
+                        mib.Declarations.mind_packets.(snd (List.hd inds))
+                      in
 		      let a = mip.Declarations.mind_consnames in
 		      let i =
 		        let rec loop i =
-		          if i = Array.length a then failwith "constructor not found"
+		          if i = Array.length a then assert false
 		          else if Id.to_string a.(i) = qis then i + 1
                         else loop (i + 1)
                         in
@@ -1970,9 +1982,10 @@ let interp ?proof ~loc locality poly c =
                       in
                       Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None)
                   | x ->
-                     failwith (Printf.sprintf "constr_expr %s\n%!" (obj_string x))
+                     failwith
+                       (Printf.sprintf "constr_expr %s\n%!" (obj_string x))
                 in
-                glop ce
+                glob_term_of_constr_expr ce
             | CRef _ ->
                 user_err_loc
                   (loc, "_",
@@ -1985,9 +1998,12 @@ let interp ?proof ~loc locality poly c =
             failwith "Number Notation (uninterp) not yet interpreted"
           in
           let dir = (path, []) in
-          Notation.declare_numeral_interpreter sc dir interp (patl, uninterp, false)
+          Notation.declare_numeral_interpreter sc dir interp
+            (patl, uninterp, false)
       | Some _ | None ->
-          user_err_loc (loc, "_", str "type " ++ str (Id.to_string ty) ++ str " not found")
+          user_err_loc
+            (loc, "_",
+             str "type " ++ str (Id.to_string ty) ++ str " not found")
       end
 
   (* Gallina *)
