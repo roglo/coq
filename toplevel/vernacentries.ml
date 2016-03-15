@@ -1901,6 +1901,50 @@ let z'_of_bigint dloc n =
   else
     CRef (Ident (identref_of_string dloc "Z0'"), None)
 
+let interp_big_int f mib sp spi loc bi =
+  let t =
+    vernac_check_eval (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)]))
+  in
+  match t with
+  | CApp (_, _, [(ce, _)]) ->
+      let rec glob_term_of_constr_expr = function
+        | CApp (loc, (pf, ce), ceel) ->
+            let c1 = glob_term_of_constr_expr ce in
+            Glob_term.GApp
+              (loc, c1,
+               List.map (fun (ce, _) -> glob_term_of_constr_expr ce)
+                 ceel)
+        | CRef (Qualid (loc, qi), None) ->
+            let qis = string_of_qualid qi in
+            let inds =
+              List.init (Array.length mib.Declarations.mind_packets)
+                (fun x -> (sp, x))
+            in
+            let mip =
+              mib.Declarations.mind_packets.(snd (List.hd inds))
+            in
+            let a = mip.Declarations.mind_consnames in
+            let i =
+              let rec loop i =
+                if i = Array.length a then assert false
+                else if Id.to_string a.(i) = qis then i + 1
+              else loop (i + 1)
+              in
+              loop 0
+            in
+            Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None)
+        | x ->
+           failwith
+             (Printf.sprintf "constr_expr %s\n%!" (obj_string x))
+      in
+      glob_term_of_constr_expr ce
+  | CRef _ ->
+      user_err_loc
+        (loc, "_",
+         str "Cannot interpret this number as a value of type " ++
+         str (MutInd.to_string sp))
+  | _ -> assert false
+
 (* "locality" is the prefix "Local" attribute, while the "local" component
  * is the outdated/deprecated "Local" attribute of some vernacular commands
  * still parsed as the obsolete_locality grammar entry for retrocompatibility.
@@ -1949,58 +1993,13 @@ let interp ?proof ~loc locality poly c =
           let path = Nametab.path_of_global ir in
           let env = Global.env () in
           let mib = Environ.lookup_mind sp env in
-          let interp_big_int loc bi =
-            let t =
-              vernac_check_eval
-                (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)]))
-            in
-            match t with
-            | CApp (_, _, [(ce, _)]) ->
-                let rec glob_term_of_constr_expr = function
-                  | CApp (loc, (pf, ce), ceel) ->
-                      let c1 = glob_term_of_constr_expr ce in
-                      Glob_term.GApp
-                        (loc, c1,
-                         List.map (fun (ce, _) -> glob_term_of_constr_expr ce)
-                           ceel)
-                  | CRef (Qualid (loc, qi), None) ->
-                      let qis = string_of_qualid qi in
-                      let inds =
-                        List.init (Array.length mib.Declarations.mind_packets)
-                          (fun x -> (sp, x))
-                      in
-		      let mip =
-                        mib.Declarations.mind_packets.(snd (List.hd inds))
-                      in
-		      let a = mip.Declarations.mind_consnames in
-		      let i =
-		        let rec loop i =
-		          if i = Array.length a then assert false
-		          else if Id.to_string a.(i) = qis then i + 1
-                        else loop (i + 1)
-                        in
-                        loop 0
-                      in
-                      Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None)
-                  | x ->
-                     failwith
-                       (Printf.sprintf "constr_expr %s\n%!" (obj_string x))
-                in
-                glob_term_of_constr_expr ce
-            | CRef _ ->
-                user_err_loc
-                  (loc, "_",
-                   str "Cannot interpret this number as a value of type " ++
-                   str (MutInd.to_string sp))
-            | _ -> assert false
-          in
           let patl : Glob_term.glob_constr list = [] in
           let uninterp (c : Glob_term.glob_constr) : Bigint.bigint option =
             failwith "Number Notation (uninterp) not yet interpreted"
           in
           let dir = (path, []) in
-          Notation.declare_numeral_interpreter sc dir interp_big_int
-            (patl, uninterp, false)
+          Notation.declare_numeral_interpreter sc dir
+            (interp_big_int f mib sp spi) (patl, uninterp, false)
       | Some _ | None ->
           user_err_loc
             (loc, "_",
