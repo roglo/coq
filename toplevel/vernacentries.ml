@@ -1995,17 +1995,19 @@ let interp ?proof ~loc locality poly c =
             let rec glop c =
               match c with
               | Glob_term.GApp (loc, gc1, [gc2]) ->
-                  let c1 = glop gc1 in
-                  failwith "ouaip c1 c2"
+                  let _c1 = glop gc1 in
+                  let _ = Printf.eprintf "uninterp GApp\n%!" in
+                  None
               | Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None) ->
-                  failwith "agaga"
+                  let _ = Printf.eprintf "uninterp GRef %s %d\n%!" (MutInd.to_string sp) i in
+                  None
               | c -> failwith (Printf.sprintf "uninterp glob_constr %s" (obj_string c))
             in
             glop c
           in
           let path = Nametab.path_of_global ir in
           let dir = (path, []) in
-(*
+(**)
           let patl =
             Array.to_list
               (Array.mapi
@@ -2014,9 +2016,9 @@ let interp ?proof ~loc locality poly c =
                       (loc, ConstructRef ((sp, spi), i + 1), None))
                  mc)
           in
-*)
+(*
           let patl = [] in
-(**)
+*)
           Notation.declare_numeral_interpreter sc dir
             (interp_big_int ty f mc sp spi) (patl, uninterp, false)
       | Some _ | None ->
