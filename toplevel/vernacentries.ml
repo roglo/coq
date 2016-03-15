@@ -1521,7 +1521,7 @@ let get_current_context_of_args = function
 
 (* duplication of vernac_check_may_eval below to get the result instead
    of printing it *)
-let vernac_check_eval rc =
+let vernac_get_eval rc =
   let (sigma, env) = get_current_context () in
   let sigma', c = interp_open_constr env sigma rc in
   let sigma' = Evarconv.consider_remaining_unif_problems env sigma' in
@@ -1877,18 +1877,18 @@ let obj_string x =
     "tag = " ^ string_of_int (Obj.tag (Obj.repr x))
   else "int_val = " ^ string_of_int (Obj.magic x)
 
-let identref_of_string loc s = (loc, Names.Id.of_string s)
+let identref loc s = (loc, Names.Id.of_string s)
 
 let rec pos'_of_bigint dloc n =
   match Bigint.div2_with_rest n with
   | (q, false) ->
-      let c = CRef (Ident (identref_of_string dloc "xO'"), None) in
+      let c = CRef (Ident (identref dloc "xO'"), None) in
       CApp (dloc, (None, c), [(pos'_of_bigint dloc q, None)])
   | (q, true) when not (Bigint.equal q Bigint.zero) ->
-      let c = CRef (Ident (identref_of_string dloc "xI'"), None) in
+      let c = CRef (Ident (identref dloc "xI'"), None) in
       CApp (dloc, (None, c), [(pos'_of_bigint dloc q, None)])
   | (q, true) ->
-      CRef (Ident (identref_of_string dloc "xH'"), None)
+      CRef (Ident (identref dloc "xH'"), None)
 
 let z'_of_bigint dloc n =
   if not (Bigint.equal n Bigint.zero) then
@@ -1896,14 +1896,14 @@ let z'_of_bigint dloc n =
       if Bigint.is_pos_or_zero n then ("Zpos'", n)
       else ("Zneg'", Bigint.neg n)
     in
-    let sgn = CRef (Ident (identref_of_string dloc s), None) in
+    let sgn = CRef (Ident (identref dloc s), None) in
     CApp (dloc, (None, sgn), [(pos'_of_bigint dloc n, None)])
   else
-    CRef (Ident (identref_of_string dloc "Z0'"), None)
+    CRef (Ident (identref dloc "Z0'"), None)
 
-let interp_big_int f mib sp spi loc bi =
+let interp_big_int ty f mib sp spi loc bi =
   let t =
-    vernac_check_eval (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)]))
+    vernac_get_eval (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)]))
   in
   match t with
   | CApp (_, _, [(ce, _)]) ->
@@ -1912,8 +1912,7 @@ let interp_big_int f mib sp spi loc bi =
             let c1 = glob_term_of_constr_expr ce in
             Glob_term.GApp
               (loc, c1,
-               List.map (fun (ce, _) -> glob_term_of_constr_expr ce)
-                 ceel)
+               List.map (fun (ce, _) -> glob_term_of_constr_expr ce) ceel)
         | CRef (Qualid (loc, qi), None) ->
             let qis = string_of_qualid qi in
             let inds =
@@ -1934,15 +1933,14 @@ let interp_big_int f mib sp spi loc bi =
             in
             Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None)
         | x ->
-           failwith
-             (Printf.sprintf "constr_expr %s\n%!" (obj_string x))
+           failwith (Printf.sprintf "constr_expr %s\n%!" (obj_string x))
       in
       glob_term_of_constr_expr ce
   | CRef _ ->
       user_err_loc
         (loc, "_",
          str "Cannot interpret this number as a value of type " ++
-         str (MutInd.to_string sp))
+         str (Id.to_string ty))
   | _ -> assert false
 
 (* "locality" is the prefix "Local" attribute, while the "local" component
@@ -1983,9 +1981,9 @@ let interp ?proof ~loc locality poly c =
           let env = Global.env () in
           let _ =
             (* checking "f" is of type "Z' -> option ty" *)
-            let crb = CRef (Ident (loc, Id.of_string "Z'"), None) in
+            let crb = CRef (Ident (identref loc "Z'"), None) in
             let b_b = ([(loc, Anonymous)], Default Implicit, crb) in
-            let cro = CRef (Ident (loc, Id.of_string "option"), None) in
+            let cro = CRef (Ident (identref loc "option"), None) in
             let crq = CRef (Qualid (loc, qid), None) in
             let caoq = CApp (loc, (None, cro), [(crq, None)]) in
             let c = CCast (loc, f, CastConv (CProdN (loc, [b_b], caoq))) in
@@ -2000,7 +1998,7 @@ let interp ?proof ~loc locality poly c =
           let patl : Glob_term.glob_constr list = [] in
           let mib = Environ.lookup_mind sp env in
           Notation.declare_numeral_interpreter sc dir
-            (interp_big_int f mib sp spi) (patl, uninterp, false)
+            (interp_big_int ty f mib sp spi) (patl, uninterp, false)
       | Some _ | None ->
           user_err_loc
             (loc, "_",
