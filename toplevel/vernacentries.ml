@@ -1935,12 +1935,14 @@ let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp mib) in
           in
           let interp (loc : Loc.t) (bi : Bigint.bigint) : Glob_term.glob_constr =
             let t = toto None (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)])) in
-            let rec glop = function
-              | CApp (loc, (pf, ce), ceel) ->
-                  Glob_term.GApp
-                    (loc, glop ce, List.map (fun (ce, _) -> glop ce) ceel)
-              | CRef (Qualid (loc, qi), None) ->
-                  let qis = string_of_qualid qi in
+            match t with
+            | CApp (_, (pf, CRef (Qualid (loc, qi), None)), [(ce, _)]) ->
+                let rec glop = function
+                  | CApp (loc, (pf, ce), ceel) ->
+                      let c1 = glop ce in
+                      Glob_term.GApp (loc, c1, List.map (fun (ce, _) -> glop ce) ceel)
+                  | CRef (Qualid (loc, qi), None) ->
+                      let qis = string_of_qualid qi in
 let _ = Printf.eprintf "qualid %s\n%!" qis in
 (**)
 let inds = List.init (Array.length mib.Declarations.mind_packets) (fun x -> (sp, x)) in
@@ -1954,13 +1956,15 @@ let i =
   in
   loop 0
 in
-                 Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None)
-              | x ->
-                 failwith (Printf.sprintf "constr_expr %s\n%!" (obj_string x))
-            in glop t
+let _ = Printf.eprintf "--> %d\n%!" i in
+                     Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None)
+                  | x ->
+                     failwith (Printf.sprintf "constr_expr %s\n%!" (obj_string x))
+                in glop ce
 (*
             failwith "Number Notation (interp) not yet interpreted"
 *)
+            | _ -> failwith "case not Some not impl"
           in
           let patl : Glob_term.glob_constr list = [] in
           let uninterp (c : Glob_term.glob_constr) : Bigint.bigint option =
@@ -1968,8 +1972,7 @@ in
           in
           let inpat : bool = false in
           let dir = (path, []) in
-          Notation.declare_numeral_interpreter sc dir interp
-            (patl, uninterp, inpat)
+          Notation.declare_numeral_interpreter sc dir interp (patl, uninterp, inpat)
       | Some _ | None -> Printf.eprintf "*** %s not found\n%!" ty
       end
 
