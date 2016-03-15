@@ -83,7 +83,7 @@ let _ =
     Constrexpr.CProdN
       (Loc.ghost,
        [([(Loc.ghost, Names.Anonymous)],
-         Constrexpr.Default Decl_kinds.Implicit, x)],
+         Constrexpr.Default Decl_kinds.Explicit, x)],
        y)
   in
   Vernacentries.interp ~verbosely:false
