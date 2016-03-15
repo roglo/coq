@@ -1877,6 +1877,30 @@ let obj_string x =
     "tag = " ^ string_of_int (Obj.tag (Obj.repr x))
   else "int_val = " ^ string_of_int (Obj.magic x)
 
+let identref_of_string loc s = (loc, Names.Id.of_string s)
+
+let rec pos'_of_bigint dloc n =
+  match Bigint.div2_with_rest n with
+  | (q, false) ->
+      let c = CRef (Ident (identref_of_string dloc "xO'"), None) in
+      CApp (dloc, (None, c), [(pos'_of_bigint dloc q, None)])
+  | (q, true) when not (Bigint.equal q Bigint.zero) ->
+      let c = CRef (Ident (identref_of_string dloc "xI'"), None) in
+      CApp (dloc, (None, c), [(pos'_of_bigint dloc q, None)])
+  | (q, true) ->
+      CRef (Ident (identref_of_string dloc "xH'"), None)
+
+let z'_of_bigint dloc n =
+  if not (Bigint.equal n Bigint.zero) then
+    let (s, n) =
+      if Bigint.is_pos_or_zero n then ("Zpos'", n)
+      else ("Zneg'", Bigint.neg n)
+    in
+    let sgn = CRef (Ident (identref_of_string dloc s), None) in
+    CApp (dloc, (None, sgn), [(pos'_of_bigint dloc n, None)])
+  else
+    CRef (Ident (identref_of_string dloc "Z0'"), None)
+
 (* "locality" is the prefix "Local" attribute, while the "local" component
  * is the outdated/deprecated "Local" attribute of some vernacular commands
  * still parsed as the obsolete_locality grammar entry for retrocompatibility.
@@ -1925,30 +1949,7 @@ let interp ?proof ~loc locality poly c =
           let path = Nametab.path_of_global ir in
           let env = Global.env () in
           let mib = Environ.lookup_mind sp env in
-          let identref loc s = (loc, Names.Id.of_string s) in
-          let rec pos'_of_bigint dloc n =
-            match Bigint.div2_with_rest n with
-            | (q, false) ->
-                let c = CRef (Ident (identref dloc "xO'"), None) in
-                CApp (dloc, (None, c), [(pos'_of_bigint dloc q, None)])
-            | (q, true) when not (Bigint.equal q Bigint.zero) ->
-                let c = CRef (Ident (identref dloc "xI'"), None) in
-                CApp (dloc, (None, c), [(pos'_of_bigint dloc q, None)])
-            | (q, true) ->
-                CRef (Ident (identref dloc "xH'"), None)
-          in
-          let z'_of_bigint dloc n =
-            if not (Bigint.equal n Bigint.zero) then
-              let (s, n) =
-                if Bigint.is_pos_or_zero n then ("Zpos'", n)
-                else ("Zneg'", Bigint.neg n)
-              in
-              let sgn = CRef (Ident (identref dloc s), None) in
-              CApp (dloc, (None, sgn), [(pos'_of_bigint dloc n, None)])
-            else
-              CRef (Ident (identref dloc "Z0'"), None)
-          in
-          let interp loc bi =
+          let interp_big_int loc bi =
             let t =
               vernac_check_eval
                 (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)]))
@@ -1998,7 +1999,7 @@ let interp ?proof ~loc locality poly c =
             failwith "Number Notation (uninterp) not yet interpreted"
           in
           let dir = (path, []) in
-          Notation.declare_numeral_interpreter sc dir interp
+          Notation.declare_numeral_interpreter sc dir interp_big_int
             (patl, uninterp, false)
       | Some _ | None ->
           user_err_loc
