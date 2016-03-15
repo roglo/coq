@@ -1519,8 +1519,10 @@ let get_current_context_of_args = function
   | Some n -> get_goal_context n
   | None -> get_current_context ()
 
-let toto glopt rc =
-  let (sigma, env) = get_current_context_of_args glopt in
+(* duplication of vernac_check_may_eval below to get the result instead
+   of printing it *)
+let vernac_check_eval rc =
+  let (sigma, env) = get_current_context () in
   let sigma', c = interp_open_constr env sigma rc in
   let sigma' = Evarconv.consider_remaining_unif_problems env sigma' in
   Evarconv.check_problems_are_solved env sigma';
@@ -1946,7 +1948,7 @@ let interp ?proof ~loc locality poly c =
               CRef (Ident (identref dloc "Z0'"), None)
           in
           let interp (loc : Loc.t) (bi : Bigint.bigint) : Glob_term.glob_constr =
-            let t = toto None (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)])) in
+            let t = vernac_check_eval (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)])) in
             match t with
             | CApp (_, _, [(ce, _)]) ->
                 let rec glop = function
