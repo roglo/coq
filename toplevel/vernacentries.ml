@@ -1519,6 +1519,32 @@ let get_current_context_of_args = function
   | Some n -> get_goal_context n
   | None -> get_current_context ()
 
+let toto glopt rc =
+  let (sigma, env) = get_current_context_of_args glopt in
+  let sigma', c = interp_open_constr env sigma rc in
+  let sigma' = Evarconv.consider_remaining_unif_problems env sigma' in
+  Evarconv.check_problems_are_solved env sigma';
+  let sigma',nf = Evarutil.nf_evars_and_universes sigma' in
+  let pl, uctx = Evd.universe_context sigma' in
+  let env = Environ.push_context uctx (Evarutil.nf_env_evar sigma' env) in
+  let c = nf c in
+  let j =
+    if Evarutil.has_undefined_evars sigma' c then
+      Evarutil.j_nf_evar sigma' (Retyping.get_judgment_of env sigma' c)
+    else
+      Arguments_renaming.rename_typing env c in
+  let r = Genredexpr.CbvVm None in
+  Tacintern.dump_glob_red_expr r;
+  let (sigma',r_interp) = interp_redexp env sigma' r in
+  let redfun env evm c =
+    let (redfun, _) = reduction_of_red_expr env r_interp in
+    let evm = Sigma.Unsafe.of_evar_map evm in
+    let Sigma (c, _, _) = redfun.Reductionops.e_redfun env evm c in
+    c
+  in
+  let t = redfun env sigma' j.Environ.uj_val in
+  Constrextern.extern_constr false env sigma' t
+
 let vernac_check_may_eval redexp glopt rc =
   let (sigma, env) = get_current_context_of_args glopt in
   let sigma', c = interp_open_constr env sigma rc in
@@ -1844,6 +1870,10 @@ let vernac_load interp fname =
   try while true do interp (snd (parse_sentence input)) done
   with End_of_input -> ()
 
+let obj_string x =
+  if Obj.is_block (Obj.repr x) then
+    "tag = " ^ string_of_int (Obj.tag (Obj.repr x))
+  else "int_val = " ^ string_of_int (Obj.magic x)
 
 (* "locality" is the prefix "Local" attribute, while the "local" component
  * is the outdated/deprecated "Local" attribute of some vernacular commands
@@ -1903,10 +1933,20 @@ let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp (Environ.lookup_min
               CRef (Ident (identref dloc "Z0'"), None)
           in
           let interp (loc : Loc.t) (bi : Bigint.bigint) : Glob_term.glob_constr =
+(*
             let () =
               vernac_check_may_eval (Some (Genredexpr.CbvVm None)) None (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)]))
             in
+*)
+            let t : constr_expr = toto None (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)])) in
+let rec glop = function
+  | CApp (loc, (pf, ce), ceel) -> Glob_term.GApp (loc, glop ce, List.map (fun (ce, _) -> glop ce) ceel)
+  | CRef (r, ieo) -> failwith "yes, CRef"
+  | x -> failwith (Printf.sprintf "constr_expr %s\n%!" (obj_string x))
+in glop t
+(*
             failwith "Number Notation (interp) not yet interpreted"
+*)
           in
           let patl : Glob_term.glob_constr list = [] in
           let uninterp (c : Glob_term.glob_constr) : Bigint.bigint option =
