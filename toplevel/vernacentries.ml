@@ -1921,15 +1921,22 @@ let interp ?proof ~loc locality poly c =
               (CCast (loc, f, CastConv (CProdN (loc, [b_b], caoq))))
           in
           let path = Nametab.path_of_global ir in
-(**)
-let env = Global.env () in
-let mib = Environ.lookup_mind sp env in
+          let env = Global.env () in
+          let mib = Environ.lookup_mind sp env in
+(*
 let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp mib) in
-(**)
+*)
           let identref loc s = (loc, Names.Id.of_string s) in
+          let rec pos'_of_bigint dloc n =
+            failwith "pos'_of_bigint not yet impl"
+          in
           let z'_of_bigint dloc n =
             if not (Bigint.equal n Bigint.zero) then
-              failwith "z'_of_bigint (not zero) not yet implemented"
+              let (s, n) =
+                if Bigint.is_pos_or_zero n then ("Zpos'", n) else ("Zneg'", Bigint.neg n)
+              in
+              let sgn = CRef (Ident (identref dloc s), None) in
+              CApp (dloc, (None, sgn), [pos'_of_bigint dloc n])
             else
               CRef (Ident (identref dloc "Z0'"), None)
           in
@@ -1943,24 +1950,28 @@ let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp mib) in
                       Glob_term.GApp (loc, c1, List.map (fun (ce, _) -> glop ce) ceel)
                   | CRef (Qualid (loc, qi), None) ->
                       let qis = string_of_qualid qi in
+(*
 let _ = Printf.eprintf "qualid %s\n%!" qis in
-(**)
-let inds = List.init (Array.length mib.Declarations.mind_packets) (fun x -> (sp, x)) in
-let mip = mib.Declarations.mind_packets.(snd (List.hd inds)) in
-let a = mip.Declarations.mind_consnames in
-let i =
-  let rec loop i =
-    if i = Array.length a then failwith "constructor not found"
-    else if Id.to_string a.(i) = qis then i + 1
-    else loop (i + 1)
-  in
-  loop 0
-in
+*)
+                      let inds = List.init (Array.length mib.Declarations.mind_packets) (fun x -> (sp, x)) in
+		      let mip = mib.Declarations.mind_packets.(snd (List.hd inds)) in
+		      let a = mip.Declarations.mind_consnames in
+		      let i =
+		        let rec loop i =
+		          if i = Array.length a then failwith "constructor not found"
+		          else if Id.to_string a.(i) = qis then i + 1
+                        else loop (i + 1)
+                        in
+                        loop 0
+                      in
+(*
 let _ = Printf.eprintf "--> %d\n%!" i in
-                     Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None)
+*)
+                      Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None)
                   | x ->
                      failwith (Printf.sprintf "constr_expr %s\n%!" (obj_string x))
-                in glop ce
+                in
+                glop ce
 (*
             failwith "Number Notation (interp) not yet interpreted"
 *)
