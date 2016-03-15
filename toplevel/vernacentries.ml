@@ -1921,10 +1921,10 @@ let interp ?proof ~loc locality poly c =
               (CCast (loc, f, CastConv (CProdN (loc, [b_b], caoq))))
           in
           let path = Nametab.path_of_global ir in
-(*
+(**)
 let env = Global.env () in
 let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp (Environ.lookup_mind sp env)) in
-*)
+(**)
           let identref loc s = (loc, Names.Id.of_string s) in
           let z'_of_bigint dloc n =
             if not (Bigint.equal n Bigint.zero) then
