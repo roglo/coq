@@ -1980,6 +1980,7 @@ let interp ?proof ~loc locality poly c =
       let qid = qualid_of_ident ty in
       begin match try Some (Nametab.locate qid) with Not_found -> None with
       | Some (IndRef (sp, spi) as ir) ->
+          let env = Global.env () in
           let _ =
             (* checking "f" is of type "Z' -> option ty" *)
             let crb = CRef (Ident (loc, Id.of_string "Z'"), None) in
@@ -1987,17 +1988,17 @@ let interp ?proof ~loc locality poly c =
             let cro = CRef (Ident (loc, Id.of_string "option"), None) in
             let crq = CRef (Qualid (loc, qid), None) in
             let caoq = CApp (loc, (None, cro), [(crq, None)]) in
-            vernac_check_may_eval None None
-              (CCast (loc, f, CastConv (CProdN (loc, [b_b], caoq))))
-          in
-          let path = Nametab.path_of_global ir in
-          let env = Global.env () in
-          let mib = Environ.lookup_mind sp env in
-          let patl : Glob_term.glob_constr list = [] in
+            let c = CCast (loc, f, CastConv (CProdN (loc, [b_b], caoq))) in
+            let (sigma, env) = get_current_context () in
+            interp_open_constr env sigma c
+          in 
           let uninterp (c : Glob_term.glob_constr) : Bigint.bigint option =
             failwith "Number Notation (uninterp) not yet interpreted"
           in
+          let path = Nametab.path_of_global ir in
           let dir = (path, []) in
+          let patl : Glob_term.glob_constr list = [] in
+          let mib = Environ.lookup_mind sp env in
           Notation.declare_numeral_interpreter sc dir
             (interp_big_int f mib sp spi) (patl, uninterp, false)
       | Some _ | None ->
