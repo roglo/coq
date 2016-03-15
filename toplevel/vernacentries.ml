@@ -1906,8 +1906,8 @@ let interp ?proof ~loc locality poly c =
       vernac_notation locality local c infpl sc
   | VernacNotationAddFormat(n,k,v) ->
       Metasyntax.add_notation_extra_printing_rule n k v
-  | VernacNumberNotation (ty,f,g,sc) ->
-      let qid = qualid_of_ident (Id.of_string ty) in
+  | VernacNumberNotation ((loc, ty),f,g,sc) ->
+      let qid = qualid_of_ident ty in
       begin match try Some (Nametab.locate qid) with Not_found -> None with
       | Some (IndRef (sp, spi) as ir) ->
           let _ =
@@ -1982,10 +1982,10 @@ let interp ?proof ~loc locality poly c =
           let uninterp (c : Glob_term.glob_constr) : Bigint.bigint option =
             failwith "Number Notation (uninterp) not yet interpreted"
           in
-          let inpat : bool = false in
           let dir = (path, []) in
-          Notation.declare_numeral_interpreter sc dir interp (patl, uninterp, inpat)
-      | Some _ | None -> Printf.eprintf "*** %s not found\n%!" ty
+          Notation.declare_numeral_interpreter sc dir interp (patl, uninterp, false)
+      | Some _ | None ->
+          user_err_loc (loc, "_", str "type " ++ str (Id.to_string ty) ++ str " not found")
       end
 
   (* Gallina *)

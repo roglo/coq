@@ -1114,7 +1114,7 @@ GEXTEND Gram
 	 l = [ "("; l = LIST1 syntax_modifier SEP ","; ")" -> l | -> [] ]
 	 -> VernacSyntaxExtension (local,(s,l))
 
-     | IDENT "Number"; IDENT "Notation"; ty = IDENT; f = constr;
+     | IDENT "Number"; IDENT "Notation"; ty = identref; f = constr;
        g = constr; ":"; sc = IDENT ->
 	 VernacNumberNotation (ty,f,g,sc)
 
