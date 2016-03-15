@@ -1909,7 +1909,7 @@ let interp ?proof ~loc locality poly c =
   | VernacNumberNotation (ty,f,g,sc) ->
       let qid = qualid_of_ident (Id.of_string ty) in
       begin match try Some (Nametab.locate qid) with Not_found -> None with
-      | Some (IndRef (sp, _) as ir) ->
+      | Some (IndRef (sp, spi) as ir) ->
           let _ =
             (* checking "f" is of type "Z' -> option ty" *)
             let crb = CRef (Ident (loc, Id.of_string "Z'"), None) in
@@ -1939,11 +1939,16 @@ let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp (Environ.lookup_min
             in
 *)
             let t : constr_expr = toto None (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)])) in
-let rec glop = function
-  | CApp (loc, (pf, ce), ceel) -> Glob_term.GApp (loc, glop ce, List.map (fun (ce, _) -> glop ce) ceel)
-  | CRef (r, ieo) -> failwith "yes, CRef"
-  | x -> failwith (Printf.sprintf "constr_expr %s\n%!" (obj_string x))
-in glop t
+            let rec glop = function
+              | CApp (loc, (pf, ce), ceel) ->
+                  Glob_term.GApp
+                    (loc, glop ce, List.map (fun (ce, _) -> glop ce) ceel)
+              | CRef (Qualid (loc, qi), None) ->
+let _ = Printf.eprintf "qualid %s\n%!" (string_of_qualid qi) in
+                 Glob_term.GRef (loc, ConstructRef ((sp, spi), 1), None)
+              | x ->
+                 failwith (Printf.sprintf "constr_expr %s\n%!" (obj_string x))
+            in glop t
 (*
             failwith "Number Notation (interp) not yet interpreted"
 *)
