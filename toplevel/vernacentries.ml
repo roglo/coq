@@ -1923,7 +1923,8 @@ let interp ?proof ~loc locality poly c =
           let path = Nametab.path_of_global ir in
 (**)
 let env = Global.env () in
-let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp (Environ.lookup_mind sp env)) in
+let mib = Environ.lookup_mind sp env in
+let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp mib) in
 (**)
           let identref loc s = (loc, Names.Id.of_string s) in
           let z'_of_bigint dloc n =
@@ -1933,19 +1934,27 @@ let _ = msg_notice (Printmod.pr_mutual_inductive_body env sp (Environ.lookup_min
               CRef (Ident (identref dloc "Z0'"), None)
           in
           let interp (loc : Loc.t) (bi : Bigint.bigint) : Glob_term.glob_constr =
-(*
-            let () =
-              vernac_check_may_eval (Some (Genredexpr.CbvVm None)) None (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)]))
-            in
-*)
-            let t : constr_expr = toto None (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)])) in
+            let t = toto None (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)])) in
             let rec glop = function
               | CApp (loc, (pf, ce), ceel) ->
                   Glob_term.GApp
                     (loc, glop ce, List.map (fun (ce, _) -> glop ce) ceel)
               | CRef (Qualid (loc, qi), None) ->
-let _ = Printf.eprintf "qualid %s\n%!" (string_of_qualid qi) in
-                 Glob_term.GRef (loc, ConstructRef ((sp, spi), 1), None)
+                  let qis = string_of_qualid qi in
+let _ = Printf.eprintf "qualid %s\n%!" qis in
+(**)
+let inds = List.init (Array.length mib.Declarations.mind_packets) (fun x -> (sp, x)) in
+let mip = mib.Declarations.mind_packets.(snd (List.hd inds)) in
+let a = mip.Declarations.mind_consnames in
+let i =
+  let rec loop i =
+    if i = Array.length a then failwith "constructor not found"
+    else if Id.to_string a.(i) = qis then i + 1
+    else loop (i + 1)
+  in
+  loop 0
+in
+                 Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None)
               | x ->
                  failwith (Printf.sprintf "constr_expr %s\n%!" (obj_string x))
             in glop t
