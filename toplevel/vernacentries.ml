@@ -1901,7 +1901,7 @@ let z'_of_bigint dloc n =
   else
     CRef (Ident (identref dloc "Z0'"), None)
 
-let interp_big_int ty f mib sp spi loc bi =
+let interp_big_int ty f mc sp spi loc bi =
   let t =
     vernac_get_eval (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)]))
   in
@@ -1915,18 +1915,10 @@ let interp_big_int ty f mib sp spi loc bi =
                List.map (fun (ce, _) -> glob_term_of_constr_expr ce) ceel)
         | CRef (Qualid (loc, qi), None) ->
             let qis = string_of_qualid qi in
-            let inds =
-              List.init (Array.length mib.Declarations.mind_packets)
-                (fun x -> (sp, x))
-            in
-            let mip =
-              mib.Declarations.mind_packets.(snd (List.hd inds))
-            in
-            let a = mip.Declarations.mind_consnames in
             let i =
               let rec loop i =
-                if i = Array.length a then assert false
-                else if Id.to_string a.(i) = qis then i + 1
+                if i = Array.length mc then assert false
+                else if Id.to_string mc.(i) = qis then i + 1
               else loop (i + 1)
               in
               loop 0
@@ -1990,15 +1982,34 @@ let interp ?proof ~loc locality poly c =
             let (sigma, env) = get_current_context () in
             interp_open_constr env sigma c
           in 
+          let mc =
+            let mib = Environ.lookup_mind sp env in
+            let inds =
+              List.init (Array.length mib.Declarations.mind_packets)
+                (fun x -> (sp, x))
+            in
+            let mip = mib.Declarations.mind_packets.(snd (List.hd inds)) in
+            mip.Declarations.mind_consnames
+          in
           let uninterp (c : Glob_term.glob_constr) : Bigint.bigint option =
             failwith "Number Notation (uninterp) not yet interpreted"
           in
           let path = Nametab.path_of_global ir in
           let dir = (path, []) in
-          let patl : Glob_term.glob_constr list = [] in
-          let mib = Environ.lookup_mind sp env in
+(*
+          let patl =
+            Array.to_list
+              (Array.mapi
+                 (fun i c ->
+                    Glob_term.GRef
+                      (loc, ConstructRef ((sp, spi), i + 1), None))
+                 mc)
+          in
+*)
+          let patl = [] in
+(**)
           Notation.declare_numeral_interpreter sc dir
-            (interp_big_int ty f mib sp spi) (patl, uninterp, false)
+            (interp_big_int ty f mc sp spi) (patl, uninterp, false)
       | Some _ | None ->
           user_err_loc
             (loc, "_",
