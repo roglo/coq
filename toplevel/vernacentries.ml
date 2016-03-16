@@ -1901,11 +1901,17 @@ let z'_of_bigint dloc n =
   else
     CRef (Ident (identref dloc "Z'0"), None)
 
+let bigint_of_pos' = function
+  | x ->
+      failwith (Printf.sprintf "bigint_of_pos' %s" (obj_string x))
+
 let bigint_of_z' = function
   | CRef (Qualid (loc, qi), None) ->
       if string_of_qualid qi = "Z'0" then Bigint.zero else assert false
-  | CApp (loc, (pf, ce), ceel) ->
-      failwith "bigint_of_z': CApp not yet impl"
+  | CApp (loc, (pf, CRef (Qualid (loc', qi), None)), [(ce, _)]) ->
+      let qis = string_of_qualid qi in
+      if qis = "Z'pos" then bigint_of_pos' ce
+      else failwith (Printf.sprintf "bigint_of_z': CApp %s not yet impl" qis)
   | x ->
       failwith (Printf.sprintf "bigint_of_z' %s" (obj_string x))
 
