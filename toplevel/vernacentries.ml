@@ -1902,8 +1902,10 @@ let z'_of_bigint dloc n =
     CRef (Ident (identref dloc "Z'0"), None)
 
 let bigint_of_z' dloc = function
-  | CRef (Qualid (loc, qi), None) -> failwith (Printf.sprintf "ah d'accord %s" (string_of_qualid qi))
-  | x -> failwith (Printf.sprintf "bigint_of_z %s" (obj_string x))
+  | CRef (Qualid (loc, qi), None) ->
+      if string_of_qualid qi = "Z'0" then Bigint.zero else assert false
+  | x ->
+      failwith (Printf.sprintf "bigint_of_z %s" (obj_string x))
 
 let interp_big_int ty f mc sp spi loc bi =
   let t =
@@ -1911,12 +1913,12 @@ let interp_big_int ty f mc sp spi loc bi =
   in
   match t with
   | CApp (_, _, [(ce, _)]) ->
-      let rec glob_term_of_constr_expr = function
+      let rec glob_constr_of_constr_expr = function
         | CApp (loc, (pf, ce), ceel) ->
-            let c1 = glob_term_of_constr_expr ce in
+            let c1 = glob_constr_of_constr_expr ce in
             Glob_term.GApp
               (loc, c1,
-               List.map (fun (ce, _) -> glob_term_of_constr_expr ce) ceel)
+               List.map (fun (ce, _) -> glob_constr_of_constr_expr ce) ceel)
         | CRef (Qualid (loc, qi), None) ->
             let qis = string_of_qualid qi in
             let i =
@@ -1928,10 +1930,12 @@ let interp_big_int ty f mc sp spi loc bi =
               loop 0
             in
             Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None)
+        | CPrim (loc, pt) ->
+            failwith "CPrim"
         | x ->
            failwith (Printf.sprintf "constr_expr %s\n%!" (obj_string x))
       in
-      glob_term_of_constr_expr ce
+      glob_constr_of_constr_expr ce
   | CRef _ ->
       user_err_loc
         (loc, "_",
@@ -2011,10 +2015,10 @@ let interp ?proof ~loc locality poly c =
             mip.Declarations.mind_consnames
           in
 let uninterp_big_int (c : Glob_term.glob_constr) : Bigint.bigint option =
-  let rec constr_expr_of_glob_term = function
+  let rec constr_expr_of_glob_constr = function
     | Glob_term.GApp (loc, c1, cl) ->
-        let ce = constr_expr_of_glob_term c1 in
-        let ceel = List.map (fun c -> (constr_expr_of_glob_term c, None)) cl in
+        let ce = constr_expr_of_glob_constr c1 in
+        let ceel = List.map (fun c -> (constr_expr_of_glob_constr c, None)) cl in
         CApp (loc, (None, ce), ceel)
     | Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None) ->
         let mc =
@@ -2055,7 +2059,7 @@ let uninterp_big_int (c : Glob_term.glob_constr) : Bigint.bigint option =
        failwith (Printf.sprintf "glob_constr %s\n%!" (obj_string x))
 *)
   in
-  let c = constr_expr_of_glob_term c in
+  let c = constr_expr_of_glob_constr c in
   let t = vernac_get_eval (CApp (loc, (None, g), [(c, None)])) in
   Some (bigint_of_z' loc t)
 in
@@ -2089,7 +2093,7 @@ in
           let patl = [] in
 *)
           Notation.declare_numeral_interpreter sc dir
-            (interp_big_int ty f mc sp spi) (patl, uninterp_big_int, false)
+            (interp_big_int ty f mc sp spi) (patl, uninterp_big_int, true)
       | Some _ | None ->
           user_err_loc
             (loc, "_",
