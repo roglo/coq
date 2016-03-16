@@ -1901,8 +1901,9 @@ let z'_of_bigint dloc n =
   else
     CRef (Ident (identref dloc "Z'0"), None)
 
-let bigint_of_z' dloc n =
-  failwith "bigint_of_z' not yet impl"
+let bigint_of_z' dloc = function
+  | CRef (Qualid (loc, qi), None) -> failwith (Printf.sprintf "ah d'accord %s" (string_of_qualid qi))
+  | x -> failwith (Printf.sprintf "bigint_of_z %s" (obj_string x))
 
 let interp_big_int ty f mc sp spi loc bi =
   let t =
@@ -2054,7 +2055,9 @@ let uninterp_big_int (c : Glob_term.glob_constr) : Bigint.bigint option =
        failwith (Printf.sprintf "glob_constr %s\n%!" (obj_string x))
 *)
   in
-  Some (bigint_of_z' loc (constr_expr_of_glob_term c))
+  let c = constr_expr_of_glob_term c in
+  let t = vernac_get_eval (CApp (loc, (None, g), [(c, None)])) in
+  Some (bigint_of_z' loc t)
 in
 (*
           let uninterp (c : Glob_term.glob_constr) : Bigint.bigint option =
