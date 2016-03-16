@@ -1910,7 +1910,7 @@ let rec bigint_of_pos' = function
       begin match string_of_qualid qi with
       | "x'O" -> Bigint.mult_2 (bigint_of_pos' ce)
       | "x'I" -> Bigint.add_1 (Bigint.mult_2 (bigint_of_pos' ce))
-      | qis -> failwith (Printf.sprintf "bigint_of_z': CApp %s" qis)
+      | qis -> failwith (Printf.sprintf "bigint_of_pos': CApp %s" qis)
       end
   | x ->
       failwith (Printf.sprintf "bigint_of_pos' %s" (obj_string x))
@@ -1960,6 +1960,39 @@ let interp_big_int ty f mc sp spi loc bi =
          str (Id.to_string ty))
   | x ->
       failwith (Printf.sprintf "interp_big_int %s" (obj_string x))
+
+let uninterp_big_int g c =
+  let env = Global.env () in
+  let rec constr_expr_of_glob_constr = function
+    | Glob_term.GApp (loc, c1, cl) ->
+        let ce = constr_expr_of_glob_constr c1 in
+        let ceel = List.map (fun c -> (constr_expr_of_glob_constr c, None)) cl in
+        CApp (loc, (None, ce), ceel)
+    | Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None) ->
+        let mc =
+          let mib = Environ.lookup_mind sp env in
+          let inds =
+            List.init (Array.length mib.Declarations.mind_packets)
+              (fun x -> (sp, x))
+          in
+          let mip = mib.Declarations.mind_packets.(snd (List.hd inds)) in
+          mip.Declarations.mind_consnames
+        in
+        let qis =
+          if i >= 1 && i <= Array.length mc then mc.(i-1)
+          else failwith "qis not_found"
+        in
+        let qi = qualid_of_string (Id.to_string qis) in
+        CRef (Qualid (loc, qi), None)
+    | x ->
+        failwith (Printf.sprintf "glob_constr %s\n%!" (obj_string x))
+  in
+  let ce = constr_expr_of_glob_constr c in
+  let t =
+    Constrextern.without_symbols vernac_get_eval
+      (CApp (Glob_ops.loc_of_glob_constr c, (None, g), [(ce, None)]))
+  in
+  Some (bigint_of_z' t)
 
 (* "locality" is the prefix "Local" attribute, while the "local" component
  * is the outdated/deprecated "Local" attribute of some vernacular commands
@@ -2032,38 +2065,6 @@ let interp ?proof ~loc locality poly c =
             let mip = mib.Declarations.mind_packets.(snd (List.hd inds)) in
             mip.Declarations.mind_consnames
           in
-let uninterp_big_int (c : Glob_term.glob_constr) : Bigint.bigint option =
-  let rec constr_expr_of_glob_constr = function
-    | Glob_term.GApp (loc, c1, cl) ->
-        let ce = constr_expr_of_glob_constr c1 in
-        let ceel = List.map (fun c -> (constr_expr_of_glob_constr c, None)) cl in
-        CApp (loc, (None, ce), ceel)
-    | Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None) ->
-        let mc =
-          let mib = Environ.lookup_mind sp env in
-          let inds =
-            List.init (Array.length mib.Declarations.mind_packets)
-              (fun x -> (sp, x))
-          in
-          let mip = mib.Declarations.mind_packets.(snd (List.hd inds)) in
-          mip.Declarations.mind_consnames
-        in
-        let qis =
-          if i >= 1 && i <= Array.length mc then mc.(i-1)
-          else failwith "qis not_found"
-        in
-        let qi = qualid_of_string (Id.to_string qis) in
-        CRef (Qualid (loc, qi), None)
-    | x ->
-       failwith (Printf.sprintf "glob_constr %s\n%!" (obj_string x))
-  in
-  let c = constr_expr_of_glob_constr c in
-  let t =
-    Constrextern.without_symbols vernac_get_eval
-      (CApp (loc, (None, g), [(c, None)]))
-  in
-  Some (bigint_of_z' t)
-in
           let path = Nametab.path_of_global ir in
           let dir = (path, []) in
           let patl =
@@ -2075,7 +2076,7 @@ in
                  mc)
           in
           Notation.declare_numeral_interpreter sc dir
-            (interp_big_int ty f mc sp spi) (patl, uninterp_big_int, true)
+            (interp_big_int ty f mc sp spi) (patl, uninterp_big_int g, true)
       | Some _ | None ->
           user_err_loc
             (loc, "_",
