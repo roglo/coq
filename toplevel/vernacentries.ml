@@ -2016,7 +2016,21 @@ let uninterp_big_int (c : Glob_term.glob_constr) : Bigint.bigint option =
         let ceel = List.map (fun c -> (constr_expr_of_glob_term c, None)) cl in
         CApp (loc, (None, ce), ceel)
     | Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None) ->
-        failwith "constr_expr_of_glob_term 2"
+        let mc =
+          let mib = Environ.lookup_mind sp env in
+          let inds =
+            List.init (Array.length mib.Declarations.mind_packets)
+              (fun x -> (sp, x))
+          in
+          let mip = mib.Declarations.mind_packets.(snd (List.hd inds)) in
+          mip.Declarations.mind_consnames
+        in
+        let qis =
+          if i >= 1 && i <= Array.length mc then mc.(i-1)
+          else failwith "qis not_found"
+        in
+        let qi = qualid_of_string (Id.to_string qis) in
+        CRef (Qualid (loc, qi), None)
     | x ->
        failwith (Printf.sprintf "glob_constr %s\n%!" (obj_string x))
 (*
