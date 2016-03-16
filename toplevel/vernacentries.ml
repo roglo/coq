@@ -1909,13 +1909,8 @@ let bigint_of_z' = function
 
 let interp_big_int ty f mc sp spi loc bi =
   let t =
-    let fl = !Constrextern.print_no_symbol in
-    Constrextern.print_no_symbol := true;
-    let r =
-      try vernac_get_eval (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)]))
-      with e -> Constrextern.print_no_symbol := fl; raise e
-    in
-    Constrextern.print_no_symbol := fl; r
+    Constrextern.without_symbols vernac_get_eval
+      (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)]))
   in
   match t with
   | CApp (_, _, [(ce, _)]) ->
@@ -2043,36 +2038,11 @@ let uninterp_big_int (c : Glob_term.glob_constr) : Bigint.bigint option =
         CRef (Qualid (loc, qi), None)
     | x ->
        failwith (Printf.sprintf "glob_constr %s\n%!" (obj_string x))
-(*
-    | CApp (loc, (pf, ce), ceel) ->
-        let c1 = constr_expr_of_glob_term ce in
-        Glob_term.GApp
-          (loc, c1,
-           List.map (fun (ce, _) -> constr_expr_of_glob_term ce) ceel)
-    | CRef (Qualid (loc, qi), None) ->
-        let qis = string_of_qualid qi in
-        let i =
-          let rec loop i =
-            if i = Array.length mc then assert false
-            else if Id.to_string mc.(i) = qis then i + 1
-          else loop (i + 1)
-          in
-          loop 0
-        in
-        Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None)
-    | x ->
-       failwith (Printf.sprintf "glob_constr %s\n%!" (obj_string x))
-*)
   in
   let c = constr_expr_of_glob_constr c in
   let t =
-    let fl = !Constrextern.print_no_symbol in
-    Constrextern.print_no_symbol := true;
-    let r =
-      try vernac_get_eval (CApp (loc, (None, g), [(c, None)]))
-      with e -> Constrextern.print_no_symbol := fl; raise e
-    in
-    Constrextern.print_no_symbol := fl; r
+    Constrextern.without_symbols vernac_get_eval
+      (CApp (loc, (None, g), [(c, None)]))
   in
   Some (bigint_of_z' t)
 in
