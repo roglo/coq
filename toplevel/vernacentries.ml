@@ -1903,26 +1903,20 @@ let z'_of_bigint dloc n =
 
 let bigint_of_z' = function
   | CRef (Qualid (loc, qi), None) ->
-      if string_of_qualid qi = "Z'0" then
-        let _ = Printf.eprintf "Bigint.zero\n%!" in
-        Bigint.zero
-      else assert false
+      if string_of_qualid qi = "Z'0" then Bigint.zero else assert false
   | x ->
       failwith (Printf.sprintf "bigint_of_z %s" (obj_string x))
 
 let interp_big_int ty f mc sp spi loc bi =
-let _ = Printf.eprintf "*** interp_big_int\n%!" in
   let t =
-let _ = Printf.eprintf "***** calling f\n%!" in
-    let fl = !Flags.raw_print in
-    Flags.raw_print := true;
+    let fl = !Constrextern.print_no_symbol in
+    Constrextern.print_no_symbol := true;
     let r =
       try vernac_get_eval (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)]))
-      with e -> Flags.raw_print := fl; raise e
+      with e -> Constrextern.print_no_symbol := fl; raise e
     in
-    Flags.raw_print := fl; r
+    Constrextern.print_no_symbol := fl; r
   in
-let _ = Printf.eprintf "***** f returned\n%!" in
   match t with
   | CApp (_, _, [(ce, _)]) ->
       let rec glob_constr_of_constr_expr = function
@@ -1942,8 +1936,6 @@ let _ = Printf.eprintf "***** f returned\n%!" in
               loop 0
             in
             Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None)
-        | CPrim (loc, Numeral n) ->
-            failwith "CPrim???"
         | x ->
             failwith (Printf.sprintf "constr_expr %s\n%!" (obj_string x))
       in
@@ -1953,8 +1945,6 @@ let _ = Printf.eprintf "***** f returned\n%!" in
         (loc, "_",
          str "Cannot interpret this number as a value of type " ++
          str (Id.to_string ty))
-  | CAppExpl (loc, pfri, cel) ->
-      failwith "CAppExpl?"
   | x ->
       failwith (Printf.sprintf "interp_big_int %s" (obj_string x))
 
@@ -2030,7 +2020,6 @@ let interp ?proof ~loc locality poly c =
             mip.Declarations.mind_consnames
           in
 let uninterp_big_int (c : Glob_term.glob_constr) : Bigint.bigint option =
-let _ = Printf.eprintf "*** uninterp_big_int\n%!" in
   let rec constr_expr_of_glob_constr = function
     | Glob_term.GApp (loc, c1, cl) ->
         let ce = constr_expr_of_glob_constr c1 in
@@ -2051,7 +2040,6 @@ let _ = Printf.eprintf "*** uninterp_big_int\n%!" in
           else failwith "qis not_found"
         in
         let qi = qualid_of_string (Id.to_string qis) in
-let _ = Printf.eprintf "--- %s\n%!" (Id.to_string qis) in
         CRef (Qualid (loc, qi), None)
     | x ->
        failwith (Printf.sprintf "glob_constr %s\n%!" (obj_string x))
@@ -2077,9 +2065,15 @@ let _ = Printf.eprintf "--- %s\n%!" (Id.to_string qis) in
 *)
   in
   let c = constr_expr_of_glob_constr c in
-let _ = Printf.eprintf "***** calling g\n%!" in
-  let t = vernac_get_eval (CApp (loc, (None, g), [(c, None)])) in
-let _ = Printf.eprintf "***** g returned\n%!" in
+  let t =
+    let fl = !Constrextern.print_no_symbol in
+    Constrextern.print_no_symbol := true;
+    let r =
+      try vernac_get_eval (CApp (loc, (None, g), [(c, None)]))
+      with e -> Constrextern.print_no_symbol := fl; raise e
+    in
+    Constrextern.print_no_symbol := fl; r
+  in
   Some (bigint_of_z' t)
 in
           let path = Nametab.path_of_global ir in
