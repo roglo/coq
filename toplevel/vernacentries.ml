@@ -1971,29 +1971,32 @@ let interp ?proof ~loc locality poly c =
       begin match try Some (Nametab.locate qid) with Not_found -> None with
       | Some (IndRef (sp, spi) as ir) ->
           let env = Global.env () in
+          let cref loc s = CRef (Ident (identref loc s), None) in
+          let arrow loc x y =
+            CProdN (loc, [([(loc, Anonymous)], Default Explicit, x)], y)
+          in
+          let crq = CRef (Qualid (loc, qid), None) in
           let _ =
             (* checking "f" is of type "Z' -> option ty" *)
-            let crb = CRef (Ident (identref loc "Z'"), None) in
-            let b_b = ([(loc, Anonymous)], Default Implicit, crb) in
-            let cro = CRef (Ident (identref loc "option"), None) in
-            let crq = CRef (Qualid (loc, qid), None) in
-            let caoq = CApp (loc, (None, cro), [(crq, None)]) in
-            let c = CCast (loc, f, CastConv (CProdN (loc, [b_b], caoq))) in
+            let app loc x y = CApp (loc, (None, x), [(y, None)]) in
+            let c =
+              CCast
+                (loc, f,
+                 CastConv
+                   (arrow loc (cref loc "Z'")
+                      (app loc (cref loc "option") crq)))
+            in
             let (sigma, env) = get_current_context () in
             interp_open_constr env sigma c
           in 
-(*
           let _ =
-            let crb = CRef (Ident (identref loc "Z'"), None) in
-            let b_b = ([(loc, Anonymous)], Default Implicit, crb) in
-            let cro = CRef (Ident (identref loc "option"), None) in
-            let crq = CRef (Qualid (loc, qid), None) in
-            let caoq = CApp (loc, (None, cro), [(crq, None)]) in
-            let c = CCast (loc, g, CastConv (CProdN (loc, [b_b], caoq))) in
+            (* checking "g" is of type "ty -> Z'" *)
+            let c =
+              CCast (loc, g, CastConv (arrow loc crq (cref loc "Z'")))
+            in
             let (sigma, env) = get_current_context () in
             interp_open_constr env sigma c
-          in
-*)
+          in 
           let mc =
             let mib = Environ.lookup_mind sp env in
             let inds =
