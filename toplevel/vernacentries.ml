@@ -1966,7 +1966,7 @@ let interp ?proof ~loc locality poly c =
       vernac_notation locality local c infpl sc
   | VernacNotationAddFormat(n,k,v) ->
       Metasyntax.add_notation_extra_printing_rule n k v
-  | VernacNumberNotation ((loc, ty),f,g,sc) ->
+  | VernacNumberNotation ((loc,ty),f,g,sc) ->
       let qid = qualid_of_ident ty in
       begin match try Some (Nametab.locate qid) with Not_found -> None with
       | Some (IndRef (sp, spi) as ir) ->
@@ -1982,6 +1982,18 @@ let interp ?proof ~loc locality poly c =
             let (sigma, env) = get_current_context () in
             interp_open_constr env sigma c
           in 
+(*
+          let _ =
+            let crb = CRef (Ident (identref loc "Z'"), None) in
+            let b_b = ([(loc, Anonymous)], Default Implicit, crb) in
+            let cro = CRef (Ident (identref loc "option"), None) in
+            let crq = CRef (Qualid (loc, qid), None) in
+            let caoq = CApp (loc, (None, cro), [(crq, None)]) in
+            let c = CCast (loc, g, CastConv (CProdN (loc, [b_b], caoq))) in
+            let (sigma, env) = get_current_context () in
+            interp_open_constr env sigma c
+          in
+*)
           let mc =
             let mib = Environ.lookup_mind sp env in
             let inds =
