@@ -72,9 +72,9 @@ let _ =
 *)
 
 (* Inductive positive' : Set :=
-     xI' : positive' -> positive' | xO' : positive' -> positive' | xH' : positive'
+     x'I : positive' -> positive' | x'O : positive' -> positive' | x'H : positive'
    Inductive Z' : Set :=
-     Z0' : Z' | Zpos' : positive' -> Z' | Zneg' : positive' -> Z' *)
+     Z'0 : Z' | Z'pos : positive' -> Z' | Z'neg : positive' -> Z' *)
 let _ =
   let identref s = (Loc.ghost, Names.Id.of_string s) in
   let cref s = Constrexpr.CRef (Libnames.Ident (identref s), None) in
@@ -94,11 +94,11 @@ let _ =
             Vernacexpr.Inductive_kw,
             Vernacexpr.Constructors
               [(false,
-                (identref "xI'", arrow (cref "positive'") (cref "positive'")));
+                (identref "x'I", arrow (cref "positive'") (cref "positive'")));
                (false,
-                (identref "xO'", arrow (cref "positive'") (cref "positive'")));
+                (identref "x'O", arrow (cref "positive'") (cref "positive'")));
                (false,
-                (identref "xH'", cref "positive'"))]),
+                (identref "x'H", cref "positive'"))]),
          [])]));
   Vernacentries.interp ~verbosely:false
     (Loc.ghost,
@@ -109,9 +109,9 @@ let _ =
             Vernacexpr.Inductive_kw,
             Vernacexpr.Constructors
               [(false,
-                (identref "Z0'", cref "Z'"));
+                (identref "Z'0", cref "Z'"));
                (false,
-                (identref "Zpos'", arrow (cref "positive'") (cref "Z'")));
+                (identref "Z'pos", arrow (cref "positive'") (cref "Z'")));
                (false,
-                (identref "Zneg'", arrow (cref "positive'") (cref "Z'")))]),
+                (identref "Z'neg", arrow (cref "positive'") (cref "Z'")))]),
          [])]))

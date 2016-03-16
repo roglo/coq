@@ -1882,24 +1882,24 @@ let identref loc s = (loc, Names.Id.of_string s)
 let rec pos'_of_bigint dloc n =
   match Bigint.div2_with_rest n with
   | (q, false) ->
-      let c = CRef (Ident (identref dloc "xO'"), None) in
+      let c = CRef (Ident (identref dloc "x'O"), None) in
       CApp (dloc, (None, c), [(pos'_of_bigint dloc q, None)])
   | (q, true) when not (Bigint.equal q Bigint.zero) ->
-      let c = CRef (Ident (identref dloc "xI'"), None) in
+      let c = CRef (Ident (identref dloc "x'I"), None) in
       CApp (dloc, (None, c), [(pos'_of_bigint dloc q, None)])
   | (q, true) ->
-      CRef (Ident (identref dloc "xH'"), None)
+      CRef (Ident (identref dloc "x'H"), None)
 
 let z'_of_bigint dloc n =
   if not (Bigint.equal n Bigint.zero) then
     let (s, n) =
-      if Bigint.is_pos_or_zero n then ("Zpos'", n)
-      else ("Zneg'", Bigint.neg n)
+      if Bigint.is_pos_or_zero n then ("Z'pos", n)
+      else ("Z'neg", Bigint.neg n)
     in
     let sgn = CRef (Ident (identref dloc s), None) in
     CApp (dloc, (None, sgn), [(pos'_of_bigint dloc n, None)])
   else
-    CRef (Ident (identref dloc "Z0'"), None)
+    CRef (Ident (identref dloc "Z'0"), None)
 
 let interp_big_int ty f mc sp spi loc bi =
   let t =
