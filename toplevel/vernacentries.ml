@@ -1911,9 +1911,12 @@ let bigint_of_z' = function
       failwith (Printf.sprintf "bigint_of_z %s" (obj_string x))
 
 let interp_big_int ty f mc sp spi loc bi =
+let _ = Printf.eprintf "*** interp_big_int\n%!" in
   let t =
+let _ = Printf.eprintf "***** calling f\n%!" in
     vernac_get_eval (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)]))
   in
+let _ = Printf.eprintf "***** f returned\n%!" in
   match t with
   | CApp (_, _, [(ce, _)]) ->
       let rec glob_constr_of_constr_expr = function
@@ -1934,9 +1937,9 @@ let interp_big_int ty f mc sp spi loc bi =
             in
             Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None)
         | CPrim (loc, Numeral n) ->
-            failwith "CPrim"
+            failwith "CPrim???"
         | x ->
-           failwith (Printf.sprintf "constr_expr %s\n%!" (obj_string x))
+            failwith (Printf.sprintf "constr_expr %s\n%!" (obj_string x))
       in
       glob_constr_of_constr_expr ce
   | CRef _ ->
@@ -2018,6 +2021,7 @@ let interp ?proof ~loc locality poly c =
             mip.Declarations.mind_consnames
           in
 let uninterp_big_int (c : Glob_term.glob_constr) : Bigint.bigint option =
+let _ = Printf.eprintf "*** uninterp_big_int\n%!" in
   let rec constr_expr_of_glob_constr = function
     | Glob_term.GApp (loc, c1, cl) ->
         let ce = constr_expr_of_glob_constr c1 in
@@ -2064,7 +2068,9 @@ let _ = Printf.eprintf "--- %s\n%!" (Id.to_string qis) in
 *)
   in
   let c = constr_expr_of_glob_constr c in
+let _ = Printf.eprintf "***** calling g\n%!" in
   let t = vernac_get_eval (CApp (loc, (None, g), [(c, None)])) in
+let _ = Printf.eprintf "***** g returned\n%!" in
   Some (bigint_of_z' t)
 in
           let path = Nametab.path_of_global ir in
