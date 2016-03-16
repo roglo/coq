@@ -1901,9 +1901,12 @@ let z'_of_bigint dloc n =
   else
     CRef (Ident (identref dloc "Z'0"), None)
 
-let bigint_of_z' dloc = function
+let bigint_of_z' = function
   | CRef (Qualid (loc, qi), None) ->
-      if string_of_qualid qi = "Z'0" then Bigint.zero else assert false
+      if string_of_qualid qi = "Z'0" then
+        let _ = Printf.eprintf "Bigint.zero\n%!" in
+        Bigint.zero
+      else assert false
   | x ->
       failwith (Printf.sprintf "bigint_of_z %s" (obj_string x))
 
@@ -2062,7 +2065,7 @@ let _ = Printf.eprintf "--- %s\n%!" (Id.to_string qis) in
   in
   let c = constr_expr_of_glob_constr c in
   let t = vernac_get_eval (CApp (loc, (None, g), [(c, None)])) in
-  Some (bigint_of_z' loc t)
+  Some (bigint_of_z' t)
 in
           let path = Nametab.path_of_global ir in
           let dir = (path, []) in
