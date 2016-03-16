@@ -1901,11 +1901,17 @@ let z'_of_bigint dloc n =
   else
     CRef (Ident (identref dloc "Z'0"), None)
 
-let bigint_of_pos' = function
+let rec bigint_of_pos' = function
   | CRef (Qualid (loc, qi), None) ->
       let qis = string_of_qualid qi in
       if qis = "x'H" then Bigint.one
       else failwith (Printf.sprintf "bigint_of_pos': CRef %s not yet impl" qis)
+  | CApp (loc, (pf, CRef (Qualid (loc', qi), None)), [(ce, _)]) ->
+      begin match string_of_qualid qi with
+      | "x'O" -> Bigint.mult_2 (bigint_of_pos' ce)
+      | "x'I" -> Bigint.add_1 (Bigint.mult_2 (bigint_of_pos' ce))
+      | qis -> failwith (Printf.sprintf "bigint_of_z': CApp %s" qis)
+      end
   | x ->
       failwith (Printf.sprintf "bigint_of_pos' %s" (obj_string x))
 
