@@ -1904,8 +1904,10 @@ let z'_of_bigint dloc n =
 let bigint_of_z' = function
   | CRef (Qualid (loc, qi), None) ->
       if string_of_qualid qi = "Z'0" then Bigint.zero else assert false
+  | CApp (loc, (pf, ce), ceel) ->
+      failwith "bigint_of_z': CApp not yet impl"
   | x ->
-      failwith (Printf.sprintf "bigint_of_z %s" (obj_string x))
+      failwith (Printf.sprintf "bigint_of_z' %s" (obj_string x))
 
 let interp_big_int ty f mc sp spi loc bi =
   let t =
