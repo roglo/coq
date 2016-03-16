@@ -1901,6 +1901,9 @@ let z'_of_bigint dloc n =
   else
     CRef (Ident (identref dloc "Z'0"), None)
 
+let bigint_of_z' dloc n =
+  failwith "bigint_of_z' not yet impl"
+
 let interp_big_int ty f mc sp spi loc bi =
   let t =
     vernac_get_eval (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)]))
@@ -2006,15 +2009,17 @@ let interp ?proof ~loc locality poly c =
             let mip = mib.Declarations.mind_packets.(snd (List.hd inds)) in
             mip.Declarations.mind_consnames
           in
-(*
 let uninterp_big_int (c : Glob_term.glob_constr) : Bigint.bigint option =
   let rec constr_expr_of_glob_term = function
-    | Glob_term.Gapp (loc, c1, cl) ->
+    | Glob_term.GApp (loc, c1, cl) ->
         let ce = constr_expr_of_glob_term c1 in
-        let ceel = List.map (fun c -> (constr_expr_of_glob_term c, x)) cl in
-        Capp (loc (pf, ce), ceel)
+        let ceel = List.map (fun c -> (constr_expr_of_glob_term c, None)) cl in
+        CApp (loc, (None, ce), ceel)
     | Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None) ->
-
+        failwith "constr_expr_of_glob_term 2"
+    | x ->
+       failwith (Printf.sprintf "glob_constr %s\n%!" (obj_string x))
+(*
     | CApp (loc, (pf, ce), ceel) ->
         let c1 = constr_expr_of_glob_term ce in
         Glob_term.GApp
@@ -2033,10 +2038,11 @@ let uninterp_big_int (c : Glob_term.glob_constr) : Bigint.bigint option =
         Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None)
     | x ->
        failwith (Printf.sprintf "glob_constr %s\n%!" (obj_string x))
-  in
-  constr_expr_of_glob_term ce
-in
 *)
+  in
+  Some (bigint_of_z' loc (constr_expr_of_glob_term c))
+in
+(*
           let uninterp (c : Glob_term.glob_constr) : Bigint.bigint option =
             let rec glop c =
               match c with
@@ -2051,9 +2057,9 @@ in
             in
             glop c
           in
+*)
           let path = Nametab.path_of_global ir in
           let dir = (path, []) in
-(**)
           let patl =
             Array.to_list
               (Array.mapi
@@ -2066,7 +2072,7 @@ in
           let patl = [] in
 *)
           Notation.declare_numeral_interpreter sc dir
-            (interp_big_int ty f mc sp spi) (patl, uninterp, false)
+            (interp_big_int ty f mc sp spi) (patl, uninterp_big_int, false)
       | Some _ | None ->
           user_err_loc
             (loc, "_",
