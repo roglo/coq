@@ -1930,7 +1930,7 @@ let interp_big_int ty f mc sp spi loc bi =
               loop 0
             in
             Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None)
-        | CPrim (loc, pt) ->
+        | CPrim (loc, Numeral n) ->
             failwith "CPrim"
         | x ->
            failwith (Printf.sprintf "constr_expr %s\n%!" (obj_string x))
@@ -2035,6 +2035,7 @@ let uninterp_big_int (c : Glob_term.glob_constr) : Bigint.bigint option =
           else failwith "qis not_found"
         in
         let qi = qualid_of_string (Id.to_string qis) in
+let _ = Printf.eprintf "--- %s\n%!" (Id.to_string qis) in
         CRef (Qualid (loc, qi), None)
     | x ->
        failwith (Printf.sprintf "glob_constr %s\n%!" (obj_string x))
@@ -2063,22 +2064,6 @@ let uninterp_big_int (c : Glob_term.glob_constr) : Bigint.bigint option =
   let t = vernac_get_eval (CApp (loc, (None, g), [(c, None)])) in
   Some (bigint_of_z' loc t)
 in
-(*
-          let uninterp (c : Glob_term.glob_constr) : Bigint.bigint option =
-            let rec glop c =
-              match c with
-              | Glob_term.GApp (loc, gc1, [gc2]) ->
-                  let _c1 = glop gc1 in
-                  let _ = Printf.eprintf "uninterp GApp\n%!" in
-                  None
-              | Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None) ->
-                  let _ = Printf.eprintf "uninterp GRef %s %d\n%!" (MutInd.to_string sp) i in
-                  None
-              | c -> failwith (Printf.sprintf "uninterp glob_constr %s" (obj_string c))
-            in
-            glop c
-          in
-*)
           let path = Nametab.path_of_global ir in
           let dir = (path, []) in
           let patl =
@@ -2089,9 +2074,6 @@ in
                       (loc, ConstructRef ((sp, spi), i + 1), None))
                  mc)
           in
-(*
-          let patl = [] in
-*)
           Notation.declare_numeral_interpreter sc dir
             (interp_big_int ty f mc sp spi) (patl, uninterp_big_int, true)
       | Some _ | None ->
