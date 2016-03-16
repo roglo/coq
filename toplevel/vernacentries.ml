@@ -1914,7 +1914,13 @@ let interp_big_int ty f mc sp spi loc bi =
 let _ = Printf.eprintf "*** interp_big_int\n%!" in
   let t =
 let _ = Printf.eprintf "***** calling f\n%!" in
-    vernac_get_eval (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)]))
+    let fl = !Flags.raw_print in
+    Flags.raw_print := true;
+    let r =
+      try vernac_get_eval (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)]))
+      with e -> Flags.raw_print := fl; raise e
+    in
+    Flags.raw_print := fl; r
   in
 let _ = Printf.eprintf "***** f returned\n%!" in
   match t with
@@ -1947,7 +1953,10 @@ let _ = Printf.eprintf "***** f returned\n%!" in
         (loc, "_",
          str "Cannot interpret this number as a value of type " ++
          str (Id.to_string ty))
-  | _ -> assert false
+  | CAppExpl (loc, pfri, cel) ->
+      failwith "CAppExpl?"
+  | x ->
+      failwith (Printf.sprintf "interp_big_int %s" (obj_string x))
 
 (* "locality" is the prefix "Local" attribute, while the "local" component
  * is the outdated/deprecated "Local" attribute of some vernacular commands
