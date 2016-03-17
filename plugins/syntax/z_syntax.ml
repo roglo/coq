@@ -80,6 +80,7 @@ let uninterp_positive p =
 (* Declaring interpreters and uninterpreters for positive *)
 (************************************************************************)
 
+(*
 let _ = Notation.declare_numeral_interpreter "positive_scope"
   (positive_path,binnums)
   interp_positive
@@ -88,6 +89,7 @@ let _ = Notation.declare_numeral_interpreter "positive_scope"
     GRef (Loc.ghost, glob_xH, None)],
    uninterp_positive,
    true)
+*)
 
 (**********************************************************************)
 (* Parsing N via scopes                                               *)
@@ -131,6 +133,7 @@ let uninterp_n p =
 (************************************************************************)
 (* Declaring interpreters and uninterpreters for N *)
 
+(*
 let _ = Notation.declare_numeral_interpreter "N_scope"
   (n_path,binnums)
   n_of_int
@@ -138,6 +141,7 @@ let _ = Notation.declare_numeral_interpreter "N_scope"
     GRef (Loc.ghost, glob_Npos, None)],
   uninterp_n,
   true)
+*)
 
 (**********************************************************************)
 (* Parsing Z via scopes                                               *)
@@ -179,6 +183,7 @@ let uninterp_z p =
 (************************************************************************)
 (* Declaring interpreters and uninterpreters for Z *)
 
+(*
 let _ = Notation.declare_numeral_interpreter "Z_scope"
   (z_path,binnums)
   z_of_int
@@ -187,3 +192,4 @@ let _ = Notation.declare_numeral_interpreter "Z_scope"
     GRef (Loc.ghost, glob_NEG, None)],
   uninterp_z,
   true)
+*)

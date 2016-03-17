@@ -1940,10 +1940,13 @@ let interp_big_int ty f mc sp spi loc bi =
                List.map (fun (ce, _) -> glob_constr_of_constr_expr ce) ceel)
         | CRef (Qualid (loc, qi), None) ->
             let qis = string_of_qualid qi in
+let _ = Printf.eprintf "qis %s\n%!" qis in
             let i =
               let rec loop i =
                 if i = Array.length mc then assert false
-                else if Id.to_string mc.(i) = qis then i + 1
+                else
+let _ = Printf.eprintf "= %s ?\n%!" (Id.to_string mc.(i)) in
+ if Id.to_string mc.(i) = qis then i + 1
               else loop (i + 1)
               in
               loop 0
