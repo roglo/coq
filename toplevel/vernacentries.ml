@@ -1980,14 +1980,17 @@ let uninterp_big_int g c =
         let qi = qualid_of_string (Id.to_string qis) in
         CRef (Qualid (loc, qi), None)
     | x ->
-        failwith (Printf.sprintf "glob_constr %s\n%!" (obj_string x))
+        raise Not_found
   in
-  let ce = constr_expr_of_glob_constr c in
-  let t =
-    Constrextern.without_symbols vernac_get_eval
-      (CApp (Glob_ops.loc_of_glob_constr c, (None, g), [(ce, None)]))
-  in
-  Some (bigint_of_z' t)
+  match try Some (constr_expr_of_glob_constr c) with Not_found -> None with
+  | Some ce ->
+      let t =
+        Constrextern.without_symbols vernac_get_eval
+         (CApp (Glob_ops.loc_of_glob_constr c, (None, g), [(ce, None)]))
+      in
+      Some (bigint_of_z' t)
+  | None ->
+      None
 
 (* "locality" is the prefix "Local" attribute, while the "local" component
  * is the outdated/deprecated "Local" attribute of some vernacular commands
