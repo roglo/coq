@@ -1921,7 +1921,8 @@ let bigint_of_z' = function
   | CApp (loc, (pf, CRef (Qualid (loc', qi), None)), [(ce, _)]) ->
       let qis = string_of_qualid qi in
       if qis = "Z'pos" then bigint_of_pos' ce
-      else failwith (Printf.sprintf "bigint_of_z': CApp %s not yet impl" qis)
+      else if qis = "Z'neg" then Bigint.neg (bigint_of_pos' ce)
+      else failwith (Printf.sprintf "bigint_of_z': CApp %s" qis)
   | x ->
       failwith (Printf.sprintf "bigint_of_z' %s" (obj_string x))
 
