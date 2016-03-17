@@ -1925,7 +1925,7 @@ let bigint_of_z' = function
   | x ->
       failwith (Printf.sprintf "bigint_of_z' %s" (obj_string x))
 
-let interp_big_int ty f mc sp spi loc bi =
+let interp_big_int ty f loc bi =
   let t =
     Constrextern.without_symbols vernac_get_eval
       (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)]))
@@ -1939,19 +1939,10 @@ let interp_big_int ty f mc sp spi loc bi =
               (loc, c1,
                List.map (fun (ce, _) -> glob_constr_of_constr_expr ce) ceel)
         | CRef (Qualid (loc, qi), None) ->
-            let qis = string_of_qualid qi in
-let _ = Printf.eprintf "qis %s\n%!" qis in
-            let i =
-              let rec loop i =
-                if i = Array.length mc then assert false
-                else
-let _ = Printf.eprintf "= %s ?\n%!" (Id.to_string mc.(i)) in
- if Id.to_string mc.(i) = qis then i + 1
-              else loop (i + 1)
-              in
-              loop 0
-            in
-            Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None)
+            begin match try Some (Nametab.locate qi) with Not_found -> None with
+            | Some c -> Glob_term.GRef (loc, c, None)
+	    | None -> assert false
+	    end
         | x ->
             failwith (Printf.sprintf "constr_expr %s\n%!" (obj_string x))
       in
@@ -2078,8 +2069,8 @@ let interp ?proof ~loc locality poly c =
                       (loc, ConstructRef ((sp, spi), i + 1), None))
                  mc)
           in
-          Notation.declare_numeral_interpreter sc dir
-            (interp_big_int ty f mc sp spi) (patl, uninterp_big_int g, true)
+          Notation.declare_numeral_interpreter sc dir (interp_big_int ty f)
+            (patl, uninterp_big_int g, true)
       | Some _ | None ->
           user_err_loc
             (loc, "_",
