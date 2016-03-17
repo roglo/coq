@@ -2029,63 +2029,68 @@ let interp ?proof ~loc locality poly c =
       Metasyntax.add_notation_extra_printing_rule n k v
   | VernacNumberNotation ((loc,ty),f,g,sc) ->
       let qid = qualid_of_ident ty in
+      let crq = CRef (Qualid (loc, qid), None) in
+      let arrow loc x y =
+        CProdN (loc, [([(loc, Anonymous)], Default Explicit, x)], y)
+      in
+      let cref loc s = CRef (Ident (identref loc s), None) in
+      let app loc x y = CApp (loc, (None, x), [(y, None)]) in
+      let _ =
+        (* checking "f" is of type "Z' -> option ty" *)
+        let c =
+          CCast
+            (loc, f,
+             CastConv
+               (arrow loc (cref loc "Z'")
+                  (app loc (cref loc "option") crq)))
+        in
+        let (sigma, env) = get_current_context () in
+        interp_open_constr env sigma c
+      in 
+      let _ =
+        (* checking "g" is of type "ty -> option Z'" *)
+        let c =
+          CCast
+            (loc, g,
+             CastConv
+               (arrow loc crq
+                  (app loc (cref loc "option") (cref loc "Z'"))))
+        in
+        let (sigma, env) = get_current_context () in
+        interp_open_constr env sigma c
+      in 
       begin match try Some (Nametab.locate qid) with Not_found -> None with
-      | Some (IndRef (sp, spi) as ir) ->
-          let env = Global.env () in
-          let cref loc s = CRef (Ident (identref loc s), None) in
-          let arrow loc x y =
-            CProdN (loc, [([(loc, Anonymous)], Default Explicit, x)], y)
-          in
-          let crq = CRef (Qualid (loc, qid), None) in
-          let app loc x y = CApp (loc, (None, x), [(y, None)]) in
-          let _ =
-            (* checking "f" is of type "Z' -> option ty" *)
-            let c =
-              CCast
-                (loc, f,
-                 CastConv
-                   (arrow loc (cref loc "Z'")
-                      (app loc (cref loc "option") crq)))
-            in
-            let (sigma, env) = get_current_context () in
-            interp_open_constr env sigma c
-          in 
-          let _ =
-            (* checking "g" is of type "ty -> option Z'" *)
-            let c =
-              CCast
-                (loc, g,
-                 CastConv
-                   (arrow loc crq
-                      (app loc (cref loc "option") (cref loc "Z'"))))
-            in
-            let (sigma, env) = get_current_context () in
-            interp_open_constr env sigma c
-          in 
-          let path = Nametab.path_of_global ir in
-          let dir = (path, []) in
-          let patl =
-            let mc =
-              let mib = Environ.lookup_mind sp env in
-              let inds =
-                List.init (Array.length mib.Declarations.mind_packets)
-                  (fun x -> (sp, x))
+      | Some gr ->
+          let path = Nametab.path_of_global gr in
+          begin match gr with
+          | IndRef (sp, spi) ->
+              let env = Global.env () in
+              let patl =
+                let mc =
+                  let mib = Environ.lookup_mind sp env in
+                  let inds =
+                    List.init (Array.length mib.Declarations.mind_packets)
+                      (fun x -> (sp, x))
+                  in
+                  let ind = List.hd inds in
+                  let mip = mib.Declarations.mind_packets.(snd ind) in
+                  mip.Declarations.mind_consnames
+                in
+                Array.to_list
+                  (Array.mapi
+                     (fun i c ->
+                        Glob_term.GRef
+                          (loc, ConstructRef ((sp, spi), i + 1), None))
+                     mc)
               in
-              let mip = mib.Declarations.mind_packets.(snd (List.hd inds)) in
-              mip.Declarations.mind_consnames
-            in
-            Array.to_list
-              (Array.mapi
-                 (fun i c ->
-                    Glob_term.GRef
-                      (loc, ConstructRef ((sp, spi), i + 1), None))
-                 mc)
-          in
-          Notation.declare_numeral_interpreter sc dir (interp_big_int ty f)
-            (patl, uninterp_big_int g, true)
-      | Some (ConstRef cst) ->
-          failwith (Printf.sprintf "constant %s" (Constant.to_string cst))
-      | Some _ | None ->
+              Notation.declare_numeral_interpreter sc (path, [])
+                (interp_big_int ty f) (patl, uninterp_big_int g, true)
+          | ConstRef cst ->
+              failwith (Printf.sprintf "constant %s" (string_of_path path))
+          | VarRef _ | ConstructRef _ ->
+              user_err_loc (loc, "_", str (Id.to_string ty) ++ str " is not a type")
+          end
+      | None ->
           user_err_loc
             (loc, "_",
              str "type " ++ str (Id.to_string ty) ++ str " not found")
