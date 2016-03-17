@@ -1986,9 +1986,13 @@ let uninterp_big_int g c =
   | Some ce ->
       let t =
         Constrextern.without_symbols vernac_get_eval
-         (CApp (Glob_ops.loc_of_glob_constr c, (None, g), [(ce, None)]))
+          (CApp (Glob_ops.loc_of_glob_constr c, (None, g), [(ce, None)]))
       in
-      Some (bigint_of_z' t)
+      begin match t with
+      | CApp (_, _, [(ce, _)]) -> Some (bigint_of_z' ce)
+      | CRef _ -> None
+      | _ -> assert false
+      end
   | None ->
       None
 
@@ -2033,9 +2037,9 @@ let interp ?proof ~loc locality poly c =
             CProdN (loc, [([(loc, Anonymous)], Default Explicit, x)], y)
           in
           let crq = CRef (Qualid (loc, qid), None) in
+          let app loc x y = CApp (loc, (None, x), [(y, None)]) in
           let _ =
             (* checking "f" is of type "Z' -> option ty" *)
-            let app loc x y = CApp (loc, (None, x), [(y, None)]) in
             let c =
               CCast
                 (loc, f,
@@ -2047,9 +2051,13 @@ let interp ?proof ~loc locality poly c =
             interp_open_constr env sigma c
           in 
           let _ =
-            (* checking "g" is of type "ty -> Z'" *)
+            (* checking "g" is of type "ty -> option Z'" *)
             let c =
-              CCast (loc, g, CastConv (arrow loc crq (cref loc "Z'")))
+              CCast
+                (loc, g,
+                 CastConv
+                   (arrow loc crq
+                      (app loc (cref loc "option") (cref loc "Z'"))))
             in
             let (sigma, env) = get_current_context () in
             interp_open_constr env sigma c
