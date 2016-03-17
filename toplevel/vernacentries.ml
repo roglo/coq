@@ -2062,18 +2062,18 @@ let interp ?proof ~loc locality poly c =
             let (sigma, env) = get_current_context () in
             interp_open_constr env sigma c
           in 
-          let mc =
-            let mib = Environ.lookup_mind sp env in
-            let inds =
-              List.init (Array.length mib.Declarations.mind_packets)
-                (fun x -> (sp, x))
-            in
-            let mip = mib.Declarations.mind_packets.(snd (List.hd inds)) in
-            mip.Declarations.mind_consnames
-          in
           let path = Nametab.path_of_global ir in
           let dir = (path, []) in
           let patl =
+            let mc =
+              let mib = Environ.lookup_mind sp env in
+              let inds =
+                List.init (Array.length mib.Declarations.mind_packets)
+                  (fun x -> (sp, x))
+              in
+              let mip = mib.Declarations.mind_packets.(snd (List.hd inds)) in
+              mip.Declarations.mind_consnames
+            in
             Array.to_list
               (Array.mapi
                  (fun i c ->
@@ -2083,10 +2083,9 @@ let interp ?proof ~loc locality poly c =
           in
           Notation.declare_numeral_interpreter sc dir (interp_big_int ty f)
             (patl, uninterp_big_int g, true)
-      | Some _ ->
-          user_err_loc
-            (loc, "_", str (Id.to_string ty) ++ str " is not an inductive type")
-      | None ->
+      | Some (ConstRef cst) ->
+          failwith (Printf.sprintf "constant %s" (Constant.to_string cst))
+      | Some _ | None ->
           user_err_loc
             (loc, "_",
              str "type " ++ str (Id.to_string ty) ++ str " not found")
