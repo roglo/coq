@@ -2083,7 +2083,10 @@ let interp ?proof ~loc locality poly c =
           in
           Notation.declare_numeral_interpreter sc dir (interp_big_int ty f)
             (patl, uninterp_big_int g, true)
-      | Some _ | None ->
+      | Some _ ->
+          user_err_loc
+            (loc, "_", str (Id.to_string ty) ++ str " is not an inductive type")
+      | None ->
           user_err_loc
             (loc, "_",
              str "type " ++ str (Id.to_string ty) ++ str " not found")
