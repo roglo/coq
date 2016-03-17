@@ -125,13 +125,14 @@ let uninterp_int31 i =
     None
 
 (* Actually declares the interpreter for int31 *)
+(*
 let _ = Notation.declare_numeral_interpreter int31_scope
   (int31_path, int31_module)
   interp_int31
   ([GRef (Loc.ghost, int31_construct, None)],
    uninterp_int31,
    true)
-
+*)
 
 (*** Parsing for bigN in digital notation ***)
 (* the base for bigN (in Coq) that is 2^31 in our case *)
