@@ -1999,6 +1999,7 @@ let uninterp_big_int g c =
 let uninterp_big_int2 g c =
   let env = Global.env () in
   let rec constr_expr_of_glob_constr = function
+(*
     | Glob_term.GApp (loc, c1, cl) ->
         let ce = constr_expr_of_glob_constr c1 in
         let ceel = List.map (fun c -> (constr_expr_of_glob_constr c, None)) cl in
@@ -2018,10 +2019,12 @@ let uninterp_big_int2 g c =
           else failwith "qis not_found"
         in
         let qi = qualid_of_string (Id.to_string qis) in
-let _ = Printf.eprintf "*** ah ouais CRef\n%!" in
         CRef (Qualid (loc, qi), None)
+*)
+    | Glob_term.GRef (loc, ConstRef cst, None) ->
+        failwith "ConstRef"
     | x ->
-        failwith "1"
+        failwith (Printf.sprintf "1 glob_constr %s" (obj_string x))
   in
   match try Some (constr_expr_of_glob_constr c) with Not_found -> None with
   | Some ce ->
@@ -2129,7 +2132,12 @@ let vernac_number_notation loc ty f g sc patl =
           in
           let patl =
             match patl with
-            | Some patl -> failwith "patl not impl 2"
+            | Some patl ->
+                List.map
+                  (fun (loc, id) ->
+                     Glob_term.GRef
+                       (loc, intern_reference (Ident (loc, id)), None))
+                  patl
             | None -> []
           in
           Notation.declare_numeral_interpreter sc (path, [])
