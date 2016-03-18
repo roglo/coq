@@ -2060,29 +2060,29 @@ let vernac_number_notation loc ty f g sc =
           Notation.declare_numeral_interpreter sc (path, [])
             (interp_big_int ty f) (patl, uninterp_big_int g, true)
       | ConstRef cst ->
+          let _ =
+            match g with
+            | CRef (r, _) ->
+                begin match
+                  try
+                    Some (Nametab.locate_tactic (snd (qualid_of_reference r)))
+                  with Not_found -> None
+                with
+                | Some t -> ()
+                | None ->
+                    user_err_loc
+                      (loc_of_reference r, "_",
+                       str "tactic " ++ str (string_of_reference r) ++
+                       str " not found")
+                end
+            | _ ->
+                user_err_loc
+                  (loc, "_", str (Id.to_string ty) ++ str " is not a type")
 (*
-tactics/tacintern.mli
-  let kn = Nametab.locate_tactic id in
- *)
-let _ =
-  let ist = default_ist () in
-let _ = Printf.eprintf "*** 1\n%!" in
-  match g with
-  | CRef (r, _) ->
-let _ = Printf.eprintf "*** 2\n%!" in
-      begin match
-         try Some (Nametab.locate_tactic (snd (qualid_of_reference r)))
-         with Not_found -> None
-      with
-      | Some t ->
-let _ = Printf.eprintf "*** 3\n%!" in
-      ()
-      | None ->
-          failwith (Printf.sprintf "tactic %s not found" (string_of_reference r))
-      end
-  | _ -> ()
-in
-          failwith (Printf.sprintf "constant %s" (string_of_path path))
+            let ist = default_ist () in
+*)
+          in
+          failwith "not yet impl"
       | VarRef _ | ConstructRef _ ->
           user_err_loc (loc, "_", str (Id.to_string ty) ++ str " is not a type")
       end
