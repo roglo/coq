@@ -2022,38 +2022,19 @@ let vernac_number_notation loc ty f g sc =
     let (sigma, env) = get_current_context () in
     interp_open_constr env sigma c
   in
-(*
-tactics/tacintern.mli
-  let kn = Nametab.locate_tactic id in
- *)
-let _ =
-  let ist = default_ist () in
-let _ = Printf.eprintf "*** 1\n%!" in
-  match g with
-  | CRef (r, _) ->
-let _ = Printf.eprintf "*** 2\n%!" in
-(* rather see tacintern.ml : locate_ltac *)
-(*
-      let _t = val_interp ist (Tacexpr.TacArg (loc, Tacexpr.Reference (ArgVar id))) in
-*)
-      let t = Nametab.locate_tactic (snd (qualid_of_reference r)) in
-let _ = Printf.eprintf "*** 3\n%!" in
-      ()
-  | _ -> ()
-in
-  let _ =
-    (* checking "g" is of type "ty -> option Z'" *)
-    let c =
-      CCast
-        (loc, g,
-         CastConv
-           (arrow loc crq (app loc (cref loc "option") (cref loc "Z'"))))
-    in
-    let (sigma, env) = get_current_context () in
-    interp_open_constr env sigma c
-  in
   match try Some (Nametab.locate qid) with Not_found -> None with
   | Some gr ->
+      let _ =
+        (* checking "g" is of type "ty -> option Z'" *)
+        let c =
+          CCast
+            (loc, g,
+             CastConv
+               (arrow loc crq (app loc (cref loc "option") (cref loc "Z'"))))
+        in
+        let (sigma, env) = get_current_context () in
+        interp_open_constr env sigma c
+      in
       let path = Nametab.path_of_global gr in
       begin match gr with
       | IndRef (sp, spi) ->
@@ -2079,6 +2060,28 @@ in
           Notation.declare_numeral_interpreter sc (path, [])
             (interp_big_int ty f) (patl, uninterp_big_int g, true)
       | ConstRef cst ->
+(*
+tactics/tacintern.mli
+  let kn = Nametab.locate_tactic id in
+ *)
+let _ =
+  let ist = default_ist () in
+let _ = Printf.eprintf "*** 1\n%!" in
+  match g with
+  | CRef (r, _) ->
+let _ = Printf.eprintf "*** 2\n%!" in
+      begin match
+         try Some (Nametab.locate_tactic (snd (qualid_of_reference r)))
+         with Not_found -> None
+      with
+      | Some t ->
+let _ = Printf.eprintf "*** 3\n%!" in
+      ()
+      | None ->
+          failwith (Printf.sprintf "tactic %s not found" (string_of_reference r))
+      end
+  | _ -> ()
+in
           failwith (Printf.sprintf "constant %s" (string_of_path path))
       | VarRef _ | ConstructRef _ ->
           user_err_loc (loc, "_", str (Id.to_string ty) ++ str " is not a type")
