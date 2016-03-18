@@ -1115,12 +1115,15 @@ GEXTEND Gram
 	 -> VernacSyntaxExtension (local,(s,l))
 
      | IDENT "Number"; IDENT "Notation"; ty = identref; f = constr;
-       g = constr; ":"; sc = IDENT ->
-	 VernacNumberNotation (ty,f,g,sc)
+       g = constr; ":"; sc = IDENT; patl = OPT num_pat_list ->
+	 VernacNumberNotation (ty,f,g,sc,patl)
 
      (* "Print" "Grammar" should be here but is in "command" entry in order
         to factorize with other "Print"-based vernac entries *)
   ] ]
+  ;
+  num_pat_list:
+    [ [ "("; IDENT "glop"; patl = LIST1 identref; ")" -> patl ] ]
   ;
   only_parsing:
     [ [ "("; IDENT "only"; IDENT "parsing"; ")" ->

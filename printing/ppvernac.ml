@@ -711,6 +711,10 @@ module Make
           return (
             keyword "Format Notation " ++ qs s ++ spc () ++ qs k ++ spc() ++ qs v
           )
+        | VernacNumberNotation(id,f,g,sc,pl) ->
+          return (
+            keyword "Number Notation..."
+          )
 
         (* Gallina *)
         | VernacDefinition (d,id,b) -> (* A verifier... *)

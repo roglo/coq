@@ -306,7 +306,7 @@ type vernac_expr =
       obsolete_locality * constr_expr * (lstring * syntax_modifier list) *
       scope_name option
   | VernacNotationAddFormat of string * string * string
-  | VernacNumberNotation of lident * constr_expr * constr_expr * string
+  | VernacNumberNotation of lident * constr_expr * constr_expr * string * lident list option
 
   (* Gallina *)
   | VernacDefinition of

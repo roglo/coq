@@ -1996,13 +1996,55 @@ let uninterp_big_int g c =
   | None ->
       None
 
+let uninterp_big_int2 g c =
+  let env = Global.env () in
+  let rec constr_expr_of_glob_constr = function
+    | Glob_term.GApp (loc, c1, cl) ->
+        let ce = constr_expr_of_glob_constr c1 in
+        let ceel = List.map (fun c -> (constr_expr_of_glob_constr c, None)) cl in
+        CApp (loc, (None, ce), ceel)
+    | Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None) ->
+        let mc =
+          let mib = Environ.lookup_mind sp env in
+          let inds =
+            List.init (Array.length mib.Declarations.mind_packets)
+              (fun x -> (sp, x))
+          in
+          let mip = mib.Declarations.mind_packets.(snd (List.hd inds)) in
+          mip.Declarations.mind_consnames
+        in
+        let qis =
+          if i >= 1 && i <= Array.length mc then mc.(i-1)
+          else failwith "qis not_found"
+        in
+        let qi = qualid_of_string (Id.to_string qis) in
+let _ = Printf.eprintf "*** ah ouais CRef\n%!" in
+        CRef (Qualid (loc, qi), None)
+    | x ->
+        failwith "1"
+  in
+  match try Some (constr_expr_of_glob_constr c) with Not_found -> None with
+  | Some ce ->
+let _ = Printf.eprintf "*** mmm...\n%!" in
+      let t =
+        Constrextern.without_symbols vernac_get_eval
+          (CApp (Glob_ops.loc_of_glob_constr c, (None, g), [(ce, None)]))
+      in
+      begin match t with
+      | CApp (_, _, [(ce, _)]) -> Some (bigint_of_z' ce)
+      | CRef _ -> failwith "2"
+      | _ -> assert false
+      end
+  | None ->
+      failwith "3"
+
 let apply_tactic (tac : 'a Proofview.tactic) :
     'a * Proofview.proofview * (bool * Goal.goal list * Goal.goal list) *
     Proofview_monad.Info.tree =
   let (_, pf) = Proofview.init Evd.empty [] in
   Proofview.apply (Global.env ()) tac pf
 
-let vernac_number_notation loc ty f g sc =
+let vernac_number_notation loc ty f g sc patl =
   let qid = qualid_of_ident ty in
   let crq = CRef (Qualid (loc, qid), None) in
   let arrow loc x y =
@@ -2040,22 +2082,25 @@ let vernac_number_notation loc ty f g sc =
       | IndRef (sp, spi) ->
           let env = Global.env () in
           let patl =
-            let mc =
-              let mib = Environ.lookup_mind sp env in
-              let inds =
-                List.init (Array.length mib.Declarations.mind_packets)
-                  (fun x -> (sp, x))
-              in
-              let ind = List.hd inds in
-              let mip = mib.Declarations.mind_packets.(snd ind) in
-              mip.Declarations.mind_consnames
-            in
-            Array.to_list
-              (Array.mapi
-                 (fun i c ->
-                    Glob_term.GRef
-                      (loc, ConstructRef ((sp, spi), i + 1), None))
-                 mc)
+            match patl with
+            | Some patl -> failwith "patl not impl"
+            | None ->
+                let mc =
+                  let mib = Environ.lookup_mind sp env in
+                  let inds =
+                    List.init (Array.length mib.Declarations.mind_packets)
+                      (fun x -> (sp, x))
+                  in
+                  let ind = List.hd inds in
+                  let mip = mib.Declarations.mind_packets.(snd ind) in
+                  mip.Declarations.mind_consnames
+                in
+                Array.to_list
+                  (Array.mapi
+                     (fun i c ->
+                        Glob_term.GRef
+                          (loc, ConstructRef ((sp, spi), i + 1), None))
+                     mc)
           in
           Notation.declare_numeral_interpreter sc (path, [])
             (interp_big_int ty f) (patl, uninterp_big_int g, true)
@@ -2082,9 +2127,13 @@ let vernac_number_notation loc ty f g sc =
             let ist = default_ist () in
 *)
           in
-          let patl = [] in
+          let patl =
+            match patl with
+            | Some patl -> failwith "patl not impl 2"
+            | None -> []
+          in
           Notation.declare_numeral_interpreter sc (path, [])
-            (interp_big_int ty f) (patl, uninterp_big_int g, false)
+            (interp_big_int ty f) (patl, uninterp_big_int2 g, false)
       | VarRef _ | ConstructRef _ ->
           user_err_loc (loc, "_", str (Id.to_string ty) ++ str " is not a type")
       end
@@ -2124,8 +2173,8 @@ let interp ?proof ~loc locality poly c =
       vernac_notation locality local c infpl sc
   | VernacNotationAddFormat(n,k,v) ->
       Metasyntax.add_notation_extra_printing_rule n k v
-  | VernacNumberNotation ((loc,ty),f,g,sc) ->
-      vernac_number_notation loc ty f g sc
+  | VernacNumberNotation ((loc,ty),f,g,sc,patl) ->
+      vernac_number_notation loc ty f g sc patl
 
   (* Gallina *)
   | VernacDefinition (k,lid,d) -> vernac_definition locality poly k lid d

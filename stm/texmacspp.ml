@@ -533,6 +533,7 @@ let rec tmpp v loc =
         | None -> [] in
       xmlNotation (sc_attr @ attrs) name loc [pp_expr ce]
   | VernacNotationAddFormat _ as x -> xmlTODO loc x
+  | VernacNumberNotation _ -> assert false
   | VernacUniverse _
   | VernacConstraint _
   | VernacPolymorphic (_, _) as x -> xmlTODO loc x
