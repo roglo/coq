@@ -2082,7 +2082,9 @@ let vernac_number_notation loc ty f g sc =
             let ist = default_ist () in
 *)
           in
-          failwith "not yet impl"
+          let patl = [] in
+          Notation.declare_numeral_interpreter sc (path, [])
+            (interp_big_int ty f) (patl, uninterp_big_int g, false)
       | VarRef _ | ConstructRef _ ->
           user_err_loc (loc, "_", str (Id.to_string ty) ++ str " is not a type")
       end
