@@ -2023,18 +2023,8 @@ let vernac_number_notation loc ty f g sc =
     interp_open_constr env sigma c
   in
 (*
-      | a = tactic_atom -> TacArg (!@loc,a) ] ]
-      | r = reference -> TacCall (!@loc,r,[])
-a = TacArg (loc, TacCall (loc, r, []))
-val val_interp : interp_sign -> glob_tactic_expr -> (value -> unit Proofview.tactic) -> unit Proofview.tactic
-let rec val_interp ist ?(appl=UnnamedAppl) (tac:glob_tactic_expr) : Val.t Ftactic.t =
-  | TacArg (loc,a) -> interp_tacarg ist a
-and interp_tacarg ist arg : Val.t Ftactic.t =
-  | Reference r -> interp_ltac_reference dloc false ist r
-and interp_ltac_reference loc' mustbetac ist r : Val.t Ftactic.t =
-  | ArgVar (loc,id) ->
-        try Id.Map.find id ist.lfun
-val default_ist : unit -> Geninterp.interp_sign
+tactics/tacintern.mli
+  let kn = Nametab.locate_tactic id in
  *)
 let _ =
   let ist = default_ist () in
@@ -2043,7 +2033,10 @@ let _ = Printf.eprintf "*** 1\n%!" in
   | CRef (Ident id, _) ->
 let _ = Printf.eprintf "*** 2\n%!" in
 (* rather see tacintern.ml : locate_ltac *)
+(*
       let _t = val_interp ist (Tacexpr.TacArg (loc, Tacexpr.Reference (ArgVar id))) in
+*)
+      let t = Nametab.locate_tactic qid in
 let _ = Printf.eprintf "*** 3\n%!" in
       ()
   | _ -> ()
