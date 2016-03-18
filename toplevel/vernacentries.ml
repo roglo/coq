@@ -2030,13 +2030,13 @@ let _ =
   let ist = default_ist () in
 let _ = Printf.eprintf "*** 1\n%!" in
   match g with
-  | CRef (Ident id, _) ->
+  | CRef (r, _) ->
 let _ = Printf.eprintf "*** 2\n%!" in
 (* rather see tacintern.ml : locate_ltac *)
 (*
       let _t = val_interp ist (Tacexpr.TacArg (loc, Tacexpr.Reference (ArgVar id))) in
 *)
-      let t = Nametab.locate_tactic qid in
+      let t = Nametab.locate_tactic (snd (qualid_of_reference r)) in
 let _ = Printf.eprintf "*** 3\n%!" in
       ()
   | _ -> ()
