@@ -2021,7 +2021,7 @@ let vernac_number_notation loc ty f g sc =
     in
     let (sigma, env) = get_current_context () in
     interp_open_constr env sigma c
-  in 
+  in
   let _ =
     (* checking "g" is of type "ty -> option Z'" *)
     let c =
@@ -2032,7 +2032,7 @@ let vernac_number_notation loc ty f g sc =
     in
     let (sigma, env) = get_current_context () in
     interp_open_constr env sigma c
-  in 
+  in
   match try Some (Nametab.locate qid) with Not_found -> None with
   | Some gr ->
       let path = Nametab.path_of_global gr in
