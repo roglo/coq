@@ -1996,8 +1996,10 @@ let uninterp_big_int g c =
   | None ->
       None
 
-let uninterp_big_int2 g patl c =
+let uninterp_big_int2 g c =
+(*
   let env = Global.env () in
+*)
   let rec constr_expr_of_glob_constr = function
 (*
     | Glob_term.GApp (loc, c1, cl) ->
@@ -2022,13 +2024,8 @@ let uninterp_big_int2 g patl c =
         CRef (Qualid (loc, qi), None)
 *)
     | Glob_term.GRef (loc, ConstRef cst, None) ->
-        let rec loop = function
-          | Glob_term.GRef (_, ConstRef cst1, _) :: patl ->
-               if Constant.equal cst cst1 then failwith "equal"
-               else loop patl
-          | _ :: _ | _ -> failwith "glop"
-        in
-        loop patl
+        let qi = qualid_of_string (Constant.to_string cst) in
+        CRef (Qualid (loc, qi), None)
     | x ->
         failwith (Printf.sprintf "1 glob_constr %s" (obj_string x))
   in
@@ -2041,7 +2038,7 @@ let _ = Printf.eprintf "*** mmm...\n%!" in
       in
       begin match t with
       | CApp (_, _, [(ce, _)]) -> Some (bigint_of_z' ce)
-      | CRef _ -> failwith "2"
+      | CRef (qid, _) -> failwith (Printf.sprintf "mmm CRef %s" (string_of_reference qid))
       | _ -> assert false
       end
   | None ->
@@ -2147,7 +2144,7 @@ let vernac_number_notation loc ty f g sc patl =
             | None -> []
           in
           Notation.declare_numeral_interpreter sc (path, [])
-            (interp_big_int ty f) (patl, uninterp_big_int2 g patl, false)
+            (interp_big_int ty f) (patl, uninterp_big_int2 g, false)
       | VarRef _ | ConstructRef _ ->
           user_err_loc (loc, "_", str (Id.to_string ty) ++ str " is not a type")
       end
