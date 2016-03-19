@@ -2001,28 +2001,10 @@ let uninterp_big_int2 g c =
   let env = Global.env () in
 *)
   let rec constr_expr_of_glob_constr = function
-(*
     | Glob_term.GApp (loc, c1, cl) ->
         let ce = constr_expr_of_glob_constr c1 in
         let ceel = List.map (fun c -> (constr_expr_of_glob_constr c, None)) cl in
         CApp (loc, (None, ce), ceel)
-    | Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None) ->
-        let mc =
-          let mib = Environ.lookup_mind sp env in
-          let inds =
-            List.init (Array.length mib.Declarations.mind_packets)
-              (fun x -> (sp, x))
-          in
-          let mip = mib.Declarations.mind_packets.(snd (List.hd inds)) in
-          mip.Declarations.mind_consnames
-        in
-        let qis =
-          if i >= 1 && i <= Array.length mc then mc.(i-1)
-          else failwith "qis not_found"
-        in
-        let qi = qualid_of_string (Id.to_string qis) in
-        CRef (Qualid (loc, qi), None)
-*)
     | Glob_term.GRef (loc, ConstRef cst, None) ->
         let qi = qualid_of_string (Constant.to_string cst) in
         CRef (Qualid (loc, qi), None)
