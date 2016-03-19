@@ -1996,7 +1996,13 @@ let uninterp_big_int g c =
   | None ->
       None
 
-let uninterp_big_int2 g c =
+let apply_tactic (tac : 'a Proofview.tactic) :
+    'a * Proofview.proofview * (bool * Goal.goal list * Goal.goal list) *
+    Proofview_monad.Info.tree =
+  let (_, pf) = Proofview.init Evd.empty [] in
+  Proofview.apply (Global.env ()) tac pf
+
+let uninterp_big_int2 g tac c =
 (*
   let env = Global.env () in
 *)
@@ -2014,10 +2020,14 @@ let uninterp_big_int2 g c =
   match try Some (constr_expr_of_glob_constr c) with Not_found -> None with
   | Some ce ->
 let _ = Printf.eprintf "*** mmm...\n%!" in
+(**)
+      let (t, _, _, _) = apply_tactic tac in
+(*
       let t =
         Constrextern.without_symbols vernac_get_eval
           (CApp (Glob_ops.loc_of_glob_constr c, (None, g), [(ce, None)]))
       in
+*)
       begin match t with
       | CApp (_, _, [(ce, _)]) -> Some (bigint_of_z' ce)
       | CRef (qid, _) -> failwith (Printf.sprintf "mmm CRef %s" (string_of_reference qid))
@@ -2025,12 +2035,6 @@ let _ = Printf.eprintf "*** mmm...\n%!" in
       end
   | None ->
       failwith "3"
-
-let apply_tactic (tac : 'a Proofview.tactic) :
-    'a * Proofview.proofview * (bool * Goal.goal list * Goal.goal list) *
-    Proofview_monad.Info.tree =
-  let (_, pf) = Proofview.init Evd.empty [] in
-  Proofview.apply (Global.env ()) tac pf
 
 let vernac_number_notation loc ty f g sc patl =
   let qid = qualid_of_ident ty in
@@ -2093,7 +2097,7 @@ let vernac_number_notation loc ty f g sc patl =
           Notation.declare_numeral_interpreter sc (path, [])
             (interp_big_int ty f) (patl, uninterp_big_int g, true)
       | ConstRef cst ->
-          let _ =
+          let tac =
             match g with
             | CRef (r, _) ->
                 begin match
@@ -2101,7 +2105,7 @@ let vernac_number_notation loc ty f g sc patl =
                     Some (Nametab.locate_tactic (snd (qualid_of_reference r)))
                   with Not_found -> None
                 with
-                | Some t -> ()
+                | Some t -> t
                 | None ->
                     user_err_loc
                       (loc_of_reference r, "_",
@@ -2126,7 +2130,7 @@ let vernac_number_notation loc ty f g sc patl =
             | None -> []
           in
           Notation.declare_numeral_interpreter sc (path, [])
-            (interp_big_int ty f) (patl, uninterp_big_int2 g, false)
+            (interp_big_int ty f) (patl, uninterp_big_int2 g tac, false)
       | VarRef _ | ConstructRef _ ->
           user_err_loc (loc, "_", str (Id.to_string ty) ++ str " is not a type")
       end
