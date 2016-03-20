@@ -2028,6 +2028,16 @@ let _ = Printf.eprintf "*** mmm...\n%!" in
           (CApp (Glob_ops.loc_of_glob_constr c, (None, g), [(ce, None)]))
       in
 *)
+(*
+g_ltac.ml4
+  tactic_atom:
+    r = reference -> TacCall (loc, r, [])
+  tactic_expr:
+    a = tactic_atom -> TacArg (loc, a)
+
+let ist = default_ist () in
+interp_tacarg ist (arg : 'a gen_tactic_arg located)
+*)
       begin match t with
       | CApp (_, _, [(ce, _)]) -> Some (bigint_of_z' ce)
       | CRef (qid, _) -> failwith (Printf.sprintf "mmm CRef %s" (string_of_reference qid))
