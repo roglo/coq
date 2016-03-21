@@ -2020,35 +2020,12 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) c =
   match try Some (constr_expr_of_glob_constr c) with Not_found -> None with
   | Some ce ->
 let _ = Printf.eprintf "*** mmm...\n%!" in
-(**)
       let loc = Loc.ghost in
-(**)
-      let ov = ArgArg (Tacenv.interp_ltac tac) in
-      let p : _ Tacexpr.gen_tactic_arg = Tacexpr.TacCall (loc, ov, []) in
-(*
-      let p : Tacexpr.tactic_arg = Tacexpr.TacCall (loc, (loc, tac), []) in
-*)
-      let (t, _, _, _) = failwith "apply_tactic p" in
-(*
-      let t =
-        Constrextern.without_symbols vernac_get_eval
-          (CApp (Glob_ops.loc_of_glob_constr c, (None, g), [(ce, None)]))
-      in
-*)
-(*
-g_ltac.ml4
-  tactic_atom:
-    r = reference -> TacCall (loc, r, [])
-  tactic_expr:
-    a = tactic_atom -> TacArg (loc, a)
-
-let ist = default_ist () in
-interp_tacarg ist (arg : 'a gen_tactic_arg located)
-*)
-      begin match t with
-      | CApp (_, _, [(ce, _)]) -> Some (bigint_of_z' ce)
-      | CRef (qid, _) -> failwith (Printf.sprintf "mmm CRef %s" (string_of_reference qid))
-      | _ -> assert false
+      let p : Tacexpr.tactic_arg = Tacexpr.TacCall (loc, (loc, tac), [Tacexpr.ConstrMayEval (Genredexpr.ConstrTerm (snd (interp_open_constr (Global.env ()) Evd.empty ce)))]) in
+      let (t, _, _, _) = apply_tactic (Proofview.tclUNIT p) in
+      begin match (t : Tacexpr.tactic_arg) with
+      | Tacexpr.TacCall _ -> failwith "of Loc.t * 'ref * 'a gen_tactic_arg list"
+      | t -> failwith (Printf.sprintf "gen_tactic_arg %s" (obj_string t))
       end
   | None ->
       failwith "3"
