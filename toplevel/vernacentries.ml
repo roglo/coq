@@ -2022,12 +2022,12 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) c =
 let _ = Printf.eprintf "*** mmm...\n%!" in
 (**)
       let loc = Loc.ghost in
-      let ov = ArgArg (Tacenv.interp_ltac tac) in
-(**)
-      let p = Tacexpr.TacCall (loc, ov, []) in
 (*
-      let p : Tacexpr.raw_tactic_arg = Tacexpr.TacCall (loc, ov, []) in
+      let ov = ArgArg (Tacenv.interp_ltac tac) in
+      let p = Tacexpr.TacCall (loc, ov, []) in
 *)
+      let p : Tacexpr.tactic_arg = Tacexpr.TacCall (loc, (loc, tac), []) in
+(**)
       let (t, _, _, _) = failwith "apply_tactic p" in
 (*
       let t =
