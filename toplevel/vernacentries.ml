@@ -2002,7 +2002,7 @@ let apply_tactic (tac : 'a Proofview.tactic) :
   let (_, pf) = Proofview.init Evd.empty [] in
   Proofview.apply (Global.env ()) tac pf
 
-let uninterp_big_int2 g tac c =
+let uninterp_big_int2 g (tac : Nametab.ltac_constant) c =
 (*
   let env = Global.env () in
 *)
@@ -2021,7 +2021,14 @@ let uninterp_big_int2 g tac c =
   | Some ce ->
 let _ = Printf.eprintf "*** mmm...\n%!" in
 (**)
-      let (t, _, _, _) = apply_tactic tac in
+      let loc = Loc.ghost in
+      let ov = ArgArg tac in
+(**)
+      let p = Tacexpr.TacCall (loc, ov, []) in
+(*
+      let p : Tacexpr.raw_tactic_arg = Tacexpr.TacCall (loc, ov, []) in
+*)
+      let (t, _, _, _) = failwith "apply_tactic p" in
 (*
       let t =
         Constrextern.without_symbols vernac_get_eval
@@ -2110,10 +2117,9 @@ let vernac_number_notation loc ty f g sc patl =
           let tac =
             match g with
             | CRef (r, _) ->
+                let qid = snd (qualid_of_reference r) in
                 begin match
-                  try
-                    Some (Nametab.locate_tactic (snd (qualid_of_reference r)))
-                  with Not_found -> None
+                  try Some (Nametab.locate_tactic qid) with Not_found -> None
                 with
                 | Some t -> t
                 | None ->
