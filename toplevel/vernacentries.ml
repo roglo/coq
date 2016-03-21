@@ -2022,9 +2022,9 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) c =
 let _ = Printf.eprintf "*** mmm...\n%!" in
       let loc = Loc.ghost in
       let p : Tacexpr.tactic_arg = Tacexpr.TacCall (loc, (loc, tac), [Tacexpr.ConstrMayEval (Genredexpr.ConstrTerm (snd (interp_open_constr (Global.env ()) Evd.empty ce)))]) in
-      let (t, _, _, _) = apply_tactic (Proofview.tclUNIT p) in
+      let (t, pf, (b, _, _), _) = apply_tactic (Proofview.tclUNIT p) in
       begin match (t : Tacexpr.tactic_arg) with
-      | Tacexpr.TacCall _ -> failwith "of Loc.t * 'ref * 'a gen_tactic_arg list"
+      | Tacexpr.TacCall (loc, (_, lc), [a]) -> failwith (Printf.sprintf "b %b aaa %s" b (string_of_kn lc))
       | t -> failwith (Printf.sprintf "gen_tactic_arg %s" (obj_string t))
       end
   | None ->
