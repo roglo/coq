@@ -2023,11 +2023,12 @@ let _ = Printf.eprintf "*** mmm...\n%!" in
 (*
 let il = Tacenv.interp_ltac tac in
 let pv = Tacinterp.val_interp3 (default_ist ()) il in
-      let p : Tacexpr.tactic_arg = Tacexpr.TacCall (loc, (loc, tac), [Tacexpr.ConstrMayEval (Genredexpr.ConstrTerm (snd (interp_open_constr (Global.env ()) Evd.empty ce)))]) in
       let (t, pf, (b, _, _), it) = apply_tactic pv in
       begin match (t : Taccoerce.Value.t Ftactic.focus) with
       | t -> failwith (Printf.sprintf "t %s" (obj_string t))
       end
+
+      let p : Tacexpr.tactic_arg = Tacexpr.TacCall (loc, (loc, tac), [Tacexpr.ConstrMayEval (Genredexpr.ConstrTerm (snd (interp_open_constr (Global.env ()) Evd.empty ce)))]) in
 *)
       let loc = Loc.ghost in
       let p : Tacexpr.tactic_arg = Tacexpr.TacCall (loc, (loc, tac), []) in
