@@ -2015,7 +2015,10 @@ let _ = Printf.eprintf "*** mmm...\n%!" in
       let p = (loc, Tacexpr.Reference tac) in
       let (_, pf) = Proofview.init Evd.empty [] in
       let (t, pf, (b, _, _), it) = Proofview.apply (Global.env ()) (Proofview.tclUNIT p) pf in
-      failwith "42"
+      begin match (snd t : _ Tacexpr.gen_tactic_arg) with
+      | Tacexpr.Reference r -> failwith (Printf.sprintf "r = %s" (obj_string r))
+      | t -> failwith (Printf.sprintf "t %s" (obj_string t))
+      end
   | None ->
       failwith "3"
 
@@ -2041,20 +2044,20 @@ let vernac_number_notation loc ty f g sc patl =
   in
   match try Some (Nametab.locate qid) with Not_found -> None with
   | Some gr ->
-      let _ =
-        (* checking "g" is of type "ty -> option Z'" *)
-        let c =
-          CCast
-            (loc, g,
-             CastConv
-               (arrow loc crq (app loc (cref loc "option") (cref loc "Z'"))))
-        in
-        let (sigma, env) = get_current_context () in
-        interp_open_constr env sigma c
-      in
       let path = Nametab.path_of_global gr in
       begin match gr with
       | IndRef (sp, spi) ->
+          let _ =
+            (* checking "g" is of type "ty -> option Z'" *)
+            let c =
+              CCast
+                (loc, g,
+                 CastConv
+                   (arrow loc crq (app loc (cref loc "option") (cref loc "Z'"))))
+            in
+            let (sigma, env) = get_current_context () in
+            interp_open_constr env sigma c
+          in
           let env = Global.env () in
           let patl =
             match patl with
