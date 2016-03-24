@@ -1996,16 +1996,7 @@ let uninterp_big_int g c =
   | None ->
       None
 
-let apply_tactic (tac : 'a Proofview.tactic) :
-    'a * Proofview.proofview * (bool * Goal.goal list * Goal.goal list) *
-    Proofview_monad.Info.tree =
-  let (_, pf) = Proofview.init Evd.empty [] in
-  Proofview.apply (Global.env ()) tac pf
-
 let uninterp_big_int2 g (tac : Nametab.ltac_constant) c =
-(*
-  let env = Global.env () in
-*)
   let rec constr_expr_of_glob_constr = function
     | Glob_term.GApp (loc, c1, cl) ->
         let ce = constr_expr_of_glob_constr c1 in
@@ -2020,30 +2011,11 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) c =
   match try Some (constr_expr_of_glob_constr c) with Not_found -> None with
   | Some ce ->
 let _ = Printf.eprintf "*** mmm...\n%!" in
-(*
-let il = Tacenv.interp_ltac tac in
-let pv = Tacinterp.val_interp3 (default_ist ()) il in
-      let (t, pf, (b, _, _), it) = apply_tactic pv in
-      begin match (t : Taccoerce.Value.t Ftactic.focus) with
-      | t -> failwith (Printf.sprintf "t %s" (obj_string t))
-      end
-
-      let p : Tacexpr.tactic_arg = Tacexpr.TacCall (loc, (loc, tac), [Tacexpr.ConstrMayEval (Genredexpr.ConstrTerm (snd (interp_open_constr (Global.env ()) Evd.empty ce)))]) in
-*)
       let loc = Loc.ghost in
-(*
-      let p : Tacexpr.tactic_arg = Tacexpr.TacCall (loc, (loc, tac), []) in
-*)
-let p = (loc, Tacexpr.Reference tac) in
-      let (t, pf, (b, _, _), it) = apply_tactic (Proofview.tclUNIT p) in
-let _ = Printf.eprintf "is_empty evar_map %b\n%!" (Evd.is_empty (Proofview.return pf)) in
-failwith "42"
-(*
-      begin match (snd t : _ Tacexpr.gen_tactic_arg) with
-      | Tacexpr.Reference (t : Nametab.ltac_constant) -> failwith (Printf.sprintf "t %s" (KerName.to_string t))
-      | t -> failwith (Printf.sprintf "t %s" (obj_string t))
-      end
-*)
+      let p = (loc, Tacexpr.Reference tac) in
+      let (_, pf) = Proofview.init Evd.empty [] in
+      let (t, pf, (b, _, _), it) = Proofview.apply (Global.env ()) (Proofview.tclUNIT p) pf in
+      failwith "42"
   | None ->
       failwith "3"
 
