@@ -2031,10 +2031,14 @@ let pv = Tacinterp.val_interp3 (default_ist ()) il in
       let p : Tacexpr.tactic_arg = Tacexpr.TacCall (loc, (loc, tac), [Tacexpr.ConstrMayEval (Genredexpr.ConstrTerm (snd (interp_open_constr (Global.env ()) Evd.empty ce)))]) in
 *)
       let loc = Loc.ghost in
+(*
       let p : Tacexpr.tactic_arg = Tacexpr.TacCall (loc, (loc, tac), []) in
+*)
+let p = (loc, Tacexpr.Reference tac) in
       let (t, pf, (b, _, _), it) = apply_tactic (Proofview.tclUNIT p) in
 (**)
-      begin match (t : Tacexpr.tactic_arg) with
+      begin match (snd t : _ Tacexpr.gen_tactic_arg) with
+      | Tacexpr.Reference (t : Nametab.ltac_constant) -> failwith (Printf.sprintf "t %s" (KerName.to_string t))
       | t -> failwith (Printf.sprintf "t %s" (obj_string t))
       end
   | None ->
