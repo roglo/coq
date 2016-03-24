@@ -2036,11 +2036,14 @@ let pv = Tacinterp.val_interp3 (default_ist ()) il in
 *)
 let p = (loc, Tacexpr.Reference tac) in
       let (t, pf, (b, _, _), it) = apply_tactic (Proofview.tclUNIT p) in
-(**)
+let _ = Printf.eprintf "is_empty evar_map %b\n%!" (Evd.is_empty (Proofview.return pf)) in
+failwith "42"
+(*
       begin match (snd t : _ Tacexpr.gen_tactic_arg) with
       | Tacexpr.Reference (t : Nametab.ltac_constant) -> failwith (Printf.sprintf "t %s" (KerName.to_string t))
       | t -> failwith (Printf.sprintf "t %s" (obj_string t))
       end
+*)
   | None ->
       failwith "3"
 
