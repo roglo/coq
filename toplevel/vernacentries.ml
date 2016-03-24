@@ -2015,10 +2015,12 @@ let _ = Printf.eprintf "*** mmm...\n%!" in
       let p = (loc, Tacexpr.Reference tac) in
       let (_, pf) = Proofview.init Evd.empty [] in
       let (t, pf, (b, _, _), it) = Proofview.apply (Global.env ()) (Proofview.tclUNIT p) pf in
-      begin match (snd t : _ Tacexpr.gen_tactic_arg) with
-      | Tacexpr.Reference r -> failwith (Printf.sprintf "r = %s" (obj_string r))
-      | t -> failwith (Printf.sprintf "t %s" (obj_string t))
-      end
+      let sigma = Proofview.return pf in
+      if Evd.is_empty sigma then failwith "empty result"
+      else
+        begin match (sigma : Evd.evar_map) with
+        | t -> failwith (Printf.sprintf "t %s" (obj_string t))
+        end
   | None ->
       failwith "3"
 
