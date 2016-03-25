@@ -2023,8 +2023,19 @@ let _ = Printf.eprintf "*** mmm... %s\n%!" (KerName.to_string tac) in
         | Tacexpr.Reference (ArgVar (loc, id)) -> List.assoc id vl
         | a -> failwith (Printf.sprintf "num_interp_arg %s" (obj_string a))
       and num_interp_match vl s = function
-        | Tacexpr.Pat ([], mp, t) :: mrl -> failwith "num_interp_match Pat not yet impl"
-        | _ :: _ | [] -> raise Not_found
+        | Tacexpr.Pat ([], mp, t) :: mrl -> num_interp_match_pattern vl s mp
+        | _ :: _ -> failwith "num_interp_match"
+        | [] -> raise Not_found
+      and num_interp_match_pattern vl s = function
+        | Tacexpr.Term ((gc, None), cp) ->
+            begin match num_interp_match_constr_pattern vl s cp with
+            | Some vl -> failwith "constr_pattern matched"
+            | None -> failwith "constr_pattern not matched"
+            end
+        | mp -> failwith (Printf.sprintf "num_interp_match_pattern %s" (obj_string mp))
+      and num_interp_match_constr_pattern vl s = function
+        | Pattern.PApp (cp, cpa)-> failwith "PApp not yet impl"
+        | mp -> failwith (Printf.sprintf "num_interp_match_constr_pattern %s" (obj_string mp))
       in
       begin match Tacenv.interp_ltac tac with
       | Tacexpr.TacFun ([Some id], e) ->
