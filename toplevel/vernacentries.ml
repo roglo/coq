@@ -2012,7 +2012,11 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) c =
   | Some ce ->
 let _ = Printf.eprintf "*** mmm... %s\n%!" (KerName.to_string tac) in
       let rec num_interp vl = function
-        | Tacexpr.TacMatch (lf, e, mrl) -> failwith "TacMatch not yet impl"
+        | Tacexpr.TacMatch (lf, e, mrl) ->
+            begin match num_interp vl e with
+            | _ -> failwith "num_interp TacMatch not yet impl"
+            end
+        | Tacexpr.TacArg (loc, ta) -> failwith "num_interp TacArg not yet impl"
         | t -> failwith (Printf.sprintf "num_interp %s" (obj_string t)) 
       in
       begin match Tacenv.interp_ltac tac with
