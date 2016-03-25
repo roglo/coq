@@ -2011,10 +2011,16 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) c =
   match try Some (constr_expr_of_glob_constr c) with Not_found -> None with
   | Some ce ->
 let _ = Printf.eprintf "*** mmm... %s\n%!" (KerName.to_string tac) in
-begin match (Tacenv.interp_ltac tac) with
-| Tacexpr.TacFun _ -> failwith "ouais, tacfun"
-| t -> failwith (Printf.sprintf "tac %s" (obj_string t))
-end;
+      let rec num_interp vl = function
+        | Tacexpr.TacMatch (lf, e, mrl) -> failwith "TacMatch not yet impl"
+        | t -> failwith (Printf.sprintf "num_interp %s" (obj_string t)) 
+      in
+      begin match Tacenv.interp_ltac tac with
+      | Tacexpr.TacFun ([Some id], e) -> num_interp [(id, c)] e
+      | t -> failwith (Printf.sprintf "tac %s" (obj_string t)) 
+      end
+(*
+Id.t option list * 'a gen_tactic_expr
 let _u : Taccoerce.Value.t Ftactic.t = Tacinterp.val_interp3 (default_ist ()) (Tacenv.interp_ltac tac) in
       let loc = Loc.ghost in
       let p = (loc, Tacexpr.Reference tac) in
@@ -2026,6 +2032,7 @@ let _u : Taccoerce.Value.t Ftactic.t = Tacinterp.val_interp3 (default_ist ()) (T
         begin match (sigma : Evd.evar_map) with
         | t -> failwith (Printf.sprintf "t %s" (obj_string t))
         end
+*)
   | None ->
       failwith "3"
 
