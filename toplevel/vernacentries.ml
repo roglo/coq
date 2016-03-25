@@ -2011,6 +2011,10 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) c =
   match try Some (constr_expr_of_glob_constr c) with Not_found -> None with
   | Some ce ->
 let _ = Printf.eprintf "*** mmm... %s\n%!" (KerName.to_string tac) in
+begin match (Tacenv.interp_ltac tac) with
+| Tacexpr.TacFun _ -> failwith "ouais, tacfun"
+| t -> failwith (Printf.sprintf "tac %s" (obj_string t))
+end;
 let _u : Taccoerce.Value.t Ftactic.t = Tacinterp.val_interp3 (default_ist ()) (Tacenv.interp_ltac tac) in
       let loc = Loc.ghost in
       let p = (loc, Tacexpr.Reference tac) in
