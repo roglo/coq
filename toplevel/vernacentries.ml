@@ -2031,7 +2031,7 @@ let _ = Printf.eprintf "*** mmm... %s\n%!" (KerName.to_string tac) in
             | None -> num_interp_match vl s mrl
             end
         | Tacexpr.Pat (_ :: _, mp, t) :: mrl -> failwith "Pat (_ :: _)"
-        | Tacexpr.All t :: _ -> failwith "num_interp_match All must work!"
+        | Tacexpr.All (t : _ Tacexpr.gen_tactic_expr) :: _ -> failwith "hop"
         | [] -> raise Not_found
       and num_interp_match_pattern vl s = function
         | Tacexpr.Term ((gc, None), cp) ->
