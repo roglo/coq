@@ -2023,7 +2023,7 @@ let _ = Printf.eprintf "*** mmm... %s\n%!" (KerName.to_string tac) in
         | Tacexpr.Reference (ArgVar (loc, id)) -> List.assoc id vl
         | a -> failwith (Printf.sprintf "num_interp_arg %s" (obj_string a))
       and num_interp_match vl s = function
-        | Tacexpr.Pat ([], mp, t) :: mrl -> failwith "num_interp_match not yet impl"
+        | Tacexpr.Pat ([], mp, t) :: mrl -> failwith "num_interp_match Pat not yet impl"
         | _ :: _ | [] -> raise Not_found
       in
       begin match Tacenv.interp_ltac tac with
