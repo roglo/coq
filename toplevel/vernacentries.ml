@@ -2023,6 +2023,7 @@ let _ = Printf.eprintf "*** mmm... %s\n%!" (KerName.to_string tac) in
         | t -> failwith (Printf.sprintf "num_interp %s" (obj_string t)) 
       and num_interp_arg vl = function
         | Tacexpr.Reference (ArgVar (loc, id)) -> List.assoc id vl
+        | Tacexpr.TacCall (loc, r, tal) -> failwith "TacCall to be implemented"
         | a -> failwith (Printf.sprintf "num_interp_arg %s" (obj_string a))
       and num_interp_match vl s = function
         | Tacexpr.Pat ([], mp, t) :: mrl ->
@@ -2031,11 +2032,7 @@ let _ = Printf.eprintf "*** mmm... %s\n%!" (KerName.to_string tac) in
             | None -> num_interp_match vl s mrl
             end
         | Tacexpr.Pat (_ :: _, mp, t) :: mrl -> failwith "Pat (_ :: _)"
-        | Tacexpr.All (t : _ Tacexpr.gen_tactic_expr) :: _ ->
-            begin match t with
-            | Tacexpr.TacArg (loc, a) -> failwith "hop"
-            | t -> failwith (Printf.sprintf "All %s" (obj_string t))
-            end
+        | Tacexpr.All (t : _ Tacexpr.gen_tactic_expr) :: _ -> num_interp vl t
         | [] -> raise Not_found
       and num_interp_match_pattern vl s = function
         | Tacexpr.Term ((gc, None), cp) ->
