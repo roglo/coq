@@ -2012,23 +2012,26 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr
   | Some ce ->
 let _ = Printf.eprintf "*** mmm... %s\n%!" (KerName.to_string tac) in
       let rec num_interp vl = function
-        | Tacexpr.TacMatch (lf, e, mrl) ->
-            begin match num_interp vl e with
-            | _ -> failwith "num_interp TacMatch not yet impl"
-            end
+        | Tacexpr.TacMatch (lf, e, mrl) -> num_interp_match vl (num_interp vl e) mrl
         | Tacexpr.TacArg (loc, ta) ->
             begin match (num_interp_arg vl ta : Glob_term.glob_constr) with
-            | Glob_term.GRef (loc, ConstRef c, None) ->
-                failwith (Printf.sprintf "num_interp GRef (ConstRef %s)" (Constant.to_string c))
+            | Glob_term.GRef (loc, ConstRef c, None) -> Constant.to_string c
             | a -> failwith (Printf.sprintf "num_interp TacArg %s" (obj_string a))
             end
         | t -> failwith (Printf.sprintf "num_interp %s" (obj_string t)) 
       and num_interp_arg vl = function
         | Tacexpr.Reference (ArgVar (loc, id)) -> List.assoc id vl
         | a -> failwith (Printf.sprintf "num_interp_arg %s" (obj_string a))
+      and num_interp_match vl s = function
+        | Tacexpr.Pat ([], mp, t) :: mrl -> failwith "num_interp_match not yet impl"
+        | _ :: _ | [] -> raise Not_found
       in
       begin match Tacenv.interp_ltac tac with
-      | Tacexpr.TacFun ([Some id], e) -> num_interp [(id, c)] e
+      | Tacexpr.TacFun ([Some id], e) ->
+          begin match try Some (num_interp [(id, c)] e) with Not_found -> None with
+          | Some s -> begin try Some (Bigint.of_string s) with Failure _ -> None end
+          | None -> None
+          end
       | t -> failwith (Printf.sprintf "tac %s" (obj_string t)) 
       end
 (*
