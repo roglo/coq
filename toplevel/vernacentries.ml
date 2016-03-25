@@ -2017,14 +2017,15 @@ let _ = Printf.eprintf "*** mmm... %s\n%!" (KerName.to_string tac) in
             | _ -> failwith "num_interp TacMatch not yet impl"
             end
         | Tacexpr.TacArg (loc, ta) ->
-            begin match num_interp_arg vl ta with
-            | _ -> failwith "num_interp TacArg not yet impl"
+            begin match (num_interp_arg vl ta : Glob_term.glob_constr) with
+            | Glob_term.GRef (loc, ConstRef c, None) ->
+                failwith (Printf.sprintf "num_interp GRef (ConstRef %s)" (Constant.to_string c))
+            | a -> failwith (Printf.sprintf "num_interp TacArg %s" (obj_string a))
             end
         | t -> failwith (Printf.sprintf "num_interp %s" (obj_string t)) 
       and num_interp_arg vl = function
-        | Tacexpr.Reference (ArgVar (loc, id)) ->
-            failwith (Printf.sprintf "Reference %s not yet impl" (Id.to_string id))
-        | a -> failwith (Printf.sprintf "num_interp_arg %s" (obj_string a)) 
+        | Tacexpr.Reference (ArgVar (loc, id)) -> List.assoc id vl
+        | a -> failwith (Printf.sprintf "num_interp_arg %s" (obj_string a))
       in
       begin match Tacenv.interp_ltac tac with
       | Tacexpr.TacFun ([Some id], e) -> num_interp [(id, c)] e
