@@ -1996,7 +1996,7 @@ let uninterp_big_int g c =
   | None ->
       None
 
-let uninterp_big_int2 g (tac : Nametab.ltac_constant) c =
+let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr) =
   let rec constr_expr_of_glob_constr = function
     | Glob_term.GApp (loc, c1, cl) ->
         let ce = constr_expr_of_glob_constr c1 in
