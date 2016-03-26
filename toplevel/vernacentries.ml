@@ -2001,10 +2001,6 @@ let uninterp_big_int g c =
 
 let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr) =
   let rec constr_expr_of_glob_constr = function
-    | Glob_term.GApp (loc, c1, cl) ->
-        let ce = constr_expr_of_glob_constr c1 in
-        let ceel = List.map (fun c -> (constr_expr_of_glob_constr c, None)) cl in
-        CApp (loc, (None, ce), ceel)
     | Glob_term.GRef (loc, gr, None) ->
         begin match gr with
 	| ConstRef cst ->
@@ -2016,6 +2012,11 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr
         | gr ->
             failwith (Printf.sprintf "1 global_reference %s" (obj_string gr))
 	end
+    | Glob_term.GVar (loc, id) -> failwith (Printf.sprintf "ouaips, GVar %s" (Id.to_string id))
+    | Glob_term.GApp (loc, c1, cl) ->
+        let ce = constr_expr_of_glob_constr c1 in
+        let ceel = List.map (fun c -> (constr_expr_of_glob_constr c, None)) cl in
+        CApp (loc, (None, ce), ceel)
     | x ->
         failwith (Printf.sprintf "1 glob_constr %s" (obj_string x))
   in
@@ -2052,7 +2053,12 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr
         | Tacexpr.TacCall (loc, ArgArg (loc1, tac), tal) -> num_interp_call vl tac tal
         | a -> failwith (Printf.sprintf "num_interp_arg %s" (obj_string a))
       and num_interp_let vl idltal te =
-        failwith "TacLetIn not impl"
+        let vl =
+          List.fold_left
+            (fun vl ((loc, id), ta) -> (id, num_interp_arg vl ta) :: vl)
+	    vl idltal
+        in
+	num_interp vl te
       and num_interp_match vl s = function
         | Tacexpr.Pat ([], mp, t) :: mrl ->
             begin match num_interp_match_pattern vl s mp with
