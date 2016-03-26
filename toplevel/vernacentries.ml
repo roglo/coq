@@ -2005,9 +2005,16 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr
         let ce = constr_expr_of_glob_constr c1 in
         let ceel = List.map (fun c -> (constr_expr_of_glob_constr c, None)) cl in
         CApp (loc, (None, ce), ceel)
-    | Glob_term.GRef (loc, ConstRef cst, None) ->
-        let qi = qualid_of_string (Constant.to_string cst) in
-        CRef (Qualid (loc, qi), None)
+    | Glob_term.GRef (loc, gr, None) ->
+        begin match gr with
+	| ConstRef cst ->
+            let qi = qualid_of_string (Constant.to_string cst) in
+            CRef (Qualid (loc, qi), None)
+	| ConstructRef c ->
+            failwith (Printf.sprintf "ConstructRef c not impl")
+        | gr ->
+            failwith (Printf.sprintf "1 global_reference %s" (obj_string gr))
+	end
     | x ->
         failwith (Printf.sprintf "1 glob_constr %s" (obj_string x))
   in
@@ -2079,9 +2086,13 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr
           | Some (Glob_term.GRef (_, ConstRef s, None)) ->
               begin try Some (Bigint.of_string (Constant.to_string s))
               with Failure _ -> None end
-          | Some (Glob_term.GRef (_, ConstructRef ((sp, spi), i), None)) ->
+          | Some (Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None)) ->
 	      let qi = qualid_of_constructref (Global.env ()) sp i in
-	      Some (bigint_of_z' (CRef (Qualid (Loc.ghost, qi), None)))
+	      Some (bigint_of_z' (CRef (Qualid (loc, qi), None)))
+          | Some (Glob_term.GApp (loc, gc, gcl)) ->
+              let ce = constr_expr_of_glob_constr gc in
+              let ceel = List.map (fun c -> (constr_expr_of_glob_constr c, None)) gcl in
+	      Some (bigint_of_z' (CApp (loc, (None, ce), ceel)))
           | Some x ->
               failwith (Printf.sprintf "Some (%s) not impl" (obj_string x))
 	  | None ->
