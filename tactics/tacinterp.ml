@@ -1173,7 +1173,7 @@ let interp_focussed wit f v =
   end }
 
 (* Interprets an l-tac expression into a value *)
-let rec val_interp2 ist ?(appl=UnnamedAppl) (tac:glob_tactic_expr) : Val.t Ftactic.t =
+let rec val_interp ist ?(appl=UnnamedAppl) (tac:glob_tactic_expr) : Val.t Ftactic.t =
   (* The name [appl] of applied top-level Ltac names is ignored in
      [value_interp]. It is installed in the second step by a call to
      [name_vfun], because it gives more opportunities to detect a
@@ -1293,7 +1293,7 @@ and eval_tactic ist tac : unit Proofview.tactic = match tac with
         let ist = {
           lfun = lfun;
           extra = TacStore.set ist.extra f_trace trace; } in
-        val_interp2 ist body >>= fun v ->
+        val_interp ist body >>= fun v ->
         Ftactic.lift (tactic_of_value ist v)
       in
       let tac =
@@ -1330,7 +1330,7 @@ and force_vrec ist v : Val.t Ftactic.t =
   if has_type v (topwit wit_tacvalue) then
     let v = to_tacvalue v in
     match v with
-    | VRec (lfun,body) -> val_interp2 {ist with lfun = !lfun} body
+    | VRec (lfun,body) -> val_interp {ist with lfun = !lfun} body
     | v -> Ftactic.return (of_tacvalue v)
   else Ftactic.return v
 
@@ -1352,7 +1352,7 @@ and interp_ltac_reference loc' mustbetac ist r : Val.t Ftactic.t =
       let extra = TacStore.set extra f_trace (push_trace loc_info ist) in
       let ist = { lfun = Id.Map.empty; extra = extra; } in
       let appl = GlbAppl[r,[]] in
-      val_interp2 ~appl ist (Tacenv.interp_ltac r)
+      val_interp ~appl ist (Tacenv.interp_ltac r)
 
 and interp_tacarg ist arg : Val.t Ftactic.t =
   match arg with
@@ -1396,7 +1396,7 @@ and interp_tacarg ist arg : Val.t Ftactic.t =
         Proofview.numgoals >>= fun i ->
         Proofview.tclUNIT (Value.of_int i)
       end
-  | Tacexp t -> val_interp2 ist t
+  | Tacexp t -> val_interp ist t
 
 (* Interprets an application node *)
 and interp_app loc ist fv largs : Val.t Ftactic.t =
@@ -1421,7 +1421,7 @@ and interp_app loc ist fv largs : Val.t Ftactic.t =
               let ist = {
                 lfun = newlfun;
                 extra = TacStore.set ist.extra f_trace []; } in
-              catch_error_tac trace (val_interp2 ist body) >>= fun v ->
+              catch_error_tac trace (val_interp ist body) >>= fun v ->
               Ftactic.return (name_vfun (push_appl appl largs) v)
             end
 	    begin fun (e, info) ->
@@ -1470,14 +1470,14 @@ and interp_letrec ist llc u =
   let lfun = List.fold_left fold ist.lfun llc in
   let () = lref := lfun in
   let ist = { ist with lfun } in
-  val_interp2 ist u
+  val_interp ist u
 
 (* Interprets the clauses of a LetIn *)
 and interp_letin ist llc u =
   let rec fold lfun = function
   | [] ->
     let ist = { ist with lfun } in
-    val_interp2 ist u
+    val_interp ist u
   | ((_, id), body) :: defs ->
     Ftactic.bind (interp_tacarg ist body) (fun v ->
     fold (Id.Map.add id v lfun) defs)
@@ -1492,7 +1492,7 @@ and interp_match_success ist { Tactic_matching.subst ; context ; terms ; lhs } =
   let hyp_subst = Id.Map.map Value.of_constr terms in
   let lfun = extend_values_with_bindings subst (lctxt +++ hyp_subst +++ ist.lfun) in
   let ist = { ist with lfun } in
-  val_interp2 ist lhs >>= fun v ->
+  val_interp ist lhs >>= fun v ->
   if has_type v (topwit wit_tacvalue) then match to_tacvalue v with
   | VFun (appl,trace,lfun,[],t) ->
       let ist = {
@@ -1626,7 +1626,7 @@ and interp_genarg_var_list ist x =
 and interp_ltac_constr ist e : constr Ftactic.t =
   let (>>=) = Ftactic.bind in
   begin Proofview.tclORELSE
-      (val_interp2 ist e)
+      (val_interp ist e)
       begin function (err, info) -> match err with
         | Not_found ->
             Ftactic.enter { enter = begin fun gl ->
@@ -1663,7 +1663,7 @@ and interp_ltac_constr ist e : constr Ftactic.t =
 
 (* Interprets tactic expressions : returns a "tactic" *)
 and interp_tactic ist tac : unit Proofview.tactic =
-  Ftactic.run (val_interp2 ist tac) (fun v -> tactic_of_value ist v)
+  Ftactic.run (val_interp ist tac) (fun v -> tactic_of_value ist v)
 
 (* Provides a "name" for the trace to atomic tactics *)
 and name_atomic ?env tacexpr tac : unit Proofview.tactic =
@@ -2154,7 +2154,7 @@ let () =
 (***************************************************************************)
 (* Other entry points *)
 
-let val_interp ist tac k = Ftactic.run (val_interp2 ist tac) k
+let val_interp ist tac k = Ftactic.run (val_interp ist tac) k
 
 let interp_ltac_constr ist c k = Ftactic.run (interp_ltac_constr ist c) k
 
@@ -2204,6 +2204,3 @@ let lift_constr_tac_to_ml_tac vars tac =
     tac args ist
   end } in
   tac
-
-let val_interp3 ist (tac:glob_tactic_expr) : Val.t Ftactic.t =
-  val_interp2 ist ~appl:UnnamedAppl tac
