@@ -2046,7 +2046,7 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr
       and num_interp_arg vl = function
         | Tacexpr.ConstrMayEval me ->
 	    begin match me with
-	    | Genredexpr.ConstrTerm (gc, None) -> gc
+	    | Genredexpr.ConstrTerm (gc, None) -> (* should evaluate, here *) gc
 	    | me -> failwith (Printf.sprintf "ConstrMayEval may_eval %s" (obj_string me))
 	    end
         | Tacexpr.Reference (ArgVar (loc, id)) -> List.assoc id vl
