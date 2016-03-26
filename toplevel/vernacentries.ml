@@ -2066,16 +2066,22 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr
 	    failwith (Printf.sprintf "num_interp_match_pattern %s" (obj_string mp))
       and num_interp_match_constr_pattern vl s = function
         | Pattern.PRef gr ->
+let _ = Printf.eprintf "GRef gr %s\n%!" (string_of_path (Nametab.path_of_global gr)) in
 	    begin match s with
 	    | Glob_term.GRef (_, gr1, None) ->
-	        if eq_gr gr gr1 then Some vl else None
+let _ = Printf.eprintf "GRef gr1 %s\n%!" (string_of_path (Nametab.path_of_global gr1)) in
+	        if eq_gr gr gr1 then Some vl else let _ = Printf.eprintf "*** oh no...\n%!" in None
 	    | _ ->
 	        failwith (Printf.sprintf "1 glob_constr %s" (obj_string s))
 	    end
         | Pattern.PApp (cp, cpa)->
 	    begin match s with
 	    | Glob_term.GRef _ -> None
-	    | Glob_term.GApp (loc, gc, gcl) -> failwith "PApp/GApp: probable match"
+	    | Glob_term.GApp (loc, gc, gcl) ->
+	        begin match num_interp_match_constr_pattern vl gc cp with
+                | Some vl -> failwith "PApp/GApp: probable match"
+                | None -> None
+                end
 	    | _ -> failwith (Printf.sprintf "num_interp_match_constr_pattern glob_constr %s" (obj_string s))
 	    end
         | mp -> failwith (Printf.sprintf "num_interp_match_constr_pattern %s" (obj_string mp))
