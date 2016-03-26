@@ -1123,7 +1123,7 @@ GEXTEND Gram
   ] ]
   ;
   num_pat_list:
-    [ [ "("; IDENT "glop"; patl = LIST1 identref; ")" -> patl ] ]
+    [ [ "("; IDENT "printing"; patl = LIST1 identref; ")" -> patl ] ]
   ;
   only_parsing:
     [ [ "("; IDENT "only"; IDENT "parsing"; ")" ->
