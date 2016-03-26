@@ -2075,6 +2075,7 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr
         | Pattern.PApp (cp, cpa)->
 	    begin match s with
 	    | Glob_term.GRef _ -> None
+	    | Glob_term.GApp (loc, gc, gcl) -> failwith "PApp/GApp: probable match"
 	    | _ -> failwith (Printf.sprintf "num_interp_match_constr_pattern glob_constr %s" (obj_string s))
 	    end
         | mp -> failwith (Printf.sprintf "num_interp_match_constr_pattern %s" (obj_string mp))
