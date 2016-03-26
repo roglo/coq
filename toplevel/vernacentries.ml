@@ -2082,7 +2082,9 @@ let _ = Printf.eprintf "GApp\n*** no\n%!" in
 	    | Glob_term.GRef _ -> None
 	    | Glob_term.GApp (loc, gc, gcl) ->
 	        begin match num_interp_match_constr_pattern vl gc cp with
-                | Some vl -> failwith "PApp/GApp: probable match"
+                | Some vl ->
+                   if Array.length cpa <> List.length gcl then failwith "patt #parm <> #arg not impl"
+                   else failwith "ok len"
                 | None -> None
                 end
 	    | _ -> failwith (Printf.sprintf "num_interp_match_constr_pattern glob_constr %s" (obj_string s))
