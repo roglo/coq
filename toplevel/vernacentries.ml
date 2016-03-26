@@ -2034,7 +2034,7 @@ let _ = Printf.eprintf "*** mmm... %s\n%!" (KerName.to_string tac) in
       and num_interp_arg vl = function
         | Tacexpr.ConstrMayEval me ->
 	    begin match me with
-	    | Genredexpr.ConstrTerm (a : Tacexpr.g_trm) -> failwith "ConstrTerm"
+	    | Genredexpr.ConstrTerm (gc, None) -> gc
 	    | me -> failwith (Printf.sprintf "ConstrMayEval may_eval %s" (obj_string me))
 	    end
         | Tacexpr.Reference (ArgVar (loc, id)) -> List.assoc id vl
@@ -2077,7 +2077,12 @@ let _ = Printf.eprintf "*** mmm... %s\n%!" (KerName.to_string tac) in
           | Some (Glob_term.GRef (_, ConstRef s, None)) ->
               begin try Some (Bigint.of_string (Constant.to_string s))
               with Failure _ -> None end
-          | Some _ | None -> None
+          | Some (Glob_term.GRef (_, ConstructRef c, None)) ->
+	      failwith "ConstructRef not impl"
+          | Some x ->
+              failwith (Printf.sprintf "Some (%s) not impl" (obj_string x))
+	  | None ->
+	      None
           end
       | t -> failwith (Printf.sprintf "tac %s" (obj_string t)) 
       end
