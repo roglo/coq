@@ -2038,6 +2038,7 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr
       	    num_interp vl e
       	| t -> failwith (Printf.sprintf "num_interp_call tac %s" (obj_string t)) 
       and num_interp vl = function
+        | Tacexpr.TacLetIn (rf, idltal, te) -> failwith "TacLetIn not impl"
         | Tacexpr.TacMatch (lf, e, mrl) -> num_interp_match vl (num_interp vl e) mrl
         | Tacexpr.TacArg (loc, ta) -> num_interp_arg vl ta
         | t -> failwith (Printf.sprintf "num_interp %s" (obj_string t)) 
