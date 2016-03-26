@@ -1996,8 +1996,6 @@ let uninterp_big_int g c =
   | None ->
       None
 
-type 'a term = TVar of 'a | TApp of 'a term * 'a term
-
 let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr) =
   let rec constr_expr_of_glob_constr = function
     | Glob_term.GApp (loc, c1, cl) ->
@@ -2027,11 +2025,7 @@ let _ = Printf.eprintf "*** mmm... %s\n%!" (KerName.to_string tac) in
                      | None -> vl)
                   vl idol tal
             in
-failwith "
-      	    begin match num_interp vl e with
-      	    | TVar s -> s
-      	    | TApp _ -> failwith \"num_interp_call TApp\"
-      	    end"
+      	    num_interp vl e
       	| t -> failwith (Printf.sprintf "num_interp_call tac %s" (obj_string t)) 
       and num_interp vl = function
         | Tacexpr.TacMatch (lf, e, mrl) -> num_interp_match vl (num_interp vl e) mrl
@@ -2058,8 +2052,16 @@ failwith "
             end
         | mp -> failwith (Printf.sprintf "num_interp_match_pattern %s" (obj_string mp))
       and num_interp_match_constr_pattern vl s = function
+        | Pattern.PRef gr ->
+	    begin match s with
+	    | Glob_term.GRef (_, gr1, None) -> failwith "that matched; what do I do?"
+	    | _ -> failwith (Printf.sprintf "1 glob_constr %s" (obj_string s))
+	    end
         | Pattern.PApp (cp, cpa)->
-            failwith (Printf.sprintf "num_interp_match_constr_pattern glob_constr %s" (obj_string s))
+	    begin match s with
+	    | Glob_term.GRef _ -> None
+	    | _ -> failwith (Printf.sprintf "num_interp_match_constr_pattern glob_constr %s" (obj_string s))
+	    end
         | mp -> failwith (Printf.sprintf "num_interp_match_constr_pattern %s" (obj_string mp))
       in
       begin match Tacenv.interp_ltac tac with
