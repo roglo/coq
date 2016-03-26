@@ -1999,7 +1999,7 @@ let uninterp_big_int g c =
       None
 
 let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr) =
-  let rec constr_expr_of_glob_constr = function
+  let rec constr_expr_of_glob_constr vl = function
     | Glob_term.GRef (loc, gr, None) ->
         begin match gr with
 	| ConstRef cst ->
@@ -2011,15 +2011,16 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr
         | gr ->
             failwith (Printf.sprintf "1 global_reference %s" (obj_string gr))
 	end
-    | Glob_term.GVar (loc, id) -> failwith (Printf.sprintf "ouaips, GVar %s" (Id.to_string id))
+    | Glob_term.GVar (loc, id) ->
+        constr_expr_of_glob_constr vl (List.assoc id vl)
     | Glob_term.GApp (loc, c1, cl) ->
-        let ce = constr_expr_of_glob_constr c1 in
-        let ceel = List.map (fun c -> (constr_expr_of_glob_constr c, None)) cl in
+        let ce = constr_expr_of_glob_constr vl c1 in
+        let ceel = List.map (fun c -> (constr_expr_of_glob_constr vl c, None)) cl in
         CApp (loc, (None, ce), ceel)
     | x ->
         failwith (Printf.sprintf "1 glob_constr %s" (obj_string x))
   in
-  match try Some (constr_expr_of_glob_constr c) with Not_found -> None with
+  match try Some (constr_expr_of_glob_constr [] c) with Not_found -> None with
   | Some ce ->
       let rec num_interp_call (vl : (_ * Glob_term.glob_constr) list) tac tal =
       	match Tacenv.interp_ltac tac with
@@ -2046,7 +2047,7 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr
         | Tacexpr.ConstrMayEval me ->
 	    begin match me with
 	    | Genredexpr.ConstrTerm (gc, None) ->
-	        let ce = vernac_get_eval (constr_expr_of_glob_constr gc) in
+	        let ce = vernac_get_eval (constr_expr_of_glob_constr vl gc) in
 		glob_constr_of_constr_expr ce
 	    | me ->
 	        failwith (Printf.sprintf "ConstrMayEval may_eval %s" (obj_string me))
@@ -2127,8 +2128,8 @@ let _ = Printf.eprintf "GApp\n*** no\n%!" in
 	      let qi = qualid_of_constructref (Global.env ()) sp i in
 	      Some (bigint_of_z' (CRef (Qualid (loc, qi), None)))
           | Some (Glob_term.GApp (loc, gc, gcl)) ->
-              let ce = constr_expr_of_glob_constr gc in
-              let ceel = List.map (fun c -> (constr_expr_of_glob_constr c, None)) gcl in
+              let ce = constr_expr_of_glob_constr [] gc in
+              let ceel = List.map (fun c -> (constr_expr_of_glob_constr [] c, None)) gcl in
 	      Some (bigint_of_z' (CApp (loc, (None, ce), ceel)))
           | Some x ->
               failwith (Printf.sprintf "Some (%s) not impl" (obj_string x))
