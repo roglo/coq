@@ -2032,7 +2032,11 @@ let _ = Printf.eprintf "*** mmm... %s\n%!" (KerName.to_string tac) in
         | Tacexpr.TacArg (loc, ta) -> num_interp_arg vl ta
         | t -> failwith (Printf.sprintf "num_interp %s" (obj_string t)) 
       and num_interp_arg vl = function
-        | Tacexpr.ConstrMayEval me -> failwith "ConstrMayEval not impl"
+        | Tacexpr.ConstrMayEval me ->
+	    begin match me with
+	    | Genredexpr.ConstrTerm (a : Tacexpr.g_trm) -> failwith "ConstrTerm"
+	    | me -> failwith (Printf.sprintf "ConstrMayEval may_eval %s" (obj_string me))
+	    end
         | Tacexpr.Reference (ArgVar (loc, id)) -> List.assoc id vl
         | Tacexpr.TacCall (loc, ArgArg (loc1, tac), tal) -> num_interp_call vl tac tal
         | a -> failwith (Printf.sprintf "num_interp_arg %s" (obj_string a))
