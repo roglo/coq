@@ -2094,15 +2094,7 @@ let _ = Printf.eprintf "GApp\n*** no\n%!" in
 		     List.fold_left2
 		       (fun vlo cp gc ->
 		        match vlo with
-			| Some vl ->
-		            begin match (cp, gc) with
-			    | (Pattern.PRef gr, Glob_term.GRef (_, gr1, None)) ->
-			        if eq_gr gr gr1 then Some vl else None
-			    | (Pattern.PRef gr, _) ->
-			        failwith (Printf.sprintf "Glob_term.glob_constr gc %s" (obj_string gc))
-			    | _ ->
-			        failwith (Printf.sprintf "Pattern.constr_pattern cp %s" (obj_string cp))
-		            end
+			| Some vl -> num_interp_match_constr_pattern vl gc cp
 			| None -> None)
 		       (Some vl) (Array.to_list cpa) gcl
                 | None -> None
