@@ -2071,8 +2071,11 @@ let _ = Printf.eprintf "GRef gr %s\n%!" (string_of_path (Nametab.path_of_global 
 	    | Glob_term.GRef (_, gr1, None) ->
 let _ = Printf.eprintf "GRef gr1 %s\n%!" (string_of_path (Nametab.path_of_global gr1)) in
 	        if eq_gr gr gr1 then Some vl else let _ = Printf.eprintf "*** oh no...\n%!" in None
+            | Glob_term.GApp (loc, gc1, gcl) ->
+let _ = Printf.eprintf "GApp\n*** no\n%!" in
+	        None
 	    | _ ->
-	        failwith (Printf.sprintf "1 glob_constr %s" (obj_string s))
+	        failwith (Printf.sprintf "2 glob_constr %s" (obj_string s))
 	    end
         | Pattern.PApp (cp, cpa)->
 	    begin match s with
@@ -2084,6 +2087,7 @@ let _ = Printf.eprintf "GRef gr1 %s\n%!" (string_of_path (Nametab.path_of_global
                 end
 	    | _ -> failwith (Printf.sprintf "num_interp_match_constr_pattern glob_constr %s" (obj_string s))
 	    end
+	| Pattern.PMeta (Some id) -> Some ((id, s) :: vl)
         | mp -> failwith (Printf.sprintf "num_interp_match_constr_pattern %s" (obj_string mp))
       in
       begin match Tacenv.interp_ltac tac with
