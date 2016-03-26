@@ -1956,6 +1956,22 @@ let interp_big_int ty f loc bi =
   | x ->
       failwith (Printf.sprintf "interp_big_int %s" (obj_string x))
 
+let qualid_of_constructref env sp i =
+  let mc =
+    let mib = Environ.lookup_mind sp env in
+    let inds =
+      List.init (Array.length mib.Declarations.mind_packets)
+        (fun x -> (sp, x))
+    in
+    let mip = mib.Declarations.mind_packets.(snd (List.hd inds)) in
+    mip.Declarations.mind_consnames
+  in
+  let qis =
+    if i >= 1 && i <= Array.length mc then mc.(i-1)
+    else failwith "qis not_found"
+  in
+  qualid_of_string (Id.to_string qis)
+
 let uninterp_big_int g c =
   let env = Global.env () in
   let rec constr_expr_of_glob_constr = function
@@ -1964,20 +1980,7 @@ let uninterp_big_int g c =
         let ceel = List.map (fun c -> (constr_expr_of_glob_constr c, None)) cl in
         CApp (loc, (None, ce), ceel)
     | Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None) ->
-        let mc =
-          let mib = Environ.lookup_mind sp env in
-          let inds =
-            List.init (Array.length mib.Declarations.mind_packets)
-              (fun x -> (sp, x))
-          in
-          let mip = mib.Declarations.mind_packets.(snd (List.hd inds)) in
-          mip.Declarations.mind_consnames
-        in
-        let qis =
-          if i >= 1 && i <= Array.length mc then mc.(i-1)
-          else failwith "qis not_found"
-        in
-        let qi = qualid_of_string (Id.to_string qis) in
+	let qi = qualid_of_constructref env sp i in
         CRef (Qualid (loc, qi), None)
     | x ->
         raise Not_found
@@ -2010,7 +2013,6 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr
   in
   match try Some (constr_expr_of_glob_constr c) with Not_found -> None with
   | Some ce ->
-let _ = Printf.eprintf "*** mmm... %s\n%!" (KerName.to_string tac) in
       let rec num_interp_call (vl : (_ * Glob_term.glob_constr) list) tac tal =
       	match Tacenv.interp_ltac tac with
       	| Tacexpr.TacFun (idol, e) ->
@@ -2077,8 +2079,9 @@ let _ = Printf.eprintf "*** mmm... %s\n%!" (KerName.to_string tac) in
           | Some (Glob_term.GRef (_, ConstRef s, None)) ->
               begin try Some (Bigint.of_string (Constant.to_string s))
               with Failure _ -> None end
-          | Some (Glob_term.GRef (_, ConstructRef c, None)) ->
-	      failwith "ConstructRef not impl"
+          | Some (Glob_term.GRef (_, ConstructRef ((sp, spi), i), None)) ->
+	      let qi = qualid_of_constructref (Global.env ()) sp i in
+	      Some (bigint_of_z' (CRef (Qualid (Loc.ghost, qi), None)))
           | Some x ->
               failwith (Printf.sprintf "Some (%s) not impl" (obj_string x))
 	  | None ->
