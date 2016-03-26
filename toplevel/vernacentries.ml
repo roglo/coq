@@ -2010,8 +2010,9 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr
 	| ConstRef cst ->
             let qi = qualid_of_string (Constant.to_string cst) in
             CRef (Qualid (loc, qi), None)
-	| ConstructRef c ->
-            failwith (Printf.sprintf "ConstructRef c not impl")
+	| ConstructRef ((sp, spi), i) ->
+	    let qi = qualid_of_constructref (Global.env ()) sp i in
+            CRef (Qualid (loc, qi), None)
         | gr ->
             failwith (Printf.sprintf "1 global_reference %s" (obj_string gr))
 	end
