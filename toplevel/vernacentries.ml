@@ -2032,13 +2032,14 @@ let _ = Printf.eprintf "*** mmm... %s\n%!" (KerName.to_string tac) in
         | Tacexpr.TacArg (loc, ta) -> num_interp_arg vl ta
         | t -> failwith (Printf.sprintf "num_interp %s" (obj_string t)) 
       and num_interp_arg vl = function
+        | Tacexpr.ConstrMayEval me -> failwith "ConstrMayEval not impl"
         | Tacexpr.Reference (ArgVar (loc, id)) -> List.assoc id vl
         | Tacexpr.TacCall (loc, ArgArg (loc1, tac), tal) -> num_interp_call vl tac tal
         | a -> failwith (Printf.sprintf "num_interp_arg %s" (obj_string a))
       and num_interp_match vl s = function
         | Tacexpr.Pat ([], mp, t) :: mrl ->
             begin match num_interp_match_pattern vl s mp with
-            | Some _ -> failwith "num_interp_match matched"
+            | Some vl -> num_interp vl t
             | None -> num_interp_match vl s mrl
             end
         | Tacexpr.Pat (_ :: _, mp, t) :: mrl -> failwith "Pat (_ :: _)"
@@ -2046,16 +2047,16 @@ let _ = Printf.eprintf "*** mmm... %s\n%!" (KerName.to_string tac) in
         | [] -> raise Not_found
       and num_interp_match_pattern vl s = function
         | Tacexpr.Term ((gc, None), cp) ->
-            begin match num_interp_match_constr_pattern vl s cp with
-            | Some vl -> failwith "constr_pattern matched"
-            | None -> None
-            end
-        | mp -> failwith (Printf.sprintf "num_interp_match_pattern %s" (obj_string mp))
+	    num_interp_match_constr_pattern vl s cp
+        | mp ->
+	    failwith (Printf.sprintf "num_interp_match_pattern %s" (obj_string mp))
       and num_interp_match_constr_pattern vl s = function
         | Pattern.PRef gr ->
 	    begin match s with
-	    | Glob_term.GRef (_, gr1, None) -> failwith "that matched; what do I do?"
-	    | _ -> failwith (Printf.sprintf "1 glob_constr %s" (obj_string s))
+	    | Glob_term.GRef (_, gr1, None) ->
+	        if eq_gr gr gr1 then Some vl else None
+	    | _ ->
+	        failwith (Printf.sprintf "1 glob_constr %s" (obj_string s))
 	    end
         | Pattern.PApp (cp, cpa)->
 	    begin match s with
