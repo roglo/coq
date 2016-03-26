@@ -1915,6 +1915,20 @@ let rec bigint_of_pos' = function
   | x ->
       failwith (Printf.sprintf "bigint_of_pos' %s" (obj_string x))
 
+let rec glob_constr_of_constr_expr = function
+  | CApp (loc, (pf, ce), ceel) ->
+      let c1 = glob_constr_of_constr_expr ce in
+      Glob_term.GApp
+        (loc, c1,
+         List.map (fun (ce, _) -> glob_constr_of_constr_expr ce) ceel)
+  | CRef (Qualid (loc, qi), None) ->
+      begin match try Some (Nametab.locate qi) with Not_found -> None with
+      | Some c -> Glob_term.GRef (loc, c, None)
+	    | None -> assert false
+	    end
+  | x ->
+      failwith (Printf.sprintf "constr_expr %s\n%!" (obj_string x))
+
 let bigint_of_z' = function
   | CRef (Qualid (loc, qi), None) ->
       if string_of_qualid qi = "Z'0" then Bigint.zero else assert false
@@ -1932,22 +1946,7 @@ let interp_big_int ty f loc bi =
       (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)]))
   in
   match t with
-  | CApp (_, _, [(ce, _)]) ->
-      let rec glob_constr_of_constr_expr = function
-        | CApp (loc, (pf, ce), ceel) ->
-            let c1 = glob_constr_of_constr_expr ce in
-            Glob_term.GApp
-              (loc, c1,
-               List.map (fun (ce, _) -> glob_constr_of_constr_expr ce) ceel)
-        | CRef (Qualid (loc, qi), None) ->
-            begin match try Some (Nametab.locate qi) with Not_found -> None with
-            | Some c -> Glob_term.GRef (loc, c, None)
-	    | None -> assert false
-	    end
-        | x ->
-            failwith (Printf.sprintf "constr_expr %s\n%!" (obj_string x))
-      in
-      glob_constr_of_constr_expr ce
+  | CApp (_, _, [(ce, _)]) -> glob_constr_of_constr_expr ce
   | CRef _ ->
       user_err_loc
         (loc, "_",
@@ -2046,8 +2045,11 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr
       and num_interp_arg vl = function
         | Tacexpr.ConstrMayEval me ->
 	    begin match me with
-	    | Genredexpr.ConstrTerm (gc, None) -> (* should evaluate, here *) gc
-	    | me -> failwith (Printf.sprintf "ConstrMayEval may_eval %s" (obj_string me))
+	    | Genredexpr.ConstrTerm (gc, None) ->
+	        let ce = vernac_get_eval (constr_expr_of_glob_constr gc) in
+		glob_constr_of_constr_expr ce
+	    | me ->
+	        failwith (Printf.sprintf "ConstrMayEval may_eval %s" (obj_string me))
 	    end
         | Tacexpr.Reference (ArgVar (loc, id)) -> List.assoc id vl
         | Tacexpr.TacCall (loc, ArgArg (loc1, tac), tal) -> num_interp_call vl tac tal
