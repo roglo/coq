@@ -711,7 +711,7 @@ module Make
           return (
             keyword "Format Notation " ++ qs s ++ spc () ++ qs k ++ spc() ++ qs v
           )
-        | VernacNumberNotation(id,f,g,sc,pl) ->
+        | VernacNumberNotation(id,f,g,sc,pl,thr) ->
           return (
             keyword "Number Notation..."
           )

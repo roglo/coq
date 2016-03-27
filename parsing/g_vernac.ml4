@@ -1115,15 +1115,28 @@ GEXTEND Gram
 	 -> VernacSyntaxExtension (local,(s,l))
 
      | IDENT "Number"; IDENT "Notation"; ty = identref; f = constr;
-       g = constr; ":"; sc = IDENT; patl = OPT num_pat_list ->
-	 VernacNumberNotation (ty,f,g,sc,patl)
+       g = constr; ":"; sc = IDENT; (patl, thr) = num_pat_list_threshold ->
+	 VernacNumberNotation (ty,f,g,sc,patl,thr)
 
      (* "Print" "Grammar" should be here but is in "command" entry in order
         to factorize with other "Print"-based vernac entries *)
   ] ]
   ;
+  num_pat_list_threshold:
+    [ [ "("; patl = num_pat_list; ")";
+        (patl2, thr) = num_pat_list_threshold ->
+          ((if patl2 = [] then patl else patl2), thr)
+      | "("; thr = threshold; ")";
+        (patl, thr2) = num_pat_list_threshold ->
+          (patl, max thr thr2)
+      | ->
+          ([], 0) ] ]
+  ;
   num_pat_list:
-    [ [ "("; IDENT "printing"; patl = LIST1 identref; ")" -> patl ] ]
+    [ [ IDENT "printing"; patl = LIST1 identref -> patl ] ]
+  ;
+  threshold:
+    [ [ IDENT "threshold"; m = INT -> int_of_string m ] ]
   ;
   only_parsing:
     [ [ "("; IDENT "only"; IDENT "parsing"; ")" ->

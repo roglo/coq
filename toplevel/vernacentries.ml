@@ -1890,9 +1890,18 @@ let rec pos'_of_bigint dloc n =
   | (q, true) ->
       CRef (Ident (identref dloc "x'H"), None)
 
-let z'_of_bigint dloc n =
+let z'_of_bigint dloc ty thr n =
+  if Bigint.is_pos_or_zero n && not (Bigint.equal thr Bigint.zero) &&
+     Bigint.less_than thr n
+  then
+    msg_warning
+      (strbrk "Stack overflow or segmentation fault happens when " ++
+       strbrk "working with large numbers in " ++ str (Id.to_string ty) ++
+       strbrk " (observed threshold may vary from 5000 to 70000 depending" ++
+       strbrk " on your system limits and on the command executed).")
+  else ();
   if not (Bigint.equal n Bigint.zero) then
-    let (s, n) =
+      let (s, n) =
       if Bigint.is_pos_or_zero n then ("Z'pos", n)
       else ("Z'neg", Bigint.neg n)
     in
@@ -1915,20 +1924,6 @@ let rec bigint_of_pos' = function
   | x ->
       failwith (Printf.sprintf "bigint_of_pos' %s" (obj_string x))
 
-let rec glob_constr_of_constr_expr = function
-  | CApp (loc, (pf, ce), ceel) ->
-      let c1 = glob_constr_of_constr_expr ce in
-      Glob_term.GApp
-        (loc, c1,
-         List.map (fun (ce, _) -> glob_constr_of_constr_expr ce) ceel)
-  | CRef (Qualid (loc, qi), None) ->
-      begin match try Some (Nametab.locate qi) with Not_found -> None with
-      | Some c -> Glob_term.GRef (loc, c, None)
-	    | None -> assert false
-	    end
-  | x ->
-      failwith (Printf.sprintf "constr_expr %s\n%!" (obj_string x))
-
 let bigint_of_z' = function
   | CRef (Qualid (loc, qi), None) ->
       if string_of_qualid qi = "Z'0" then Bigint.zero else assert false
@@ -1940,10 +1935,24 @@ let bigint_of_z' = function
   | x ->
       failwith (Printf.sprintf "bigint_of_z' %s" (obj_string x))
 
-let interp_big_int ty f loc bi =
+let rec glob_constr_of_constr_expr = function
+  | CApp (loc, (pf, ce), ceel) ->
+      let c1 = glob_constr_of_constr_expr ce in
+      Glob_term.GApp
+        (loc, c1,
+         List.map (fun (ce, _) -> glob_constr_of_constr_expr ce) ceel)
+  | CRef (Qualid (loc, qi), None) ->
+      begin match try Some (Nametab.locate qi) with Not_found -> None with
+      | Some c -> Glob_term.GRef (loc, c, None)
+      | None -> assert false
+      end
+  | x ->
+      failwith (Printf.sprintf "constr_expr %s\n%!" (obj_string x))
+
+let interp_big_int ty thr f loc bi =
   let t =
     Constrextern.without_symbols vernac_get_eval
-      (CApp (loc, (None, f), [(z'_of_bigint loc bi, None)]))
+      (CApp (loc, (None, f), [(z'_of_bigint loc ty thr bi, None)]))
   in
   match t with
   | CApp (_, _, [(ce, _)]) -> glob_constr_of_constr_expr ce
@@ -2113,7 +2122,8 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr
       end
   | None -> None
 
-let vernac_number_notation loc ty f g sc patl =
+let vernac_number_notation loc ty f g sc patl thr =
+  let thr = Bigint.of_int thr in
   let qid = qualid_of_ident ty in
   let crq = CRef (Qualid (loc, qid), None) in
   let arrow loc x y =
@@ -2152,8 +2162,8 @@ let vernac_number_notation loc ty f g sc patl =
           let env = Global.env () in
           let patl =
             match patl with
-            | Some patl -> failwith "patl not impl"
-            | None ->
+            | _ :: _ -> failwith "patl not impl"
+            | [] ->
                 let mc =
                   let mib = Environ.lookup_mind sp env in
                   let inds =
@@ -2172,7 +2182,7 @@ let vernac_number_notation loc ty f g sc patl =
                      mc)
           in
           Notation.declare_numeral_interpreter sc (path, [])
-            (interp_big_int ty f) (patl, uninterp_big_int g, true)
+            (interp_big_int ty thr f) (patl, uninterp_big_int g, true)
       | ConstRef cst ->
           let tac =
             match g with
@@ -2194,16 +2204,16 @@ let vernac_number_notation loc ty f g sc patl =
           in
           let patl =
             match patl with
-            | Some patl ->
+            | _ :: _ ->
                 List.map
                   (fun (loc, id) ->
                      Glob_term.GRef
                        (loc, intern_reference (Ident (loc, id)), None))
                   patl
-            | None -> []
+            | [] -> []
           in
           Notation.declare_numeral_interpreter sc (path, [])
-            (interp_big_int ty f) (patl, uninterp_big_int2 g tac, false)
+            (interp_big_int ty thr f) (patl, uninterp_big_int2 g tac, false)
       | VarRef _ | ConstructRef _ ->
           user_err_loc (loc, "_", str (Id.to_string ty) ++ str " is not a type")
       end
@@ -2243,8 +2253,8 @@ let interp ?proof ~loc locality poly c =
       vernac_notation locality local c infpl sc
   | VernacNotationAddFormat(n,k,v) ->
       Metasyntax.add_notation_extra_printing_rule n k v
-  | VernacNumberNotation ((loc,ty),f,g,sc,patl) ->
-      vernac_number_notation loc ty f g sc patl
+  | VernacNumberNotation ((loc,ty),f,g,sc,patl,thr) ->
+      vernac_number_notation loc ty f g sc patl thr
 
   (* Gallina *)
   | VernacDefinition (k,lid,d) -> vernac_definition locality poly k lid d
