@@ -2094,6 +2094,9 @@ and num_interp_match_constr_pattern vl s = function
   | mp -> failwith (Printf.sprintf "num_interp_match_constr_pattern %s" (obj_string mp))
 
 let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr) =
+(*
+  num_interp_call [] tac [c]
+*)
   match try Some (constr_expr_of_glob_constr [] c) with Not_found -> None with
   | Some ce ->
       begin match Tacenv.interp_ltac tac with
@@ -2120,6 +2123,7 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr
       end
   | None ->
       failwith "3"
+(**)
 
 let vernac_number_notation loc ty f g sc patl =
   let qid = qualid_of_ident ty in
