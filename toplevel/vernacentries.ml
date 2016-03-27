@@ -1971,20 +1971,29 @@ let qualid_of_constructref env sp i =
   in
   qualid_of_string (Id.to_string qis)
 
+let rec constr_expr_of_glob_constr vl = function
+  | Glob_term.GRef (loc, gr, None) ->
+      begin match gr with
+      | ConstRef cst ->
+          let qi = qualid_of_string (Constant.to_string cst) in
+          CRef (Qualid (loc, qi), None)
+      | ConstructRef ((sp, spi), i) ->
+          let qi = qualid_of_constructref (Global.env ()) sp i in
+          CRef (Qualid (loc, qi), None)
+      | gr ->
+          failwith (Printf.sprintf "1 global_reference %s" (obj_string gr))
+      end
+  | Glob_term.GVar (loc, id) ->
+      constr_expr_of_glob_constr vl (List.assoc id vl)
+  | Glob_term.GApp (loc, c1, cl) ->
+      let ce = constr_expr_of_glob_constr vl c1 in
+      let ceel = List.map (fun c -> (constr_expr_of_glob_constr vl c, None)) cl in
+      CApp (loc, (None, ce), ceel)
+  | x ->
+      failwith (Printf.sprintf "1 glob_constr %s" (obj_string x))
+
 let uninterp_big_int g c =
-  let env = Global.env () in
-  let rec constr_expr_of_glob_constr = function
-    | Glob_term.GApp (loc, c1, cl) ->
-        let ce = constr_expr_of_glob_constr c1 in
-        let ceel = List.map (fun c -> (constr_expr_of_glob_constr c, None)) cl in
-        CApp (loc, (None, ce), ceel)
-    | Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None) ->
-	let qi = qualid_of_constructref env sp i in
-        CRef (Qualid (loc, qi), None)
-    | x ->
-        raise Not_found
-  in
-  match try Some (constr_expr_of_glob_constr c) with Not_found -> None with
+  match try Some (constr_expr_of_glob_constr [] c) with Not_found -> None with
   | Some ce ->
       let t =
         Constrextern.without_symbols vernac_get_eval
@@ -1999,27 +2008,6 @@ let uninterp_big_int g c =
       None
 
 let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr) =
-  let rec constr_expr_of_glob_constr vl = function
-    | Glob_term.GRef (loc, gr, None) ->
-        begin match gr with
-	| ConstRef cst ->
-            let qi = qualid_of_string (Constant.to_string cst) in
-            CRef (Qualid (loc, qi), None)
-	| ConstructRef ((sp, spi), i) ->
-	    let qi = qualid_of_constructref (Global.env ()) sp i in
-            CRef (Qualid (loc, qi), None)
-        | gr ->
-            failwith (Printf.sprintf "1 global_reference %s" (obj_string gr))
-	end
-    | Glob_term.GVar (loc, id) ->
-        constr_expr_of_glob_constr vl (List.assoc id vl)
-    | Glob_term.GApp (loc, c1, cl) ->
-        let ce = constr_expr_of_glob_constr vl c1 in
-        let ceel = List.map (fun c -> (constr_expr_of_glob_constr vl c, None)) cl in
-        CApp (loc, (None, ce), ceel)
-    | x ->
-        failwith (Printf.sprintf "1 glob_constr %s" (obj_string x))
-  in
   match try Some (constr_expr_of_glob_constr [] c) with Not_found -> None with
   | Some ce ->
       let rec num_interp_call (vl : (_ * Glob_term.glob_constr) list) tac tal =
