@@ -2217,9 +2217,7 @@ let vernac_number_notation loc ty f g sc patl thr =
             match patl with
             | _ :: _ ->
                 List.map
-                  (fun (loc, id) ->
-                     Glob_term.GRef
-                       (loc, intern_reference (Ident (loc, id)), None))
+                  (fun r -> Glob_term.GRef (loc, intern_reference r, None))
                   patl
             | [] -> []
           in

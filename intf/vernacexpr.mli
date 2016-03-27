@@ -307,7 +307,7 @@ type vernac_expr =
       scope_name option
   | VernacNotationAddFormat of string * string * string
   | VernacNumberNotation of reference or_by_notation * constr_expr *
-      constr_expr * string * lident list * int
+      constr_expr * string * reference list * int
 
   (* Gallina *)
   | VernacDefinition of

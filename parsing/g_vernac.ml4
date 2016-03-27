@@ -1133,7 +1133,7 @@ GEXTEND Gram
           ([], 0) ] ]
   ;
   num_pat_list:
-    [ [ IDENT "printing"; patl = LIST1 identref -> patl ] ]
+    [ [ IDENT "printing"; patl = LIST1 reference -> patl ] ]
   ;
   threshold:
     [ [ IDENT "threshold"; m = INT -> int_of_string m ] ]
