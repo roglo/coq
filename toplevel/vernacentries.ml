@@ -2007,95 +2007,95 @@ let uninterp_big_int g c =
   | None ->
       None
 
+let rec num_interp_call (vl : (_ * Glob_term.glob_constr) list) tac tal =
+  match Tacenv.interp_ltac tac with
+  | Tacexpr.TacFun (idol, e) ->
+      let vl =
+        if List.length idol <> List.length tal then failwith "#parm <> #arg not impl"
+        else
+          let tal = List.map (num_interp_arg vl) tal in
+          List.fold_left2
+            (fun vl ido ta ->
+               match ido with
+               | Some id -> (id, ta) :: vl
+               | None -> vl)
+            vl idol tal
+      in
+      num_interp vl e
+  | t -> failwith (Printf.sprintf "num_interp_call tac %s" (obj_string t))
+and num_interp vl = function
+  | Tacexpr.TacFail _ -> raise Not_found
+  | Tacexpr.TacLetIn (rf, idltal, te) -> num_interp_let vl idltal te
+  | Tacexpr.TacMatch (lf, e, mrl) -> num_interp_match vl (num_interp vl e) mrl
+  | Tacexpr.TacArg (loc, ta) -> num_interp_arg vl ta
+  | t -> failwith (Printf.sprintf "num_interp %s" (obj_string t))
+and num_interp_arg vl = function
+  | Tacexpr.ConstrMayEval me ->
+      begin match me with
+      | Genredexpr.ConstrTerm (gc, None) ->
+          let ce = vernac_get_eval (constr_expr_of_glob_constr vl gc) in
+	  glob_constr_of_constr_expr ce
+      | me ->
+          failwith (Printf.sprintf "ConstrMayEval may_eval %s" (obj_string me))
+      end
+  | Tacexpr.Reference (ArgVar (loc, id)) -> List.assoc id vl
+  | Tacexpr.TacCall (loc, ArgArg (loc1, tac), tal) -> num_interp_call vl tac tal
+  | a -> failwith (Printf.sprintf "num_interp_arg %s" (obj_string a))
+and num_interp_let vl idltal te =
+  let vl =
+    List.fold_left
+      (fun vl ((loc, id), ta) -> (id, num_interp_arg vl ta) :: vl)
+	    vl idltal
+  in
+  num_interp vl te
+and num_interp_match vl s = function
+  | Tacexpr.Pat ([], mp, t) :: mrl ->
+      begin match num_interp_match_pattern vl s mp with
+      | Some vl -> num_interp vl t
+      | None -> num_interp_match vl s mrl
+      end
+  | Tacexpr.Pat (_ :: _, mp, t) :: mrl -> failwith "Pat (_ :: _)"
+  | Tacexpr.All (t : _ Tacexpr.gen_tactic_expr) :: _ -> num_interp vl t
+  | [] -> raise Not_found
+and num_interp_match_pattern vl s = function
+  | Tacexpr.Term ((gc, None), cp) ->
+      num_interp_match_constr_pattern vl s cp
+  | mp ->
+      failwith (Printf.sprintf "num_interp_match_pattern %s" (obj_string mp))
+and num_interp_match_constr_pattern vl s = function
+  | Pattern.PRef gr ->
+      begin match s with
+      | Glob_term.GRef (_, gr1, None) ->
+          if eq_gr gr gr1 then Some vl else None
+      | Glob_term.GApp (loc, gc1, gcl) ->
+          None
+      | _ ->
+          failwith (Printf.sprintf "2 glob_constr %s" (obj_string s))
+      end
+  | Pattern.PApp (cp, cpa)->
+      begin match s with
+      | Glob_term.GRef _ -> None
+      | Glob_term.GApp (loc, gc, gcl) ->
+          begin match num_interp_match_constr_pattern vl gc cp with
+          | Some vl ->
+             if Array.length cpa <> List.length gcl then failwith "patt #parm <> #arg not impl"
+             else
+	       List.fold_left2
+		 (fun vlo cp gc ->
+		  match vlo with
+		  | Some vl -> num_interp_match_constr_pattern vl gc cp
+		  | None -> None)
+    		 (Some vl) (Array.to_list cpa) gcl
+          | None -> None
+          end
+      | _ -> failwith (Printf.sprintf "num_interp_match_constr_pattern glob_constr %s" (obj_string s))
+      end
+  | Pattern.PMeta (Some id) -> Some ((id, s) :: vl)
+  | mp -> failwith (Printf.sprintf "num_interp_match_constr_pattern %s" (obj_string mp))
+
 let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr) =
   match try Some (constr_expr_of_glob_constr [] c) with Not_found -> None with
   | Some ce ->
-      let rec num_interp_call (vl : (_ * Glob_term.glob_constr) list) tac tal =
-      	match Tacenv.interp_ltac tac with
-      	| Tacexpr.TacFun (idol, e) ->
-            let vl =
-              if List.length idol <> List.length tal then failwith "#parm <> #arg not impl"
-              else
-                let tal = List.map (num_interp_arg vl) tal in
-                List.fold_left2
-                  (fun vl ido ta ->
-                     match ido with
-                     | Some id -> (id, ta) :: vl
-                     | None -> vl)
-                  vl idol tal
-            in
-      	    num_interp vl e
-      	| t -> failwith (Printf.sprintf "num_interp_call tac %s" (obj_string t)) 
-      and num_interp vl = function
-        | Tacexpr.TacFail _ -> raise Not_found
-        | Tacexpr.TacLetIn (rf, idltal, te) -> num_interp_let vl idltal te
-        | Tacexpr.TacMatch (lf, e, mrl) -> num_interp_match vl (num_interp vl e) mrl
-        | Tacexpr.TacArg (loc, ta) -> num_interp_arg vl ta
-        | t -> failwith (Printf.sprintf "num_interp %s" (obj_string t)) 
-      and num_interp_arg vl = function
-        | Tacexpr.ConstrMayEval me ->
-	    begin match me with
-	    | Genredexpr.ConstrTerm (gc, None) ->
-	        let ce = vernac_get_eval (constr_expr_of_glob_constr vl gc) in
-		glob_constr_of_constr_expr ce
-	    | me ->
-	        failwith (Printf.sprintf "ConstrMayEval may_eval %s" (obj_string me))
-	    end
-        | Tacexpr.Reference (ArgVar (loc, id)) -> List.assoc id vl
-        | Tacexpr.TacCall (loc, ArgArg (loc1, tac), tal) -> num_interp_call vl tac tal
-        | a -> failwith (Printf.sprintf "num_interp_arg %s" (obj_string a))
-      and num_interp_let vl idltal te =
-        let vl =
-          List.fold_left
-            (fun vl ((loc, id), ta) -> (id, num_interp_arg vl ta) :: vl)
-	    vl idltal
-        in
-	num_interp vl te
-      and num_interp_match vl s = function
-        | Tacexpr.Pat ([], mp, t) :: mrl ->
-            begin match num_interp_match_pattern vl s mp with
-            | Some vl -> num_interp vl t
-            | None -> num_interp_match vl s mrl
-            end
-        | Tacexpr.Pat (_ :: _, mp, t) :: mrl -> failwith "Pat (_ :: _)"
-        | Tacexpr.All (t : _ Tacexpr.gen_tactic_expr) :: _ -> num_interp vl t
-        | [] -> raise Not_found
-      and num_interp_match_pattern vl s = function
-        | Tacexpr.Term ((gc, None), cp) ->
-	    num_interp_match_constr_pattern vl s cp
-        | mp ->
-	    failwith (Printf.sprintf "num_interp_match_pattern %s" (obj_string mp))
-      and num_interp_match_constr_pattern vl s = function
-        | Pattern.PRef gr ->
-	    begin match s with
-	    | Glob_term.GRef (_, gr1, None) ->
-	        if eq_gr gr gr1 then Some vl else None
-            | Glob_term.GApp (loc, gc1, gcl) ->
-	        None
-	    | _ ->
-	        failwith (Printf.sprintf "2 glob_constr %s" (obj_string s))
-	    end
-        | Pattern.PApp (cp, cpa)->
-	    begin match s with
-	    | Glob_term.GRef _ -> None
-	    | Glob_term.GApp (loc, gc, gcl) ->
-	        begin match num_interp_match_constr_pattern vl gc cp with
-                | Some vl ->
-                   if Array.length cpa <> List.length gcl then failwith "patt #parm <> #arg not impl"
-                   else
-		     List.fold_left2
-		       (fun vlo cp gc ->
-		        match vlo with
-			| Some vl -> num_interp_match_constr_pattern vl gc cp
-			| None -> None)
-		       (Some vl) (Array.to_list cpa) gcl
-                | None -> None
-                end
-	    | _ -> failwith (Printf.sprintf "num_interp_match_constr_pattern glob_constr %s" (obj_string s))
-	    end
-	| Pattern.PMeta (Some id) -> Some ((id, s) :: vl)
-        | mp -> failwith (Printf.sprintf "num_interp_match_constr_pattern %s" (obj_string mp))
-      in
       begin match Tacenv.interp_ltac tac with
       | Tacexpr.TacFun ([Some id], e) ->
           begin
@@ -2116,7 +2116,7 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr
 	  | None ->
 	      None
           end
-      | t -> failwith (Printf.sprintf "tac %s" (obj_string t)) 
+      | t -> failwith (Printf.sprintf "tac %s" (obj_string t))
       end
   | None ->
       failwith "3"
