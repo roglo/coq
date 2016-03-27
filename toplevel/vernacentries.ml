@@ -2118,20 +2118,6 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr
           end
       | t -> failwith (Printf.sprintf "tac %s" (obj_string t)) 
       end
-(*
-Id.t option list * 'a gen_tactic_expr
-let _u : Taccoerce.Value.t Ftactic.t = Tacinterp.val_interp3 (default_ist ()) (Tacenv.interp_ltac tac) in
-      let loc = Loc.ghost in
-      let p = (loc, Tacexpr.Reference tac) in
-      let (_, pf) = Proofview.init Evd.empty [] in
-      let (t, pf, (b, _, _), it) = Proofview.apply (Global.env ()) (Proofview.tclUNIT p) pf in
-      let sigma = Proofview.return pf in
-      if Evd.is_empty sigma then failwith "empty result"
-      else
-        begin match (sigma : Evd.evar_map) with
-        | t -> failwith (Printf.sprintf "t %s" (obj_string t))
-        end
-*)
   | None ->
       failwith "3"
 
