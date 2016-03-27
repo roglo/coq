@@ -1890,13 +1890,18 @@ let rec pos'_of_bigint dloc n =
   | (q, true) ->
       CRef (Ident (identref dloc "x'H"), None)
 
+let string_of_reference_or_by_notation = function
+  | AN r -> string_of_reference r
+  | ByNotation (loc, s, so) -> failwith "string_of_reference_or_by_notation ByNotation"
+
 let z'_of_bigint dloc ty thr n =
   if Bigint.is_pos_or_zero n && not (Bigint.equal thr Bigint.zero) &&
      Bigint.less_than thr n
   then
     msg_warning
       (strbrk "Stack overflow or segmentation fault happens when " ++
-       strbrk "working with large numbers in " ++ str (Id.to_string ty) ++
+       strbrk "working with large numbers in " ++
+       str (string_of_reference_or_by_notation ty) ++
        strbrk " (observed threshold may vary from 5000 to 70000 depending" ++
        strbrk " on your system limits and on the command executed).")
   else ();
@@ -1960,7 +1965,7 @@ let interp_big_int ty thr f loc bi =
       user_err_loc
         (loc, "_",
          str "Cannot interpret this number as a value of type " ++
-         str (Id.to_string ty))
+         str (string_of_reference_or_by_notation ty))
   | x ->
       failwith (Printf.sprintf "interp_big_int %s" (obj_string x))
 
@@ -2122,10 +2127,14 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr
       end
   | None -> None
 
+let qualid_of_reference_or_by_notation = function
+  | AN r -> qualid_of_reference r
+  | ByNotation (loc, s, so) -> failwith "qualid_of_reference_or_by_notation ByNotation"
+
 let vernac_number_notation loc ty f g sc patl thr =
   let thr = Bigint.of_int thr in
-  let qid = qualid_of_ident ty in
-  let crq = CRef (Qualid (loc, qid), None) in
+  let lqid = qualid_of_reference_or_by_notation ty in
+  let crq = CRef (Qualid lqid, None) in
   let arrow loc x y =
     CProdN (loc, [([(loc, Anonymous)], Default Explicit, x)], y)
   in
@@ -2143,7 +2152,7 @@ let vernac_number_notation loc ty f g sc patl thr =
     let (sigma, env) = get_current_context () in
     interp_open_constr env sigma c
   in
-  match try Some (Nametab.locate qid) with Not_found -> None with
+  match try Some (Nametab.locate (snd lqid)) with Not_found -> None with
   | Some gr ->
       let path = Nametab.path_of_global gr in
       begin match gr with
@@ -2200,7 +2209,9 @@ let vernac_number_notation loc ty f g sc patl thr =
                 end
             | _ ->
                 user_err_loc
-                  (loc, "_", str (Id.to_string ty) ++ str " is not a type")
+                  (loc, "_",
+		   str (string_of_reference_or_by_notation ty) ++
+		   str " is not a type")
           in
           let patl =
             match patl with
@@ -2215,12 +2226,16 @@ let vernac_number_notation loc ty f g sc patl thr =
           Notation.declare_numeral_interpreter sc (path, [])
             (interp_big_int ty thr f) (patl, uninterp_big_int2 g tac, false)
       | VarRef _ | ConstructRef _ ->
-          user_err_loc (loc, "_", str (Id.to_string ty) ++ str " is not a type")
+          user_err_loc
+	    (loc, "_",
+	     str (string_of_reference_or_by_notation ty) ++
+	     str " is not a type")
       end
   | None ->
       user_err_loc
         (loc, "_",
-         str "type " ++ str (Id.to_string ty) ++ str " not found")
+         str "type " ++ str (string_of_reference_or_by_notation ty) ++
+	 str " not found")
 
 (* "locality" is the prefix "Local" attribute, while the "local" component
  * is the outdated/deprecated "Local" attribute of some vernacular commands
@@ -2253,7 +2268,7 @@ let interp ?proof ~loc locality poly c =
       vernac_notation locality local c infpl sc
   | VernacNotationAddFormat(n,k,v) ->
       Metasyntax.add_notation_extra_printing_rule n k v
-  | VernacNumberNotation ((loc,ty),f,g,sc,patl,thr) ->
+  | VernacNumberNotation (ty,f,g,sc,patl,thr) ->
       vernac_number_notation loc ty f g sc patl thr
 
   (* Gallina *)

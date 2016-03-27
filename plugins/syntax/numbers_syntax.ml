@@ -244,13 +244,14 @@ let bigN_list_of_constructors =
   build 0
 
 (* Actually declares the interpreter for bigN *)
+(*
 let _ = Notation.declare_numeral_interpreter bigN_scope
   (bigN_path, bigN_module)
   interp_bigN
   (bigN_list_of_constructors,
    uninterp_bigN,
    true)
-
+*)
 
 (*** Parsing for bigZ in digital notation ***)
 let interp_bigZ dloc n =
