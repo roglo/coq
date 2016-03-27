@@ -2105,7 +2105,11 @@ and num_interp_match_constr_pattern vl s = function
           end
       | _ -> failwith (Printf.sprintf "num_interp_match_constr_pattern glob_constr %s" (obj_string s))
       end
-  | Pattern.PMeta (Some id) -> Some ((id, s) :: vl)
+  | Pattern.PMeta ido ->
+      begin match ido with
+      | Some id -> Some ((id, s) :: vl)
+      | None -> Some vl
+      end
   | mp -> failwith (Printf.sprintf "num_interp_match_constr_pattern %s" (obj_string mp))
 
 let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr) =
