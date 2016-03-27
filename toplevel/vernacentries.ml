@@ -1901,7 +1901,7 @@ let z'_of_bigint dloc ty thr n =
        strbrk " on your system limits and on the command executed).")
   else ();
   if not (Bigint.equal n Bigint.zero) then
-      let (s, n) =
+    let (s, n) =
       if Bigint.is_pos_or_zero n then ("Z'pos", n)
       else ("Z'neg", Bigint.neg n)
     in
