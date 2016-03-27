@@ -2013,7 +2013,6 @@ let rec num_interp_call (vl : (_ * Glob_term.glob_constr) list) tac tal =
       let vl =
         if List.length idol <> List.length tal then failwith "#parm <> #arg not impl"
         else
-          let tal = List.map (num_interp_arg vl) tal in
           List.fold_left2
             (fun vl ido ta ->
                match ido with
@@ -2039,7 +2038,9 @@ and num_interp_arg vl = function
           failwith (Printf.sprintf "ConstrMayEval may_eval %s" (obj_string me))
       end
   | Tacexpr.Reference (ArgVar (loc, id)) -> List.assoc id vl
-  | Tacexpr.TacCall (loc, ArgArg (loc1, tac), tal) -> num_interp_call vl tac tal
+  | Tacexpr.TacCall (loc, ArgArg (loc1, tac), tal) ->
+      let tal = List.map (num_interp_arg vl) tal in
+      num_interp_call vl tac tal
   | a -> failwith (Printf.sprintf "num_interp_arg %s" (obj_string a))
 and num_interp_let vl idltal te =
   let vl =
@@ -2094,36 +2095,23 @@ and num_interp_match_constr_pattern vl s = function
   | mp -> failwith (Printf.sprintf "num_interp_match_constr_pattern %s" (obj_string mp))
 
 let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr) =
-(*
-  num_interp_call [] tac [c]
-*)
-  match try Some (constr_expr_of_glob_constr [] c) with Not_found -> None with
-  | Some ce ->
-      begin match Tacenv.interp_ltac tac with
-      | Tacexpr.TacFun ([Some id], e) ->
-          begin
-            match try Some (num_interp [(id, c)] e) with Not_found -> None
-          with
-          | Some (Glob_term.GRef (_, ConstRef s, None)) ->
-              begin try Some (Bigint.of_string (Constant.to_string s))
-              with Failure _ -> None end
-          | Some (Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None)) ->
-	      let qi = qualid_of_constructref (Global.env ()) sp i in
-	      Some (bigint_of_z' (CRef (Qualid (loc, qi), None)))
-          | Some (Glob_term.GApp (loc, gc, gcl)) ->
-              let ce = constr_expr_of_glob_constr [] gc in
-              let ceel = List.map (fun c -> (constr_expr_of_glob_constr [] c, None)) gcl in
-	      Some (bigint_of_z' (CApp (loc, (None, ce), ceel)))
-          | Some x ->
-              failwith (Printf.sprintf "Some (%s) not impl" (obj_string x))
-	  | None ->
-	      None
-          end
-      | t -> failwith (Printf.sprintf "tac %s" (obj_string t))
+  match try Some (num_interp_call [] tac [c]) with Not_found -> None with
+  | Some gr ->
+      begin match gr with
+      | Glob_term.GRef (_, ConstRef s, None) ->
+          begin try Some (Bigint.of_string (Constant.to_string s))
+          with Failure _ -> None end
+      | Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None) ->
+          let qi = qualid_of_constructref (Global.env ()) sp i in
+          Some (bigint_of_z' (CRef (Qualid (loc, qi), None)))
+      | Glob_term.GApp (loc, gc, gcl) ->
+          let ce = constr_expr_of_glob_constr [] gc in
+          let ceel = List.map (fun c -> (constr_expr_of_glob_constr [] c, None)) gcl in
+          Some (bigint_of_z' (CApp (loc, (None, ce), ceel)))
+      | x ->
+          failwith (Printf.sprintf "uninterp_big_int2 (%s) not impl" (obj_string x))
       end
-  | None ->
-      failwith "3"
-(**)
+  | None -> None
 
 let vernac_number_notation loc ty f g sc patl =
   let qid = qualid_of_ident ty in
@@ -2203,9 +2191,6 @@ let vernac_number_notation loc ty f g sc patl =
             | _ ->
                 user_err_loc
                   (loc, "_", str (Id.to_string ty) ++ str " is not a type")
-(*
-            let ist = default_ist () in
-*)
           in
           let patl =
             match patl with
