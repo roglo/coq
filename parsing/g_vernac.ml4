@@ -1115,28 +1115,29 @@ GEXTEND Gram
 	 -> VernacSyntaxExtension (local,(s,l))
 
      | IDENT "Number"; IDENT "Notation"; ty = smart_global; f = constr;
-       g = constr; ":"; sc = IDENT; (patl, thr) = num_pat_list_threshold ->
-	 VernacNumberNotation (ty,f,g,sc,patl,thr)
+       g = constr; ":"; sc = IDENT;
+       (patl, waft) = num_pat_list_warning_after ->
+	 VernacNumberNotation (ty,f,g,sc,patl,waft)
 
      (* "Print" "Grammar" should be here but is in "command" entry in order
         to factorize with other "Print"-based vernac entries *)
   ] ]
   ;
-  num_pat_list_threshold:
+  num_pat_list_warning_after:
     [ [ "("; patl = num_pat_list; ")";
-        (patl2, thr) = num_pat_list_threshold ->
-          ((if patl2 = [] then patl else patl2), thr)
-      | "("; thr = threshold; ")";
-        (patl, thr2) = num_pat_list_threshold ->
-          (patl, max thr thr2)
+        (patl2, waft) = num_pat_list_warning_after ->
+          ((if patl2 = [] then patl else patl2), waft)
+      | "("; waft = warning_after; ")";
+        (patl, waft2) = num_pat_list_warning_after ->
+          (patl, max waft waft2)
       | ->
           ([], 0) ] ]
   ;
   num_pat_list:
     [ [ IDENT "printing"; patl = LIST1 reference -> patl ] ]
   ;
-  threshold:
-    [ [ IDENT "threshold"; m = INT -> int_of_string m ] ]
+  warning_after:
+    [ [ IDENT "warning"; IDENT "after"; m = INT -> int_of_string m ] ]
   ;
   only_parsing:
     [ [ "("; IDENT "only"; IDENT "parsing"; ")" ->

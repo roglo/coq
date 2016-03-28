@@ -2141,8 +2141,8 @@ let qualid_of_reference_or_by_notation = function
   | AN r -> qualid_of_reference r
   | ByNotation (loc, s, so) -> failwith "qualid_of_reference_or_by_notation ByNotation"
 
-let vernac_number_notation loc ty f g sc patl thr =
-  let thr = Bigint.of_int thr in
+let vernac_number_notation loc ty f g sc patl waft =
+  let thr = Bigint.of_int waft in
   let lqid = qualid_of_reference_or_by_notation ty in
   let crq = CRef (Qualid lqid, None) in
   let arrow loc x y =
@@ -2276,8 +2276,8 @@ let interp ?proof ~loc locality poly c =
       vernac_notation locality local c infpl sc
   | VernacNotationAddFormat(n,k,v) ->
       Metasyntax.add_notation_extra_printing_rule n k v
-  | VernacNumberNotation (ty,f,g,sc,patl,thr) ->
-      vernac_number_notation loc ty f g sc patl thr
+  | VernacNumberNotation (ty,f,g,sc,patl,waft) ->
+      vernac_number_notation loc ty f g sc patl waft
 
   (* Gallina *)
   | VernacDefinition (k,lid,d) -> vernac_definition locality poly k lid d
