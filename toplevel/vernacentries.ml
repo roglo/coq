@@ -1940,6 +1940,10 @@ let bigint_of_z' = function
   | x ->
       failwith (Printf.sprintf "bigint_of_z' %s" (obj_string x))
 
+let string_of_prim_token = function
+  | Numeral bi -> Bigint.to_string bi
+  | String s -> "\"" ^ s ^ "\""
+
 let rec glob_constr_of_constr_expr = function
   | CApp (loc, (pf, ce), ceel) ->
       let c1 = glob_constr_of_constr_expr ce in
@@ -1951,8 +1955,10 @@ let rec glob_constr_of_constr_expr = function
       | Some c -> Glob_term.GRef (loc, c, None)
       | None -> assert false
       end
+  | CPrim (loc, pt) ->
+      failwith (Printf.sprintf "CPrim %s in glob_constr_of_constr_expr" (string_of_prim_token pt))
   | x ->
-      failwith (Printf.sprintf "constr_expr %s\n%!" (obj_string x))
+      failwith (Printf.sprintf "constr_expr %s" (obj_string x))
 
 let interp_big_int ty thr f loc bi =
   let t =
