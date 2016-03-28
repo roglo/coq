@@ -1955,8 +1955,6 @@ let rec glob_constr_of_constr_expr = function
       | Some c -> Glob_term.GRef (loc, c, None)
       | None -> assert false
       end
-  | CPrim (loc, pt) ->
-      failwith (Printf.sprintf "CPrim %s in glob_constr_of_constr_expr" (string_of_prim_token pt))
   | x ->
       failwith (Printf.sprintf "constr_expr %s" (obj_string x))
 
@@ -2052,7 +2050,10 @@ and num_interp_arg vl = function
   | Tacexpr.ConstrMayEval me ->
       begin match me with
       | Genredexpr.ConstrTerm (gc, None) ->
-          let ce = vernac_get_eval (constr_expr_of_glob_constr vl gc) in
+          let ce =
+	    Constrextern.without_symbols vernac_get_eval
+              (constr_expr_of_glob_constr vl gc)
+	  in
 	  glob_constr_of_constr_expr ce
       | me ->
           failwith (Printf.sprintf "ConstrMayEval may_eval %s" (obj_string me))
