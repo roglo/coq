@@ -1956,34 +1956,6 @@ let rec glob_constr_of_constr loc c = match Constr.kind c with
   | x ->
       failwith (Printf.sprintf "constr %s" (obj_string x))
 
-(*
-let string_of_global_reference = function
-  | ConstructRef ((ty, p), n) ->
-let s = MutInd.to_string ty in
-let s = let rec loop i =
- if i = 0 then s
- else if s.[i-1] = '.' then String.sub s i (String.length s - i)
- else loop (i-1)
- in loop (String.length s)
-in
-       Printf.sprintf "%s/%d" s n
-  | x ->
-      failwith (Printf.sprintf "string_of_global_reference %s" (obj_string x))
-
-let glob_constr_of_constr ce =
-  let r = glob_constr_of_constr ce in
-  let rec trace gc =
-    match gc with
-    | Glob_term.GApp (_, c1, gcl) -> trace c1; List.iter trace1 gcl
-    | _ -> trace1 gc
-  and trace1 gc =
-    match gc with
-    | Glob_term.GRef (_, c, _) -> Printf.eprintf "%s %!" (string_of_global_reference c)
-    | _ -> Printf.eprintf "("; trace gc; Printf.eprintf ") "
-  in
-  trace r; Printf.eprintf "\n%!"; r
-*)
-
 let interp_big_int ty thr f loc bi =
   let t =
     Constrextern.without_symbols vernac_get_eval
