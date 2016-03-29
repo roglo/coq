@@ -1953,8 +1953,10 @@ let rec glob_constr_of_constr loc c = match Constr.kind c with
       Glob_term.GApp (loc, c, cel)
   | Construct (c, _) ->
       Glob_term.GRef (loc, ConstructRef c, None)
+  | Const (c, _) ->
+      failwith "Const yeah"
   | x ->
-      failwith (Printf.sprintf "constr %s" (obj_string x))
+      failwith (Printf.sprintf "1 constr %s" (obj_string x))
 
 let interp_big_int ty thr f loc bi =
   let t =
@@ -2021,7 +2023,7 @@ let uninterp_big_int g c =
       | CApp (_, _, [(ce, _)]) -> Some (bigint_of_z' ce)
       | CRef _ -> None
 *)
-      | x -> failwith (Printf.sprintf "constr %s" (obj_string x))
+      | x -> failwith (Printf.sprintf "2 constr %s" (obj_string x))
       end
   | None ->
       None
