@@ -1545,9 +1545,8 @@ let vernac_get_eval rc =
     c
   in
   let t = redfun env sigma' j.Environ.uj_val in
-(*
-  Constrextern.extern_constr false env sigma' t
-*)t
+  let e = Constrextern.extern_constr false env sigma' t in
+  intern_constr (Global.env ()) e
 
 let vernac_check_may_eval redexp glopt rc =
   let (sigma, env) = get_current_context_of_args glopt in
@@ -1936,6 +1935,11 @@ let bigint_of_z' c = match Constr.kind c with
   | x ->
       failwith (Printf.sprintf "bigint_of_z' Constr.kind %s" (obj_string x))
 
+let new_bigint_of_z' = function
+  | Glob_term.GRef (loc, gr, gllo) -> failwith "GRef ouais"
+  | x ->
+      failwith (Printf.sprintf "new_bigint_of_z' glob_constr %s" (obj_string x))
+
 let old_bigint_of_z' = function
   | CRef (Qualid (loc, qi), None) ->
       if string_of_qualid qi = "Z'0" then Bigint.zero else assert false
@@ -1998,17 +2002,17 @@ let interp_big_int ty thr f loc bi =
     Constrextern.without_symbols vernac_get_eval
       (CApp (loc, (None, f), [(z'_of_bigint loc ty thr bi, None)]))
   in
-  match Constr.kind t with
 (*
+  match Constr.kind t with
   | CApp (_, _, [(ce, _)]) -> glob_constr_of_constr_expr ce
   | CRef _ ->
       user_err_loc
         (loc, "_",
          str "Cannot interpret this number as a value of type " ++
          str (string_of_reference_or_by_notation ty))
-*)
   | x ->
       failwith (Printf.sprintf "interp_big_int Constr.kind_of_term %s" (obj_string x))
+*)t
 
 let qualid_of_constructref env sp i =
   let mc =
@@ -2054,13 +2058,14 @@ let uninterp_big_int g c =
         Constrextern.without_symbols vernac_get_eval
           (CApp (Glob_ops.loc_of_glob_constr c, (None, g), [(ce, None)]))
       in
-      begin match Constr.kind t with
+      begin match t with
 (*
       | CApp (_, _, [(ce, _)]) -> Some (old_bigint_of_z' ce)
       | CRef _ -> None
-*)
       | Constr.App (c, ca) -> (* @Some _ x *) Some (bigint_of_z' ca.(1)) 
-      | x -> failwith (Printf.sprintf "uninterp_big_int Constr.kind %s" (obj_string x))
+*)
+      | Glob_term.GApp (loc, _, [_; gc]) -> Some (new_bigint_of_z' gc)
+      | x -> failwith (Printf.sprintf "uninterp_big_int glob_constr %s" (obj_string x))
       end
   | None ->
       None
