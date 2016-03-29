@@ -1960,6 +1960,8 @@ let rec glob_constr_of_constr loc c = match Constr.kind c with
       | None -> assert false
       end
 *)
+  | App (c, ca) ->
+      failwith "App to implement"
   | Construct (c, _) ->
       Glob_term.GRef (loc, ConstructRef c, None)
   | x ->
