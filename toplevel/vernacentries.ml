@@ -1914,7 +1914,8 @@ let z'_of_bigint dloc ty thr n =
   else
     CRef (Ident (identref dloc "Z'0"), None)
 
-let rec bigint_of_pos' = function
+let rec bigint_of_pos' c = match Constr.kind c with
+(*
   | CRef (Qualid (loc, qi), None) ->
       let qis = string_of_qualid qi in
       if qis = "x'H" then Bigint.one
@@ -1925,43 +1926,35 @@ let rec bigint_of_pos' = function
       | "x'I" -> Bigint.add_1 (Bigint.mult_2 (bigint_of_pos' ce))
       | qis -> failwith (Printf.sprintf "bigint_of_pos': CApp %s" qis)
       end
+*)
   | x ->
       failwith (Printf.sprintf "bigint_of_pos' %s" (obj_string x))
 
 let bigint_of_z' z' = match Constr.kind z' with
-(*
-  | CRef (Qualid (loc, qi), None) ->
-      if string_of_qualid qi = "Z'0" then Bigint.zero else assert false
-  | CApp (loc, (pf, CRef (Qualid (loc', qi), None)), [(ce, _)]) ->
-      let qis = string_of_qualid qi in
-      if qis = "Z'pos" then bigint_of_pos' ce
-      else if qis = "Z'neg" then Bigint.neg (bigint_of_pos' ce)
-      else failwith (Printf.sprintf "bigint_of_z': CApp %s" qis)
-*)
-  | Construct (((ty, _), 1), _) -> (* Z'0 *)
-      Bigint.zero
-  | x ->
-      failwith (Printf.sprintf "bigint_of_z' %s" (obj_string x))
+  | App (c, ca) ->
+      begin match Constr.kind c with
+      | Construct ((_, n), _) ->
+          if Array.length ca = 1 then
+            begin match n with
+            | 2 -> (* Z'pos *) bigint_of_pos' ca.(0)
+            | 3 -> (* Z'neg *) Bigint.neg (bigint_of_pos' ca.(0))
+            | n -> assert false
+            end
+          else failwith (Printf.sprintf "bigint_of_z' len %d" (Array.length ca))
+      | x -> failwith (Printf.sprintf "bigint_of_z' App c %s" (obj_string x))
+      end
+  | Construct ((_, 1), _) -> (* Z'0 *) Bigint.zero
+  | x -> failwith (Printf.sprintf "bigint_of_z' %s" (obj_string x))
 
 let string_of_prim_token = function
   | Numeral bi -> Bigint.to_string bi
   | String s -> "\"" ^ s ^ "\""
 
 let rec glob_constr_of_constr loc c = match Constr.kind c with
-(*
-  | CApp (loc, (pf, ce), ceel) ->
-      let c1 = glob_constr_of_constr ce in
-      Glob_term.GApp
-        (loc, c1,
-         List.map (fun (ce, _) -> glob_constr_of_constr ce) ceel)
-  | CRef (Qualid (loc, qi), None) ->
-      begin match try Some (Nametab.locate qi) with Not_found -> None with
-      | Some c -> Glob_term.GRef (loc, c, None)
-      | None -> assert false
-      end
-*)
   | App (c, ca) ->
-      failwith "App to implement"
+      let c = glob_constr_of_constr loc c in
+      let cel = List.map (glob_constr_of_constr loc) (Array.to_list ca) in
+      Glob_term.GApp (loc, c, cel)
   | Construct (c, _) ->
       Glob_term.GRef (loc, ConstructRef c, None)
   | x ->
