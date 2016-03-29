@@ -1928,7 +1928,7 @@ let rec bigint_of_pos' c = match Constr.kind c with
   | Construct ((_, 3), _) -> (* x'H *) Bigint.one
   | x -> failwith (Printf.sprintf "bigint_of_pos' %s" (obj_string x))
 
-let bigint_of_z' z' = match Constr.kind z' with
+let bigint_of_z'_kind = function
   | App (c, [| d |]) ->
       begin match Constr.kind c with
       | Construct ((_, n), _) ->
@@ -1941,6 +1941,8 @@ let bigint_of_z' z' = match Constr.kind z' with
       end
   | Construct ((_, 1), _) -> (* Z'0 *) Bigint.zero
   | x -> failwith (Printf.sprintf "bigint_of_z' %s" (obj_string x))
+
+let bigint_of_z' z' = bigint_of_z'_kind (Constr.kind z')
 
 let string_of_prim_token = function
   | Numeral bi -> Bigint.to_string bi
@@ -2122,9 +2124,18 @@ and num_interp_match_constr_pattern vl s = function
       end
   | mp -> failwith (Printf.sprintf "num_interp_match_constr_pattern %s" (obj_string mp))
 
+let constr_of_glob_constr = function
+  | Glob_term.GRef (_, ConstructRef c, None) ->
+      Construct (c, Univ.Instance.empty)
+  | Glob_term.GRef (_, c, None) -> failwith (Printf.sprintf "tagada %s" (obj_string c))
+  | gc -> failwith (Printf.sprintf "constr_of_glob_constr %s" (obj_string gc))
+
 let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr) =
   match try Some (num_interp_call [] tac [c]) with Not_found -> None with
   | Some gr ->
+      begin try Some (bigint_of_z'_kind (constr_of_glob_constr gr))
+      with Not_found -> None end
+(*
       begin match gr with
       | Glob_term.GRef (_, ConstRef s, None) ->
           begin try Some (Bigint.of_string (Constant.to_string s))
@@ -2146,6 +2157,7 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr
       | x ->
           failwith (Printf.sprintf "uninterp_big_int2 (%s) not impl" (obj_string x))
       end
+*)
   | None -> None
 
 let qualid_of_reference_or_by_notation = function
