@@ -1947,21 +1947,23 @@ let string_of_prim_token = function
   | Numeral bi -> Bigint.to_string bi
   | String s -> "\"" ^ s ^ "\""
 
-let rec glob_constr_of_constr_expr = function
+let rec glob_constr_of_constr loc c = match Constr.kind c with
 (*
   | CApp (loc, (pf, ce), ceel) ->
-      let c1 = glob_constr_of_constr_expr ce in
+      let c1 = glob_constr_of_constr ce in
       Glob_term.GApp
         (loc, c1,
-         List.map (fun (ce, _) -> glob_constr_of_constr_expr ce) ceel)
+         List.map (fun (ce, _) -> glob_constr_of_constr ce) ceel)
   | CRef (Qualid (loc, qi), None) ->
       begin match try Some (Nametab.locate qi) with Not_found -> None with
       | Some c -> Glob_term.GRef (loc, c, None)
       | None -> assert false
       end
 *)
+  | Construct (c, _) ->
+      Glob_term.GRef (loc, ConstructRef c, None)
   | x ->
-      failwith (Printf.sprintf "constr_expr %s" (obj_string x))
+      failwith (Printf.sprintf "constr %s" (obj_string x))
 
 (*
 let string_of_global_reference = function
@@ -1977,8 +1979,8 @@ in
   | x ->
       failwith (Printf.sprintf "string_of_global_reference %s" (obj_string x))
 
-let glob_constr_of_constr_expr ce =
-  let r = glob_constr_of_constr_expr ce in
+let glob_constr_of_constr ce =
+  let r = glob_constr_of_constr ce in
   let rec trace gc =
     match gc with
     | Glob_term.GApp (_, c1, gcl) -> trace c1; List.iter trace1 gcl
@@ -1996,15 +1998,16 @@ let interp_big_int ty thr f loc bi =
     Constrextern.without_symbols vernac_get_eval
       (CApp (loc, (None, f), [(z'_of_bigint loc ty thr bi, None)]))
   in
-  match t with
+  match Constr.kind t with
 (*
-  | CApp (_, _, [(ce, _)]) -> glob_constr_of_constr_expr ce
+  | CApp (_, _, [(ce, _)]) -> glob_constr_of_constr ce
   | CRef _ ->
       user_err_loc
         (loc, "_",
          str "Cannot interpret this number as a value of type " ++
          str (string_of_reference_or_by_notation ty))
 *)
+  | App (_, [| _; c |]) -> glob_constr_of_constr loc c
   | x ->
       failwith (Printf.sprintf "interp_big_int %s" (obj_string x))
 
@@ -2092,7 +2095,7 @@ and num_interp_arg vl = function
 	    Constrextern.without_symbols vernac_get_eval
               (constr_expr_of_glob_constr vl gc)
 	  in
-	  glob_constr_of_constr_expr ce
+	  glob_constr_of_constr Loc.ghost ce
       | me ->
           failwith (Printf.sprintf "ConstrMayEval may_eval %s" (obj_string me))
       end
