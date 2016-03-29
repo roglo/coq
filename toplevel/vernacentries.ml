@@ -1960,7 +1960,15 @@ let rec glob_constr_of_constr_expr = function
 
 (*
 let string_of_global_reference = function
-  | ConstructRef ((ty, p), n) -> Printf.sprintf "%s/%d" (MutInd.to_string ty) n
+  | ConstructRef ((ty, p), n) ->
+let s = MutInd.to_string ty in
+let s = let rec loop i =
+ if i = 0 then s
+ else if s.[i-1] = '.' then String.sub s i (String.length s - i)
+ else loop (i-1)
+ in loop (String.length s)
+in
+       Printf.sprintf "%s/%d" s n
   | x ->
       failwith (Printf.sprintf "string_of_global_reference %s" (obj_string x))
 
