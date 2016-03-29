@@ -1544,8 +1544,7 @@ let vernac_get_eval rc =
     let Sigma (c, _, _) = redfun.Reductionops.e_redfun env evm c in
     c
   in
-  let t = redfun env sigma' j.Environ.uj_val in
-  Constrextern.extern_constr false env sigma' t
+  redfun env sigma' j.Environ.uj_val
 
 let vernac_check_may_eval redexp glopt rc =
   let (sigma, env) = get_current_context_of_args glopt in
@@ -1929,7 +1928,8 @@ let rec bigint_of_pos' = function
   | x ->
       failwith (Printf.sprintf "bigint_of_pos' %s" (obj_string x))
 
-let bigint_of_z' = function
+let bigint_of_z' z' = match Constr.kind z' with
+(*
   | CRef (Qualid (loc, qi), None) ->
       if string_of_qualid qi = "Z'0" then Bigint.zero else assert false
   | CApp (loc, (pf, CRef (Qualid (loc', qi), None)), [(ce, _)]) ->
@@ -1937,6 +1937,9 @@ let bigint_of_z' = function
       if qis = "Z'pos" then bigint_of_pos' ce
       else if qis = "Z'neg" then Bigint.neg (bigint_of_pos' ce)
       else failwith (Printf.sprintf "bigint_of_z': CApp %s" qis)
+*)
+  | Construct (((ty, _), 1), _) -> (* Z'0 *)
+      Bigint.zero
   | x ->
       failwith (Printf.sprintf "bigint_of_z' %s" (obj_string x))
 
@@ -1945,6 +1948,7 @@ let string_of_prim_token = function
   | String s -> "\"" ^ s ^ "\""
 
 let rec glob_constr_of_constr_expr = function
+(*
   | CApp (loc, (pf, ce), ceel) ->
       let c1 = glob_constr_of_constr_expr ce in
       Glob_term.GApp
@@ -1955,6 +1959,7 @@ let rec glob_constr_of_constr_expr = function
       | Some c -> Glob_term.GRef (loc, c, None)
       | None -> assert false
       end
+*)
   | x ->
       failwith (Printf.sprintf "constr_expr %s" (obj_string x))
 
@@ -1992,12 +1997,14 @@ let interp_big_int ty thr f loc bi =
       (CApp (loc, (None, f), [(z'_of_bigint loc ty thr bi, None)]))
   in
   match t with
+(*
   | CApp (_, _, [(ce, _)]) -> glob_constr_of_constr_expr ce
   | CRef _ ->
       user_err_loc
         (loc, "_",
          str "Cannot interpret this number as a value of type " ++
          str (string_of_reference_or_by_notation ty))
+*)
   | x ->
       failwith (Printf.sprintf "interp_big_int %s" (obj_string x))
 
@@ -2045,10 +2052,13 @@ let uninterp_big_int g c =
         Constrextern.without_symbols vernac_get_eval
           (CApp (Glob_ops.loc_of_glob_constr c, (None, g), [(ce, None)]))
       in
-      begin match t with
+      begin match Constr.kind t with
+      | App (c, [| _; x |]) -> Some (bigint_of_z' x)
+(*
       | CApp (_, _, [(ce, _)]) -> Some (bigint_of_z' ce)
       | CRef _ -> None
-      | _ -> assert false
+*)
+      | x -> failwith (Printf.sprintf "constr %s" (obj_string x))
       end
   | None ->
       None
@@ -2156,11 +2166,11 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr
           with Failure _ -> None end
       | Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None) ->
           let qi = qualid_of_constructref (Global.env ()) sp i in
-          Some (bigint_of_z' (CRef (Qualid (loc, qi), None)))
+          failwith "Some (bigint_of_z' (CRef (Qualid (loc, qi), None)))"
       | Glob_term.GApp (loc, gc, gcl) ->
           let ce = constr_expr_of_glob_constr [] gc in
           let ceel = List.map (fun c -> (constr_expr_of_glob_constr [] c, None)) gcl in
-          Some (bigint_of_z' (CApp (loc, (None, ce), ceel)))
+          failwith "Some (bigint_of_z' (CApp (loc, (None, ce), ceel)))"
       | x ->
           failwith (Printf.sprintf "uninterp_big_int2 (%s) not impl" (obj_string x))
       end
