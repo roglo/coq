@@ -1915,32 +1915,28 @@ let z'_of_bigint dloc ty thr n =
     CRef (Ident (identref dloc "Z'0"), None)
 
 let rec bigint_of_pos' c = match Constr.kind c with
-(*
-  | CRef (Qualid (loc, qi), None) ->
-      let qis = string_of_qualid qi in
-      if qis = "x'H" then Bigint.one
-      else failwith (Printf.sprintf "bigint_of_pos': CRef %s not yet impl" qis)
-  | CApp (loc, (pf, CRef (Qualid (loc', qi), None)), [(ce, _)]) ->
-      begin match string_of_qualid qi with
-      | "x'O" -> Bigint.mult_2 (bigint_of_pos' ce)
-      | "x'I" -> Bigint.add_1 (Bigint.mult_2 (bigint_of_pos' ce))
-      | qis -> failwith (Printf.sprintf "bigint_of_pos': CApp %s" qis)
-      end
-*)
-  | x ->
-      failwith (Printf.sprintf "bigint_of_pos' %s" (obj_string x))
-
-let bigint_of_z' z' = match Constr.kind z' with
-  | App (c, ca) ->
+  | App (c, [| d |]) ->
       begin match Constr.kind c with
       | Construct ((_, n), _) ->
-          if Array.length ca = 1 then
-            begin match n with
-            | 2 -> (* Z'pos *) bigint_of_pos' ca.(0)
-            | 3 -> (* Z'neg *) Bigint.neg (bigint_of_pos' ca.(0))
-            | n -> assert false
-            end
-          else failwith (Printf.sprintf "bigint_of_z' len %d" (Array.length ca))
+          begin match n with
+          | 1 -> (* x'I *) Bigint.add_1 (Bigint.mult_2 (bigint_of_pos' d))
+          | 2 -> (* x'O *) Bigint.mult_2 (bigint_of_pos' d)
+          | n -> assert false
+          end
+      | x -> failwith (Printf.sprintf "bigint_of_pos' App c %s" (obj_string x))
+      end
+  | Construct ((_, 3), _) -> (* x'H *) Bigint.one
+  | x -> failwith (Printf.sprintf "bigint_of_pos' %s" (obj_string x))
+
+let bigint_of_z' z' = match Constr.kind z' with
+  | App (c, [| d |]) ->
+      begin match Constr.kind c with
+      | Construct ((_, n), _) ->
+          begin match n with
+          | 2 -> (* Z'pos *) bigint_of_pos' d
+          | 3 -> (* Z'neg *) Bigint.neg (bigint_of_pos' d)
+          | n -> assert false
+          end
       | x -> failwith (Printf.sprintf "bigint_of_z' App c %s" (obj_string x))
       end
   | Construct ((_, 1), _) -> (* Z'0 *) Bigint.zero
@@ -1994,15 +1990,12 @@ let interp_big_int ty thr f loc bi =
       (CApp (loc, (None, f), [(z'_of_bigint loc ty thr bi, None)]))
   in
   match Constr.kind t with
-(*
-  | CApp (_, _, [(ce, _)]) -> glob_constr_of_constr ce
-  | CRef _ ->
+  | App (_, [| _; c |]) -> glob_constr_of_constr loc c
+  | App (_, [| _ |]) ->
       user_err_loc
         (loc, "_",
          str "Cannot interpret this number as a value of type " ++
          str (string_of_reference_or_by_notation ty))
-*)
-  | App (_, [| _; c |]) -> glob_constr_of_constr loc c
   | x ->
       failwith (Printf.sprintf "interp_big_int %s" (obj_string x))
 
