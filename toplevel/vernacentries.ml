@@ -2131,16 +2131,11 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr
           with Failure _ -> None end
       | Glob_term.GRef (loc, ConstructRef c, None) ->
           Some Bigint.zero
-(*
-      | Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None) ->
-          let qi = qualid_of_constructref (Global.env ()) sp i in
-          failwith "Some (bigint_of_z' (CRef (Qualid (loc, qi), None)))"
-*)
+      | Glob_term.GApp (loc, gc, [gc1]) ->
+          failwith "Some (bigint_of_z' (App (gc, [| gc1 |])))"
       | Glob_term.GApp (loc, gc, gcl) ->
-(*
-          let ce = constr_expr_of_glob_constr [] gc in
-          let ceel = List.map (fun c -> (constr_expr_of_glob_constr [] c, None)) gcl in
-*)
+          let _ce = constr_expr_of_glob_constr [] gc in
+          let _ceel = List.map (fun c -> (constr_expr_of_glob_constr [] c, None)) gcl in
           failwith "Some (bigint_of_z' (CApp (loc, (None, ce), ceel)))"
       | x ->
           failwith (Printf.sprintf "uninterp_big_int2 (%s) not impl" (obj_string x))
