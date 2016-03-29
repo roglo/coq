@@ -2132,7 +2132,13 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr
       | Glob_term.GRef (loc, ConstructRef c, None) ->
           Some Bigint.zero
       | Glob_term.GApp (loc, gc, [gc1]) ->
+          begin match gc with
+          | Glob_term.GRef (loc, c, None) -> failwith "glop"
+          | x -> failwith (Printf.sprintf "GApp (%s)" (obj_string x))
+          end
+(*
           failwith "Some (bigint_of_z' (App (gc, [| gc1 |])))"
+*)
       | Glob_term.GApp (loc, gc, gcl) ->
           let _ce = constr_expr_of_glob_constr [] gc in
           let _ceel = List.map (fun c -> (constr_expr_of_glob_constr [] c, None)) gcl in
