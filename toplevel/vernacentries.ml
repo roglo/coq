@@ -1954,7 +1954,7 @@ let rec glob_constr_of_constr loc c = match Constr.kind c with
   | Construct (c, _) ->
       Glob_term.GRef (loc, ConstructRef c, None)
   | Const (c, _) ->
-      failwith "Const yeah"
+      Glob_term.GRef (loc, ConstRef c, None)
   | x ->
       failwith (Printf.sprintf "1 constr %s" (obj_string x))
 
@@ -2129,12 +2129,18 @@ let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr
       | Glob_term.GRef (_, ConstRef s, None) ->
           begin try Some (Bigint.of_string (Constant.to_string s))
           with Failure _ -> None end
+      | Glob_term.GRef (loc, ConstructRef c, None) ->
+          Some Bigint.zero
+(*
       | Glob_term.GRef (loc, ConstructRef ((sp, spi), i), None) ->
           let qi = qualid_of_constructref (Global.env ()) sp i in
           failwith "Some (bigint_of_z' (CRef (Qualid (loc, qi), None)))"
+*)
       | Glob_term.GApp (loc, gc, gcl) ->
+(*
           let ce = constr_expr_of_glob_constr [] gc in
           let ceel = List.map (fun c -> (constr_expr_of_glob_constr [] c, None)) gcl in
+*)
           failwith "Some (bigint_of_z' (CApp (loc, (None, ce), ceel)))"
       | x ->
           failwith (Printf.sprintf "uninterp_big_int2 (%s) not impl" (obj_string x))
