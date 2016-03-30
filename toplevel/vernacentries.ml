@@ -1889,15 +1889,40 @@ let rec pos'_of_bigint dloc n =
   | (q, true) ->
       CRef (Ident (identref dloc "x'H"), None)
 
+let short_mutind_to_string m =
+  let s = MutInd.to_string m in
+  try let i = String.rindex s '.' in
+    try
+      let i = String.rindex_from s (i - 1) '.' in
+      String.sub s (i + 1) (String.length s - i - 1)
+    with Not_found -> String.sub s (i + 1) (String.length s - i - 1)
+  with Not_found -> s
+
 let string_of_global_reference = function
   | VarRef v -> "VarRef ..."
   | ConstRef c -> "ConstRef ..."
   | IndRef i -> "IndRef ..."
-  | ConstructRef ((ty, _), i) -> Printf.sprintf "ConstructRef %s/%d" (MutInd.to_string ty) i
+  | ConstructRef ((ty, _), i) ->
+      Printf.sprintf "ConstructRef %s/%d" (short_mutind_to_string ty) i
 
 let string_of_reference_or_by_notation = function
   | AN r -> string_of_reference r
   | ByNotation (loc, s, so) -> failwith "string_of_reference_or_by_notation ByNotation"
+
+let rec string_of_constr_pattern = function
+  | Pattern.PRef gr -> string_of_global_reference gr
+  | Pattern.PApp (cp, cpa) ->
+      Printf.sprintf "%s (%s)" (string_of_constr_pattern cp)
+        (string_of_constr_pattern_list "" (Array.to_list cpa))
+  | Pattern.PMeta (Some pv) -> Id.to_string pv
+  | Pattern.PMeta None -> "_"
+  | x -> failwith (Printf.sprintf "constr_pattern %s" (obj_string x))
+
+and string_of_constr_pattern_list sep = function
+  | cp :: cpl ->
+      Printf.sprintf "%s%s%s" sep (string_of_constr_pattern cp)
+        (string_of_constr_pattern_list "," cpl)
+  | [] -> ""
 
 let z'_of_bigint dloc ty thr n =
   if Bigint.is_pos_or_zero n && not (Bigint.equal thr Bigint.zero) &&
@@ -2035,20 +2060,6 @@ let uninterp_big_int g c =
       end
   | None ->
       None
-
-let rec string_of_constr_pattern = function
-  | Pattern.PRef gr -> string_of_global_reference gr
-  | Pattern.PApp (cp, cpa) ->
-      Printf.sprintf "%s (%s)" (string_of_constr_pattern cp)
-        (string_of_constr_pattern_list "" (Array.to_list cpa))
-  | Pattern.PMeta (Some pv) -> Id.to_string pv
-  | Pattern.PMeta None -> "_"
-  | x -> failwith (Printf.sprintf "constr_pattern %s" (obj_string x))
-and string_of_constr_pattern_list sep = function
-  | cp :: cpl ->
-      Printf.sprintf "%s%s%s" sep (string_of_constr_pattern cp)
-        (string_of_constr_pattern_list "," cpl)
-  | [] -> ""
 
 let rec num_interp_call (vl : (_ * Glob_term.glob_constr) list) tac tal =
   match Tacenv.interp_ltac tac with
