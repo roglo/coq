@@ -1889,8 +1889,7 @@ let rec pos'_of_bigint dloc n =
   | (q, true) ->
       CRef (Ident (identref dloc "x'H"), None)
 
-let short_mutind_to_string m =
-  let s = MutInd.to_string m in
+let shorted s =
   try let i = String.rindex s '.' in
     try
       let i = String.rindex_from s (i - 1) '.' in
@@ -1898,12 +1897,20 @@ let short_mutind_to_string m =
     with Not_found -> String.sub s (i + 1) (String.length s - i - 1)
   with Not_found -> s
 
+let short_mutind_to_string m = shorted (MutInd.to_string m)
+let short_constant_to_string c = shorted (Constant.to_string c)
+
 let string_of_global_reference = function
   | VarRef v -> "VarRef ..."
-  | ConstRef c -> "ConstRef ..."
+  | ConstRef c -> short_constant_to_string c
   | IndRef i -> "IndRef ..."
   | ConstructRef ((ty, _), i) ->
-      Printf.sprintf "ConstructRef %s/%d" (short_mutind_to_string ty) i
+      match Printf.sprintf "%s/%d" (short_mutind_to_string ty) i with
+      | "Int31.digits/1" -> "0"
+      | "Int31.digits/2" -> "1"
+      | "Int31.int31/1" -> "I31"
+      | "DoubleType.zn2z/2" -> "WW"
+      | s -> s
 
 let string_of_reference_or_by_notation = function
   | AN r -> string_of_reference r
@@ -1922,6 +1929,19 @@ and string_of_constr_pattern_list sep = function
   | cp :: cpl ->
       Printf.sprintf "%s%s%s" sep (string_of_constr_pattern cp)
         (string_of_constr_pattern_list "," cpl)
+  | [] -> ""
+
+let rec string_of_glob_constr = function
+  | Glob_term.GRef (loc, gr, _) -> string_of_global_reference gr
+  | Glob_term.GApp (loc, gc, gcl) ->
+      Printf.sprintf "%s (%s)" (string_of_glob_constr gc)
+        (string_of_glob_constr_list "" gcl)
+  | x -> failwith (Printf.sprintf "4 glob_constr %s" (obj_string x))
+
+and string_of_glob_constr_list sep = function
+  | gc :: gcl ->
+      Printf.sprintf "%s%s%s" sep (string_of_glob_constr gc)
+        (string_of_glob_constr_list "," gcl)
   | [] -> ""
 
 let z'_of_bigint dloc ty thr n =
@@ -2121,7 +2141,7 @@ and num_interp_match_constr_pattern vl s = function
   | Pattern.PRef gr ->
       begin match s with
       | Glob_term.GRef (_, gr1, None) ->
-          if eq_gr gr gr1 then let _ = Printf.eprintf "GRef %s\n%!" (string_of_global_reference gr) in Some vl else None
+          if eq_gr gr gr1 then Some vl else None
       | Glob_term.GApp (loc, gc1, gcl) ->
           None
       | _ ->
@@ -2135,6 +2155,7 @@ and num_interp_match_constr_pattern vl s = function
           | Some vl ->
              if Array.length cpa <> List.length gcl then
 let _ = Printf.eprintf "PApp %s\n%!" (string_of_constr_pattern (Pattern.PApp (cp, cpa))) in
+let _ = Printf.eprintf "GApp %s\n%!" (string_of_glob_constr (Glob_term.GApp (loc, gc, gcl))) in
                failwith
                  (Printf.sprintf "patt #parm %d <> #arg %d not impl"
                     (Array.length cpa) (List.length gcl))
