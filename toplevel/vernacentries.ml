@@ -2013,6 +2013,8 @@ let rec constr_expr_of_glob_constr vl = function
       let ce = constr_expr_of_glob_constr vl c1 in
       let ceel = List.map (fun c -> (constr_expr_of_glob_constr vl c, None)) cl in
       CApp (loc, (None, ce), ceel)
+  | Glob_term.GHole (loc, evk, ipne, ggao) ->
+      CHole (loc, Some evk, ipne, None)
   | x ->
       failwith (Printf.sprintf "1 glob_constr %s" (obj_string x))
 
