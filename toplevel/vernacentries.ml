@@ -1889,6 +1889,12 @@ let rec pos'_of_bigint dloc n =
   | (q, true) ->
       CRef (Ident (identref dloc "x'H"), None)
 
+let string_of_global_reference = function
+  | VarRef v -> "VarRef ..."
+  | ConstRef c -> "ConstRef ..."
+  | IndRef i -> "IndRef ..."
+  | ConstructRef ((ty, _), i) -> Printf.sprintf "ConstructRef %s/%d" (MutInd.to_string ty) i
+
 let string_of_reference_or_by_notation = function
   | AN r -> string_of_reference r
   | ByNotation (loc, s, so) -> failwith "string_of_reference_or_by_notation ByNotation"
@@ -2088,7 +2094,7 @@ and num_interp_match_constr_pattern vl s = function
   | Pattern.PRef gr ->
       begin match s with
       | Glob_term.GRef (_, gr1, None) ->
-          if eq_gr gr gr1 then Some vl else None
+          if eq_gr gr gr1 then let _ = Printf.eprintf "GRef %s\n%!" (string_of_global_reference gr) in Some vl else None
       | Glob_term.GApp (loc, gc1, gcl) ->
           None
       | _ ->
@@ -2100,7 +2106,10 @@ and num_interp_match_constr_pattern vl s = function
       | Glob_term.GApp (loc, gc, gcl) ->
           begin match num_interp_match_constr_pattern vl gc cp with
           | Some vl ->
-             if Array.length cpa <> List.length gcl then failwith "patt #parm <> #arg not impl"
+             if Array.length cpa <> List.length gcl then
+               failwith
+                 (Printf.sprintf "patt #parm %d <> #arg %d not impl"
+                    (Array.length cpa) (List.length gcl))
              else
 	       List.fold_left2
 		 (fun vlo cp gc ->
