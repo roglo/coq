@@ -2036,6 +2036,20 @@ let uninterp_big_int g c =
   | None ->
       None
 
+let rec string_of_constr_pattern = function
+  | Pattern.PRef gr -> string_of_global_reference gr
+  | Pattern.PApp (cp, cpa) ->
+      Printf.sprintf "%s (%s)" (string_of_constr_pattern cp)
+        (string_of_constr_pattern_list "" (Array.to_list cpa))
+  | Pattern.PMeta (Some pv) -> Id.to_string pv
+  | Pattern.PMeta None -> "_"
+  | x -> failwith (Printf.sprintf "constr_pattern %s" (obj_string x))
+and string_of_constr_pattern_list sep = function
+  | cp :: cpl ->
+      Printf.sprintf "%s%s%s" sep (string_of_constr_pattern cp)
+        (string_of_constr_pattern_list "," cpl)
+  | [] -> ""
+
 let rec num_interp_call (vl : (_ * Glob_term.glob_constr) list) tac tal =
   match Tacenv.interp_ltac tac with
   | Tacexpr.TacFun (idol, e) ->
@@ -2109,6 +2123,7 @@ and num_interp_match_constr_pattern vl s = function
           begin match num_interp_match_constr_pattern vl gc cp with
           | Some vl ->
              if Array.length cpa <> List.length gcl then
+let _ = Printf.eprintf "PApp %s\n%!" (string_of_constr_pattern (Pattern.PApp (cp, cpa))) in
                failwith
                  (Printf.sprintf "patt #parm %d <> #arg %d not impl"
                     (Array.length cpa) (List.length gcl))
