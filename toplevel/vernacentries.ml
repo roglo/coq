@@ -1960,7 +1960,7 @@ let rec glob_constr_of_constr loc c = match Constr.kind c with
 
 let interp_big_int ty thr f loc bi =
   let t =
-    Constrextern.without_symbols vernac_get_eval
+    vernac_get_eval
       (CApp (loc, (None, f), [(z'_of_bigint loc ty thr bi, None)]))
   in
   match Constr.kind t with
@@ -2014,7 +2014,7 @@ let uninterp_big_int g c =
   match try Some (constr_expr_of_glob_constr [] c) with Not_found -> None with
   | Some ce ->
       let t =
-        Constrextern.without_symbols vernac_get_eval
+        vernac_get_eval
           (CApp (Glob_ops.loc_of_glob_constr c, (None, g), [(ce, None)]))
       in
       begin match Constr.kind t with
@@ -2053,10 +2053,7 @@ and num_interp_arg vl = function
   | Tacexpr.ConstrMayEval me ->
       begin match me with
       | Genredexpr.ConstrTerm (gc, None) ->
-          let ce =
-	    Constrextern.without_symbols vernac_get_eval
-              (constr_expr_of_glob_constr vl gc)
-	  in
+          let ce = vernac_get_eval (constr_expr_of_glob_constr vl gc) in
 	  glob_constr_of_constr Loc.ghost ce
       | me ->
           failwith (Printf.sprintf "ConstrMayEval may_eval %s" (obj_string me))
