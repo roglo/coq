@@ -2188,6 +2188,16 @@ let rec constr_of_glob_constr = function
       mkApp (c, Array.of_list cl)
   | gc -> failwith (Printf.sprintf "constr_of_glob_constr %s" (obj_string gc))
 
+let run_ftactic (tac : 'a Ftactic.t) : 'a =
+  let (_, pf) = Proofview.init Evd.empty [] in
+  Proofview.apply (Global.env ()) tac pf
+
+let glop g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr) : Value.t Ftactic.focus =
+  let tac = interp_ftactic (default_ist ()) (Tacenv.interp_ltac tac) in
+  let (_, pf) = Proofview.init Evd.empty [] in
+  let (v, _, _, _) = Proofview.apply (Global.env ()) tac pf in
+  v
+
 let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr) =
   match try Some (num_interp_call [] tac [c]) with Not_found -> None with
   | Some gr ->
