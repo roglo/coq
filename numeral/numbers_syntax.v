@@ -1,9 +1,5 @@
-(**)
 Load common_syntax.
 Load common_z_syntax.
-(*
-Load nat_syntax.
-*)
 
 Fixpoint int31_of_pos' p' :=
   match p' with
@@ -51,6 +47,24 @@ Fixpoint pos'log2 (bi : positive') :=
 
 Definition height (bi : positive') :=
   pos'log2 (pos'_of_pos (Pos.of_nat (Nat.double (pos'log2 bi / size)))).
+
+(*
+Fixpoint P n :=
+  match n with
+  | O => int31
+  | S n1 => zn2z {x : nat & P x}
+  end.
+
+Fixpoint word_of_pos_bigint hgt z :=
+  match hgt with
+  | O => existT P O (phi_inv z)
+  | S n =>
+      let '(h, l) := split_at hgt z in
+      let w1 := word_of_pos_bigint n h in
+      let w2 := word_of_pos_bigint n l in
+      existT P (S n) (WW w1 w2)
+  end.
+*)
 
 (*
 Fixpoint word_of_pos_bigint hgt z :=
