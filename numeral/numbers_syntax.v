@@ -66,6 +66,8 @@ Fixpoint word_of_pos_bigint hgt z :=
   end.
 *)
 
+Definition n_inlined := S (S (S (S (S (S (S O)))))).
+
 Fixpoint word_of_pos_bigint hgt z :=
   match hgt with
   | O => BigN.N0 (phi_inv z)
@@ -80,6 +82,12 @@ Fixpoint word_of_pos_bigint hgt z :=
       | (BigN.N3 wh1, BigN.N3 wl1) => BigN.N4 (WW wh1 wl1)
       | (BigN.N4 wh1, BigN.N4 wl1) => BigN.N5 (WW wh1 wl1)
       | (BigN.N5 wh1, BigN.N5 wl1) => BigN.N6 (WW wh1 wl1)
+      | (BigN.N6 wh1, BigN.N6 wl1) => BigN.Nn O (WW wh1 wl1)
+(*
+      | (BigN.Nn u wh1, BigN.Nn v wl1) =>
+           if Nat.eq_dec u v then BigN.Nn (S u) (WW wh1 wl1)
+           else wh
+*)
       | _ => wh
       end
   end.
@@ -116,10 +124,7 @@ Definition bigN_of_pos' (n' : positive') :=
   | S O => BigN.N1 (word_of_pos_bigint_1 z)
   | S (S O) => BigN.N2 (word_of_pos_bigint_2 z)
   | S (S (S O)) => BigN.N3 (word_of_pos_bigint_3 z)
-  | S (S (S (S O))) => word_of_pos_bigint h z
-  | S (S (S (S (S O)))) => word_of_pos_bigint h z
-  | S (S (S (S (S (S O))))) => word_of_pos_bigint h z
-  | _ => BigN.of_pos (Pos.of_nat h)
+  | _ => word_of_pos_bigint h z
   end.
 
 Definition bigN_of_Z' z' :=
