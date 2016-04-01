@@ -95,6 +95,7 @@ Fixpoint word_of_pos_bigint hgt z :=
       | (BigN.N4 wh1, BigN.N4 wl1) => BigN.N5 (WW wh1 wl1)
       | (BigN.N5 wh1, BigN.N5 wl1) => BigN.N6 (WW wh1 wl1)
       | (BigN.N6 wh1, BigN.N6 wl1) => BigN.Nn O (WW wh1 wl1)
+      | (BigN.Nn O wh1, BigN.Nn O wl1) => BigN.Nn (S O) (WW wh1 wl1)
 (*
       | (BigN.Nn u wh1, BigN.Nn v wl1) =>
            if Nat.eq_dec u v then BigN.Nn (S u) (WW wh1 wl1)
