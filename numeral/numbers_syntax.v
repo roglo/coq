@@ -52,7 +52,19 @@ Definition height (bi : positive') :=
 Fixpoint P n :=
   match n with
   | O => int31
-  | S n1 => zn2z {x : nat & P x}
+  | S O => zn2z int31
+  | S n1 => int31
+  end.
+
+Definition word_of_pos_bigint hgt z :=
+  match hgt with
+  | O => existT P O (phi_inv z)
+  | S O =>
+      let '(h, l) := split_at hgt z in
+      let wh := existT P O (phi_inv h) in
+      let wl := existT P O (phi_inv l) in
+      existT P (S O) (WW (projT2 wh) (projT2 wl))
+  | S (S n) => existT P O (phi_inv z)
   end.
 
 Fixpoint word_of_pos_bigint hgt z :=
