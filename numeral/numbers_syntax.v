@@ -66,17 +66,23 @@ Fixpoint word_of_pos_bigint hgt z :=
   end.
 *)
 
-(*
 Fixpoint word_of_pos_bigint hgt z :=
   match hgt with
-  | O => phi_inv z
+  | O => BigN.N0 (phi_inv z)
   | S n =>
       let '(h, l) := split_at hgt z in
-      let w1 := word_of_pos_bigint n h in
-      let w2 := word_of_pos_bigint n l in
-      WW w1 w2
+      let wh := word_of_pos_bigint n h in
+      let wl := word_of_pos_bigint n l in
+      match (wh, wl) with
+      | (BigN.N0 wh1, BigN.N0 wl1) => BigN.N1 (WW wh1 wl1)
+      | (BigN.N1 wh1, BigN.N1 wl1) => BigN.N2 (WW wh1 wl1)
+      | (BigN.N2 wh1, BigN.N2 wl1) => BigN.N3 (WW wh1 wl1)
+      | (BigN.N3 wh1, BigN.N3 wl1) => BigN.N4 (WW wh1 wl1)
+      | (BigN.N4 wh1, BigN.N4 wl1) => BigN.N5 (WW wh1 wl1)
+      | (BigN.N5 wh1, BigN.N5 wl1) => BigN.N6 (WW wh1 wl1)
+      | _ => wh
+      end
   end.
-*)
 
 Definition word_of_pos_bigint_0 z :=
   phi_inv z.
