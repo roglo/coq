@@ -116,9 +116,9 @@ Definition bigN_of_pos' (n' : positive') :=
   | S O => BigN.N1 (word_of_pos_bigint_1 z)
   | S (S O) => BigN.N2 (word_of_pos_bigint_2 z)
   | S (S (S O)) => BigN.N3 (word_of_pos_bigint_3 z)
-  | S (S (S (S O))) => BigN.of_pos (Pos.of_nat h)
-  | S (S (S (S (S O)))) => BigN.of_pos (Pos.of_nat h)
-  | S (S (S (S (S (S O))))) => BigN.of_pos (Pos.of_nat h)
+  | S (S (S (S O))) => word_of_pos_bigint h z
+  | S (S (S (S (S O)))) => word_of_pos_bigint h z
+  | S (S (S (S (S (S O))))) => word_of_pos_bigint h z
   | _ => BigN.of_pos (Pos.of_nat h)
   end.
 
