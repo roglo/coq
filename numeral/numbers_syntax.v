@@ -55,14 +55,22 @@ Fixpoint P n :=
   | S n1 => int31
   end.
 
-Definition word_of_pos_bigint (hgt : nat) (z : Z) : P hgt.
-induction hgt.
- simpl.
+Definition word_of_pos_bigint (hgt : nat) (z : Z) : sigS P.
+(* transport to do *)
+revert hgt z.
+fix 1.
+Require Import Utf8.
+intros hgt z.
+destruct hgt.
+ exists O.
  apply (phi_inv z).
 
- simpl.
  remember (split_at hgt z) as hl.
  destruct hl as (h, l).
+ remember (word_of_pos_bigint O h) as wh.
+ remember (word_of_pos_bigint O l) as wl.
+ exists hgt.
+
 bbb.
 
 Fixpoint word_of_pos_bigint hgt z :=
