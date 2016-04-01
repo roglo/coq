@@ -75,6 +75,7 @@ let _ =
      x'I : positive' -> positive' | x'O : positive' -> positive' | x'H : positive'
    Inductive Z' : Set :=
      Z'0 : Z' | Z'pos : positive' -> Z' | Z'neg : positive' -> Z' *)
+(*
 let _ =
   let identref s = (Loc.ghost, Names.Id.of_string s) in
   let cref s = Constrexpr.CRef (Libnames.Ident (identref s), None) in
@@ -115,3 +116,4 @@ let _ =
                (false,
                 (identref "Z'neg", arrow (cref "positive'") (cref "Z'")))]),
          [])]))
+*)

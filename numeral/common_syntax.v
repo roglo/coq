@@ -1,5 +1,15 @@
 (* common not using type Z *)
 
+Inductive positive' : Set :=
+  | x'I : positive' -> positive'
+  | x'O : positive' -> positive'
+  | x'H : positive'.
+
+Inductive Z' : Set :=
+  | Z'0 : Z'
+  | Z'pos : positive' -> Z'
+  | Z'neg : positive' -> Z'.
+
 Fixpoint pos'pred_double x :=
   match x with
   | x'I p => x'I (x'O p)
