@@ -83,6 +83,10 @@ let run m k = m >>= function
   let tacs = List.map k l in
   Proofview.tclDISPATCH tacs
 
+let run_id m = m >>= function
+| Uniform v -> v
+| Depends _ -> failwith "run_id depends"
+
 let (>>=) = bind
 
 let (<*>) = fun m n -> bind m (fun () -> n)
