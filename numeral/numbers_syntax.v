@@ -1,6 +1,21 @@
 Load common_syntax.
 Load common_z_syntax.
 
+Definition int31_of_Z' z' := Some (phi_inv (Z_of_Z' z')).
+Definition Z'_of_int31 n := Some (Z'_of_Z (phi n)).
+
+Number Notation int31 int31_of_Z' Z'_of_int31 : int31_scope.
+
+Definition bigN_of_Z' z' := Some (BigN.N_of_Z (Z_of_Z' z')).
+Ltac Z'_of_bigN n := constr: (Z'_of_Z (BigN.to_Z n)).
+
+Number Notation BigN.t bigN_of_Z' Z'_of_bigN : bigN_scope
+  (printing
+     BigN.N0 BigN.N1 BigN.N2 BigN.N3 BigN.N4 BigN.N5 BigN.N6
+     BigN.Nn).
+
+bbb.
+
 Fixpoint int31_of_pos' p' :=
   match p' with
   | x'I q' => Int31.twice_plus_one (int31_of_pos' q')
@@ -54,16 +69,25 @@ Definition transport (A : Type) (B : A -> Type) (x y : A)
   | eq_refl => q
   end.
 
+Fixpoint P (n : nat) : Type :=
+  match n with
+  | O => int31
+  | S n1 => zn2z (P n1)
+  end.
+
 Definition P (n : nat) : Type :=
   match n with
   | O => int31
-  | S O => BigN.w1
-  | S (S O) => BigN.w2
-  | S (S (S O)) => BigN.w3
-  | S (S (S (S O))) => BigN.w4
-  | S (S (S (S (S O)))) => BigN.w5
-  | S (S (S (S (S (S O))))) => BigN.w6
-  | _ => word BigN.w6 (S n)
+  | S O => zn2z int31
+  | S (S O) => zn2z (zn2z int31)
+  | S (S (S O)) => zn2z (zn2z (zn2z int31))
+  | S (S (S (S O))) => zn2z (zn2z (zn2z (zn2z int31)))
+  | S (S (S (S (S O)))) =>
+      zn2z (zn2z (zn2z (zn2z (zn2z int31))))
+  | S (S (S (S (S (S O))))) =>
+      zn2z (zn2z (zn2z (zn2z (zn2z (zn2z int31)))))
+  | _ =>
+      word (zn2z (zn2z (zn2z (zn2z (zn2z (zn2z int31)))))) (S n)
   end.
 
 (*
