@@ -2066,10 +2066,12 @@ let rec constr_expr_of_glob_constr vl = function
 let uninterp_big_int g c =
   match try Some (constr_expr_of_glob_constr [] c) with Not_found -> None with
   | Some ce ->
+let _ = Printf.eprintf "1\n%!" in
       let t =
         vernac_get_eval
           (CApp (Glob_ops.loc_of_glob_constr c, (None, g), [(ce, None)]))
       in
+let _ = Printf.eprintf "2\n%!" in
       begin match Constr.kind t with
       | App (c, [| _; x |]) -> Some (bigint_of_z' x)
 (*
