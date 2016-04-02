@@ -75,7 +75,9 @@ Fixpoint word_of_pos_bigint hgt z :=
       let p := proof_eq (projT1 wl) (projT1 wh) in
       existT P n
         (WW (projT2 wh)
-          (transport nat P (projT1 wl) (projT1 wh) p (projT2 wl)))
+          (transport nat
+           (fun n => zn2z (P (projT1 wh)))
+           (projT1 wl) (projT1 wh) p (projT2 wl)))
   end.
 *)
 
