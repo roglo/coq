@@ -48,25 +48,12 @@ Fixpoint pos'log2 (bi : positive') :=
 Definition height (bi : positive') :=
   pos'log2 (pos'_of_pos (Pos.of_nat (Nat.double (pos'log2 bi / size)))).
 
-(*
 Definition transport (A : Type) (B : A -> Type) (x y : A)
     (p : x = y) (q : B x) :=
   match p in _ = y return B y with
   | eq_refl => q
   end.
 
-Definition word_of_pos_bigint hgt (z : Z) : P hgt.
-Proof.
-revert hgt.
-fix 1.
-intros hgt.
-destruct hgt; [ apply (phi_inv z) | simpl ].
-remember (split_at hgt z) as hl.
-destruct hl as (h, l).
-bbb.
-*)
-
-(*
 Fixpoint P n :=
   match n with
   | O => int31
@@ -74,27 +61,21 @@ Fixpoint P n :=
   | S n1 => int31
   end.
 
-Fixpoint word_of_pos_bigint hgt z :=
-  match hgt with
-  | O => existT P O (phi_inv z)
-  | S O =>
-      let '(h, l) := split_at hgt z in
-      let wh := word_of_pos_bigint O h in
-      let wl := word_of_pos_bigint O l in
-      existT P (S O) (WW (projT2 wh) (projT2 wl))
-  | S (S n) => existT P O (phi_inv z)
-  end.
-*)
-
 (*
+Definition proof_eq (x y : nat) : x = y.
+Admitted.
+
 Fixpoint word_of_pos_bigint hgt z :=
   match hgt with
   | O => existT P O (phi_inv z)
   | S n =>
       let '(h, l) := split_at hgt z in
-      let w1 := word_of_pos_bigint n h in
-      let w2 := word_of_pos_bigint n l in
-      existT P (S n) (WW w1 w2)
+      let wh := word_of_pos_bigint n h in
+      let wl := word_of_pos_bigint n l in
+      let p := proof_eq (projT1 wl) (projT1 wh) in
+      existT P n
+        (WW (projT2 wh)
+          (transport nat P (projT1 wl) (projT1 wh) p (projT2 wl)))
   end.
 *)
 
