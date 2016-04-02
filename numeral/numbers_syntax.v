@@ -54,11 +54,16 @@ Definition transport (A : Type) (B : A -> Type) (x y : A)
   | eq_refl => q
   end.
 
-Fixpoint P n :=
+Definition P (n : nat) : Type :=
   match n with
   | O => int31
-  | S O => zn2z int31
-  | S n1 => int31
+  | S O => BigN.w1
+  | S (S O) => BigN.w2
+  | S (S (S O)) => BigN.w3
+  | S (S (S (S O))) => BigN.w4
+  | S (S (S (S (S O)))) => BigN.w5
+  | S (S (S (S (S (S O))))) => BigN.w6
+  | _ => word BigN.w6 (S n)
   end.
 
 (*
