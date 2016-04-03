@@ -82,37 +82,23 @@ Definition transport (A : Type) (B : A -> Type) (x y : A)
   | eq_refl => q
   end.
 
-Definition P (n : nat) : Type :=
-  match n with
-  | O => int31
-  | S O => zn2z int31
-  | S (S O) => zn2z (zn2z int31)
-  | S (S (S O)) => zn2z (zn2z (zn2z int31))
-  | S (S (S (S O))) => zn2z (zn2z (zn2z (zn2z int31)))
-  | S (S (S (S (S O)))) =>
-      zn2z (zn2z (zn2z (zn2z (zn2z int31))))
-  | S (S (S (S (S (S O))))) =>
-      zn2z (zn2z (zn2z (zn2z (zn2z (zn2z int31)))))
-  | _ =>
-      word (zn2z (zn2z (zn2z (zn2z (zn2z (zn2z int31)))))) (S n)
-  end.
+Definition P := word int31.
 
 (*
 Definition proof_eq (x y : nat) : x = y.
 Admitted.
 
-Fixpoint word_of_pos_bigint hgt z :=
+Fixpoint glop hgt z :=
   match hgt with
   | O => existT P O (phi_inv z)
   | S n =>
       let '(h, l) := split_at hgt z in
-      let wh := word_of_pos_bigint n h in
-      let wl := word_of_pos_bigint n l in
+      let wh := glop n h in
+      let wl := glop n l in
       let p := proof_eq (projT1 wl) (projT1 wh) in
       existT P n
         (WW (projT2 wh)
-          (transport nat
-           (fun n => zn2z (P (projT1 wh)))
+          (transport nat P
            (projT1 wl) (projT1 wh) p (projT2 wl)))
   end.
 *)
