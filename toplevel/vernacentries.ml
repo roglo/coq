@@ -1990,6 +1990,7 @@ let bigint_of_z' z' = match Constr.kind z' with
           end
       | x -> failwith (Printf.sprintf "bigint_of_z' App c %s" (obj_string x))
       end
+  | App (c, cl) -> failwith "App cl"
   | Construct ((_, 1), _) -> (* Z'0 *) Bigint.zero
   | x -> failwith (Printf.sprintf "bigint_of_z' %s" (obj_string x))
 
@@ -2006,6 +2007,8 @@ let rec glob_constr_of_constr loc c = match Constr.kind c with
       Glob_term.GRef (loc, ConstructRef c, None)
   | Const (c, _) ->
       Glob_term.GRef (loc, ConstRef c, None)
+  | Ind (ind, _) ->
+      Glob_term.GRef (loc, IndRef ind, None)
   | x ->
       failwith (Printf.sprintf "1 constr %s" (obj_string x))
 
@@ -2185,6 +2188,8 @@ let _ = Printf.eprintf "GApp %s\n%!" (string_of_glob_constr (Glob_term.GApp (loc
 let rec constr_of_glob_constr = function
   | Glob_term.GRef (_, ConstructRef c, None) ->
       mkConstruct c
+  | Glob_term.GRef (_, IndRef ind, None) ->
+      mkInd ind
   | Glob_term.GRef (_, c, None) ->
       failwith (Printf.sprintf "tagada %s" (obj_string c))
   | Glob_term.GApp (_, gc, gcl) ->

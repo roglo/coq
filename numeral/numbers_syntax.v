@@ -1,11 +1,14 @@
 Load common_syntax.
 Load common_z_syntax.
 
+(*
 Definition int31_of_Z' z' := Some (phi_inv (Z_of_Z' z')).
 Definition Z'_of_int31 n := Some (Z'_of_Z (phi n)).
 
 Number Notation int31 int31_of_Z' Z'_of_int31 : int31_scope.
+*)
 
+(*
 Definition bigN_of_Z' z' := Some (BigN.N_of_Z (Z_of_Z' z')).
 Definition Z'_of_bigN n := Some (Z'_of_Z (BigN.to_Z n)).
 
@@ -22,6 +25,7 @@ Number Notation BigN.t bigN_of_Z' Z'_of_bigN : bigN_scope
      BigN.Nn).
 
 bbb.
+*)
 
 Fixpoint int31_of_pos' p' :=
   match p' with
@@ -74,12 +78,6 @@ Definition transport (A : Type) (B : A -> Type) (x y : A)
     (p : x = y) (q : B x) :=
   match p in _ = y return B y with
   | eq_refl => q
-  end.
-
-Fixpoint P (n : nat) : Type :=
-  match n with
-  | O => int31
-  | S n1 => zn2z (P n1)
   end.
 
 Definition P (n : nat) : Type :=
