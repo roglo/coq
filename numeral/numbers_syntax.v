@@ -27,6 +27,7 @@ Number Notation BigN.t bigN_of_Z' Z'_of_bigN : bigN_scope
 bbb.
 *)
 
+(**)
 Fixpoint int31_of_pos' p' :=
   match p' with
   | x'I q' => Int31.twice_plus_one (int31_of_pos' q')
@@ -52,6 +53,7 @@ Definition Z'_of_int31 n :=
 Definition some_Z'_of_int31 n := Some (Z'_of_int31 n).
 
 Number Notation int31 int31_of_Z' some_Z'_of_int31 : int31_scope.
+(**)
 
 Definition rank n :=
   let fix rk n pow2 :=
