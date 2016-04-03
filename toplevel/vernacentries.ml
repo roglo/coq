@@ -1992,7 +1992,9 @@ let bigint_of_z' z' = match Constr.kind z' with
       end
   | App (c, [| d; e |]) ->
       begin match Constr.kind c with
-      | Construct (((ty, _), n), _) -> failwith (Printf.sprintf "ty/n %s/%d" (short_mutind_to_string ty) n)
+      | Construct (((ty, _), n), _) ->
+          let _ = Printf.eprintf "ty/n %s/%d" (short_mutind_to_string ty) n in
+          failwith "ok"
       | x -> failwith (Printf.sprintf "bigint_of_z' App c de %s" (obj_string x))
       end
   | Construct ((_, 1), _) -> (* Z'0 *) Bigint.zero
