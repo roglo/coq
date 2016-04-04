@@ -83,9 +83,11 @@ let run m k = m >>= function
   let tacs = List.map k l in
   Proofview.tclDISPATCH tacs
 
-let run_id m = m >>= function
-| Uniform v -> v
-| Depends _ -> failwith "run_id depends"
+let apply env t sp =
+  let tacl = t >>= function
+  | Uniform v -> Proofview.tclUNIT [v]
+  | Depends l -> Proofview.tclDISPATCHL (List.map Proofview.tclUNIT l) in
+  Proofview.apply env tacl sp
 
 let (>>=) = bind
 

@@ -2213,18 +2213,27 @@ let run_ftactic (tac : 'a Ftactic.t) : 'a =
   let (_, pf) = Proofview.init Evd.empty [] in
   Proofview.apply (Global.env ()) tac pf
 
-let glop g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr) : Value.t Ftactic.focus =
+let glop (tac : Nametab.ltac_constant) : Value.t list =
   let tac = interp_ftactic (default_ist ()) (Tacenv.interp_ltac tac) in
   let (_, pf) = Proofview.init Evd.empty [] in
-  let (v, _, _, _) = Proofview.apply (Global.env ()) tac pf in
+  let (v, _, _, _) = Ftactic.apply (Global.env ()) tac pf in
   v
 
-let uninterp_big_int2 g (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr) =
+let uninterp_big_int2 (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr) =
+(*
+  let loc = Loc.ghost in
+  let c = Tacexpr.ConstrMayEval (Genredexpr.ConstrTerm c) in
+  let t = Tacexpr.TacCall (loc, ArgArg (loc, tac), [c]) in
+  let (_, pf) = Proofview.init Evd.empty [] in
+  let (v, _, _, _) = Ftactic.apply (Global.env ()) t pf in
+  v
+*)
   match try Some (num_interp_call [] tac [c]) with Not_found -> None with
   | Some gr ->
       begin try Some (bigint_of_z' (constr_of_glob_constr gr))
       with Not_found -> None end
   | None -> None
+(**)
 
 let qualid_of_reference_or_by_notation = function
   | AN r -> qualid_of_reference r
@@ -2321,7 +2330,7 @@ let vernac_number_notation loc ty f g sc patl waft =
             | [] -> []
           in
           Notation.declare_numeral_interpreter sc (path, [])
-            (interp_big_int ty thr f) (patl, uninterp_big_int2 g tac, false)
+            (interp_big_int ty thr f) (patl, uninterp_big_int2 tac, false)
       | (VarRef _, _) | (ConstructRef _, _) ->
           user_err_loc
 	    (loc, "_",
