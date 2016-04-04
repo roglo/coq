@@ -3,7 +3,8 @@ Load common_z_syntax.
 
 (**)
 Definition some_int31_of_Z' z' := Some (phi_inv (Z_of_Z' z')).
-Definition some_Z'_of_int31 n := Some (Z'_of_Z (phi n)).
+Definition Z'_of_int31 n := Z'_of_Z (phi n).
+Definition some_Z'_of_int31 n := Some (Z'_of_int31 n).
 
 Number Notation int31 some_int31_of_Z' some_Z'_of_int31 : int31_scope.
 (**)
@@ -29,6 +30,7 @@ Number Notation BigN.t bigN_of_Z' Z'_of_bigN : bigN_scope
 bbb.
 *)
 
+(*
 Definition Z'_of_int31 n :=
   Int31.recr Z' Z'0
     (fun (b : digits) (_ : int31) =>
@@ -37,7 +39,6 @@ Definition Z'_of_int31 n :=
      | D1 => Z'succ_double
      end) n.
 
-(*
 Fixpoint int31_of_pos' p' :=
   match p' with
   | x'I q' => Int31.twice_plus_one (int31_of_pos' q')
