@@ -10,6 +10,15 @@ Number Notation int31 some_int31_of_Z' some_Z'_of_int31 : int31_scope.
 (**)
 
 (*
+possible issue in environment of execution:
+
+> Check 0%bigN.
+> ^^^^^^^^^^^^^
+Error: Illegal application (Non-functional construction):
+The expression "N0" of type "N"
+cannot be applied to the term
+ "0%int31" : "int31"
+
 Definition bigN_of_Z' z' := Some (BigN.N_of_Z (Z_of_Z' z')).
 Definition Z'_of_bigN n := Some (Z'_of_Z (BigN.to_Z n)).
 
@@ -98,11 +107,27 @@ Fixpoint glop hgt z :=
       let '(h, l) := split_at hgt z in
       let wh := glop n h in
       let wl := glop n l in
-      let p := proof_eq (projT1 wl) (projT1 wh) in
-      existT P n
-        (WW (projT2 wh)
-          (transport nat P
-           (projT1 wl) (projT1 wh) p (projT2 wl)))
+      let p := proof_eq (projT1 wh) n in
+      let q := proof_eq (projT1 wl) n in
+      existT P (S n)
+        (WW
+          (transport nat P (projT1 wh) n p (projT2 wh))
+          (transport nat P (projT1 wl) n q (projT2 wl)))
+  end.
+
+Definition word_of_pos_bigint hgt z :=
+  match hgt with
+  | O => BigN.N0 (projT2 (glop O z))
+  | S O => BigN.N1 (projT2 (glop (S O) z))
+  | S (S O) => BigN.N2 (projT2 (glop (S (S O)) z))
+  | S (S (S O)) => BigN.N3 (projT2 (glop (S (S (S O))) z))
+  | S (S (S (S O))) => BigN.N4 (projT2 (glop (S (S (S (S O)))) z))
+  | S (S (S (S (S O)))) => BigN.N5 (projT2 (glop (S (S (S (S (S O))))) z))
+  | S (S (S (S (S (S O))))) =>
+      BigN.N6 (projT2 (glop (S (S (S (S (S (S O)))))) z))
+  | S (S (S (S (S (S n))))) =>
+      BigN.Nn (S (S (S (S (S (S n))))))
+        (projT2 (glop (S (S (S (S (S (S n)))))) z))
   end.
 *)
 
