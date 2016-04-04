@@ -2254,8 +2254,8 @@ let vernac_number_notation loc ty f g sc patl waft =
   match try Some (Nametab.locate (snd lqid)) with Not_found -> None with
   | Some gr ->
       let path = Nametab.path_of_global gr in
-      begin match gr with
-      | IndRef (sp, spi) ->
+      begin match (gr, patl) with
+      | (IndRef (sp, spi), []) ->
           let _ =
             (* checking "g" is of type "ty -> option Z'" *)
             let c =
@@ -2291,7 +2291,7 @@ let vernac_number_notation loc ty f g sc patl waft =
           in
           Notation.declare_numeral_interpreter sc (path, [])
             (interp_big_int ty thr f) (patl, uninterp_big_int g, true)
-      | ConstRef cst ->
+      | ((IndRef _ | ConstRef _), _) ->
           let tac =
             match g with
             | CRef (r, _) ->
@@ -2322,7 +2322,7 @@ let vernac_number_notation loc ty f g sc patl waft =
           in
           Notation.declare_numeral_interpreter sc (path, [])
             (interp_big_int ty thr f) (patl, uninterp_big_int2 g tac, false)
-      | VarRef _ | ConstructRef _ ->
+      | (VarRef _, _) | (ConstructRef _, _) ->
           user_err_loc
 	    (loc, "_",
 	     str (string_of_reference_or_by_notation ty) ++

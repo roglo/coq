@@ -18,6 +18,7 @@ Error: Illegal application (Non-functional construction):
 The expression "N0" of type "N"
 cannot be applied to the term
  "0%int31" : "int31"
+*)
 
 Definition bigN_of_Z' z' := Some (BigN.N_of_Z (Z_of_Z' z')).
 Definition Z'_of_bigN n := Some (Z'_of_Z (BigN.to_Z n)).
