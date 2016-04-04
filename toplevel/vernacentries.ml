@@ -1900,10 +1900,13 @@ let shorted s =
 let short_mutind_to_string m = shorted (MutInd.to_string m)
 let short_constant_to_string c = shorted (Constant.to_string c)
 
+let string_of_inductive (mi, i) =
+  Printf.sprintf "%s/%d" (short_mutind_to_string mi) i
+
 let string_of_global_reference = function
   | VarRef v -> "VarRef ..."
   | ConstRef c -> short_constant_to_string c
-  | IndRef i -> "IndRef ..."
+  | IndRef i -> Printf.sprintf "Ind (%s)" (string_of_inductive i)
   | ConstructRef ((ty, _), i) ->
       match Printf.sprintf "%s/%d" (short_mutind_to_string ty) i with
       | "Int31.digits/1" -> "0"
@@ -1943,6 +1946,23 @@ and string_of_glob_constr_list sep = function
       Printf.sprintf "%s%s%s" sep (string_of_glob_constr gc)
         (string_of_glob_constr_list "," gcl)
   | [] -> ""
+
+let rec glob_constr_of_constr loc c = match Constr.kind c with
+  | App (c, ca) ->
+      let c = glob_constr_of_constr loc c in
+      let cel = List.map (glob_constr_of_constr loc) (Array.to_list ca) in
+      Glob_term.GApp (loc, c, cel)
+  | Construct (c, _) ->
+      Glob_term.GRef (loc, ConstructRef c, None)
+  | Const (c, _) ->
+      Glob_term.GRef (loc, ConstRef c, None)
+  | Ind (ind, _) ->
+      Glob_term.GRef (loc, IndRef ind, None)
+  | x ->
+      failwith (Printf.sprintf "1 constr %s" (obj_string x))
+
+let string_of_constr c =
+  string_of_glob_constr (glob_constr_of_constr Loc.ghost c)
 
 let z'_of_bigint dloc ty thr n =
   if Bigint.is_pos_or_zero n && not (Bigint.equal thr Bigint.zero) &&
@@ -1993,7 +2013,8 @@ let bigint_of_z' z' = match Constr.kind z' with
   | App (c, [| d; e |]) ->
       begin match Constr.kind c with
       | Construct (((ty, _), n), _) ->
-          let _ = Printf.eprintf "ty/n %s/%d" (short_mutind_to_string ty) n in
+          let _ = Printf.eprintf "ty/n %s/%d\n%!" (short_mutind_to_string ty) n in
+          let _ = Printf.eprintf "constr: %s\n%!" (string_of_constr z') in
           failwith "ok"
       | x -> failwith (Printf.sprintf "bigint_of_z' App c de %s" (obj_string x))
       end
@@ -2003,20 +2024,6 @@ let bigint_of_z' z' = match Constr.kind z' with
 let string_of_prim_token = function
   | Numeral bi -> Bigint.to_string bi
   | String s -> "\"" ^ s ^ "\""
-
-let rec glob_constr_of_constr loc c = match Constr.kind c with
-  | App (c, ca) ->
-      let c = glob_constr_of_constr loc c in
-      let cel = List.map (glob_constr_of_constr loc) (Array.to_list ca) in
-      Glob_term.GApp (loc, c, cel)
-  | Construct (c, _) ->
-      Glob_term.GRef (loc, ConstructRef c, None)
-  | Const (c, _) ->
-      Glob_term.GRef (loc, ConstRef c, None)
-  | Ind (ind, _) ->
-      Glob_term.GRef (loc, IndRef ind, None)
-  | x ->
-      failwith (Printf.sprintf "1 constr %s" (obj_string x))
 
 let interp_big_int ty thr f loc bi =
   let t =
