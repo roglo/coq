@@ -2,10 +2,10 @@ Load common_syntax.
 Load common_z_syntax.
 
 (**)
-Definition int31_of_Z' z' := Some (phi_inv (Z_of_Z' z')).
-Definition Z'_of_int31 n := Some (Z'_of_Z (phi n)).
+Definition some_int31_of_Z' z' := Some (phi_inv (Z_of_Z' z')).
+Definition some_Z'_of_int31 n := Some (Z'_of_Z (phi n)).
 
-Number Notation int31 int31_of_Z' Z'_of_int31 : int31_scope.
+Number Notation int31 some_int31_of_Z' some_Z'_of_int31 : int31_scope.
 (**)
 
 (*
@@ -15,7 +15,9 @@ Definition Z'_of_bigN n := Some (Z'_of_Z (BigN.to_Z n)).
 Number Notation BigN.t' bigN_of_Z' Z'_of_bigN : bigN_scope.
 
 bbb.
+*)
 
+(*
 Definition bigN_of_Z' z' := Some (BigN.N_of_Z (Z_of_Z' z')).
 Ltac Z'_of_bigN n := constr: (Z'_of_Z (BigN.to_Z n)).
 
@@ -26,6 +28,14 @@ Number Notation BigN.t bigN_of_Z' Z'_of_bigN : bigN_scope
 
 bbb.
 *)
+
+Definition Z'_of_int31 n :=
+  Int31.recr Z' Z'0
+    (fun (b : digits) (_ : int31) =>
+     match b with
+     | D0 => Z'double
+     | D1 => Z'succ_double
+     end) n.
 
 (*
 Fixpoint int31_of_pos' p' :=
@@ -41,14 +51,6 @@ Definition int31_of_Z' z' :=
   | Z'pos p' => Some (int31_of_pos' p')
   | Z'neg p' => None
   end.
-
-Definition Z'_of_int31 n :=
-  Int31.recr Z' Z'0
-    (fun (b : digits) (_ : int31) =>
-     match b with
-     | D0 => Z'double
-     | D1 => Z'succ_double
-     end) n.
 
 Definition some_Z'_of_int31 n := Some (Z'_of_int31 n).
 
