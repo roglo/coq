@@ -2220,7 +2220,7 @@ let glop (tac : Nametab.ltac_constant) : Value.t list =
   v
 
 let uninterp_big_int2 (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr) =
-(**)
+(*
   let loc = Loc.ghost in
   let c = Tacexpr.ConstrMayEval (Genredexpr.ConstrTerm c) in
   let t = Tacexpr.TacCall (loc, ArgArg (loc, tac), [c]) in
@@ -2229,13 +2229,13 @@ let uninterp_big_int2 (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr) 
   let (_, pf) = Proofview.init Evd.empty [] in
   let (v, _, _, _) = Ftactic.apply (Global.env ()) t pf in
   v
-(*
+*)
   match try Some (num_interp_call [] tac [c]) with Not_found -> None with
   | Some gr ->
       begin try Some (bigint_of_z' (constr_of_glob_constr gr))
       with Not_found -> None end
   | None -> None
-*)
+(**)
 
 let qualid_of_reference_or_by_notation = function
   | AN r -> qualid_of_reference r
