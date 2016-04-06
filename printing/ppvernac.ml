@@ -711,9 +711,9 @@ module Make
           return (
             keyword "Format Notation " ++ qs s ++ spc () ++ qs k ++ spc() ++ qs v
           )
-        | VernacNumberNotation(id,f,g,sc,pl,thr) ->
+        | VernacNumeralNotation(id,f,g,sc,pl,thr) ->
           return (
-            keyword "Number Notation..."
+            keyword "Numeral Notation..."
           )
 
         (* Gallina *)

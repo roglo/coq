@@ -109,7 +109,7 @@ Fixpoint Z'_of_nat_loop n :=
 
 Definition Z'_of_nat n := Some (Z'_of_nat_loop n).
 
-Global Number Notation nat nat_of_Z' Z'_of_nat : nat_scope
+Numeral Notation nat nat_of_Z' Z'_of_nat : nat_scope
   (warning after 5000).
 
 (** ** Constants *)

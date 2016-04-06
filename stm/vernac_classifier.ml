@@ -195,7 +195,7 @@ let rec classify_vernac e =
     (* These commands alter the parser *)
     | VernacOpenCloseScope _ | VernacDelimiters _ | VernacBindScope _
     | VernacInfix _ | VernacNotation _ | VernacNotationAddFormat _
-    | VernacNumberNotation _
+    | VernacNumeralNotation _
     | VernacSyntaxExtension _ 
     | VernacSyntacticDefinition _
     | VernacTacticNotation _

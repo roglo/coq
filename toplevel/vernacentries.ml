@@ -2252,7 +2252,7 @@ let qualid_of_reference_or_by_notation = function
   | AN r -> qualid_of_reference r
   | ByNotation (loc, s, so) -> failwith "qualid_of_reference_or_by_notation ByNotation"
 
-let vernac_number_notation loc ty f g sc patl waft =
+let vernac_numeral_notation loc ty f g sc patl waft =
   let thr = Bigint.of_int waft in
   let lqid = qualid_of_reference_or_by_notation ty in
   let crq = CRef (Qualid lqid, None) in
@@ -2387,8 +2387,8 @@ let interp ?proof ~loc locality poly c =
       vernac_notation locality local c infpl sc
   | VernacNotationAddFormat(n,k,v) ->
       Metasyntax.add_notation_extra_printing_rule n k v
-  | VernacNumberNotation (ty,f,g,sc,patl,waft) ->
-      vernac_number_notation loc ty f g sc patl waft
+  | VernacNumeralNotation (ty,f,g,sc,patl,waft) ->
+      vernac_numeral_notation loc ty f g sc patl waft
 
   (* Gallina *)
   | VernacDefinition (k,lid,d) -> vernac_definition locality poly k lid d
@@ -2550,7 +2550,7 @@ let check_vernac_supports_locality c l =
     | VernacSetOption _ | VernacUnsetOption _
     | VernacDeclareReduction _
     | VernacExtend _ 
-    | VernacInductive _ | VernacNumberNotation _) -> ()
+    | VernacInductive _ | VernacNumeralNotation _) -> ()
   | Some _, _ -> Errors.error "This command does not support Locality"
 
 (* Vernaculars that take a polymorphism flag *)

@@ -1114,10 +1114,10 @@ GEXTEND Gram
 	 l = [ "("; l = LIST1 syntax_modifier SEP ","; ")" -> l | -> [] ]
 	 -> VernacSyntaxExtension (local,(s,l))
 
-     | IDENT "Number"; IDENT "Notation"; ty = smart_global; f = constr;
+     | IDENT "Numeral"; IDENT "Notation"; ty = smart_global; f = constr;
        g = constr; ":"; sc = IDENT;
        (patl, waft) = num_pat_list_warning_after ->
-	 VernacNumberNotation (ty,f,g,sc,patl,waft)
+	 VernacNumeralNotation (ty,f,g,sc,patl,waft)
 
      (* "Print" "Grammar" should be here but is in "command" entry in order
         to factorize with other "Print"-based vernac entries *)

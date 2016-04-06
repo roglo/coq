@@ -306,7 +306,7 @@ type vernac_expr =
       obsolete_locality * constr_expr * (lstring * syntax_modifier list) *
       scope_name option
   | VernacNotationAddFormat of string * string * string
-  | VernacNumberNotation of reference or_by_notation * constr_expr *
+  | VernacNumeralNotation of reference or_by_notation * constr_expr *
       constr_expr * string * reference list * int
 
   (* Gallina *)
