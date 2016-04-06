@@ -133,6 +133,16 @@ Definition word_of_pos_bigint hgt z :=
 
 Definition n_inlined := S (S (S (S (S (S (S O)))))).
 
+Definition transport' (A : Type) (B : A -> Type) (x y : A)
+    (p : x = y) (q : B x) :=
+  match p in _ = y return B y with
+  | eq_refl => q
+  end.
+
+
+Definition word_of_pos_bigint (hgt : nat) (z : Z) : BigN.t'.
+bbb.
+
 Fixpoint word_of_pos_bigint hgt z :=
   match hgt with
   | O => BigN.N0 (phi_inv z)
@@ -148,18 +158,28 @@ Fixpoint word_of_pos_bigint hgt z :=
       | (BigN.N4 wh1, BigN.N4 wl1) => BigN.N5 (WW wh1 wl1)
       | (BigN.N5 wh1, BigN.N5 wl1) => BigN.N6 (WW wh1 wl1)
       | (BigN.N6 wh1, BigN.N6 wl1) => BigN.Nn O (WW wh1 wl1)
-      | (BigN.Nn O wh1, BigN.Nn O wl1) =>
-          BigN.Nn (S O) (WW wh1 wl1)
-      | (BigN.Nn (S O) wh1, BigN.Nn (S O) wl1) =>
-          BigN.Nn (S (S O)) (WW wh1 wl1)
-(*
-      | (BigN.Nn u wh1, BigN.Nn v wl1) =>
-           if Nat.eq_dec u v then BigN.Nn (S u) (WW wh1 wl1)
+      | (BigN.Nn m wh1, BigN.Nn n wl1) =>
+           if Nat.eq_dec m n then
+             BigN.Nn (S m) (WW wh1 wl1)
            else wh
-*)
       | _ => wh
       end
   end.
+revert hgt z.
+fix 1.
+intros **.
+destruct hgt.
+ exact (BigN.N0 (phi_inv z)).
+
+ remember (split_at hgt z) as hl.
+ destruct hl as (h, l).
+ set (wh := word_of_pos_bigint hgt h).
+ set (wl := word_of_pos_bigint hgt l).
+ destruct wh eqn:p.
+  destruct wl eqn:q.
+   Focus 1.
+
+Theorem toto_N1 : forall (v : BigN.t') hgt z ('(h, l) := split_at hgt z)
 
 Definition word_of_pos_bigint_0 z :=
   phi_inv z.
