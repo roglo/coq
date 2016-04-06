@@ -50,16 +50,7 @@ where "n * m" := (mul n m) : nat_scope.
 
 (** ** Parsing and Printing digit strings as type nat *)
 
-Inductive positive' : Set :=
-  | x'I : positive' -> positive'
-  | x'O : positive' -> positive'
-  | x'H : positive'.
-
-Inductive Z' : Set :=
-  | Z'0 : Z'
-  | Z'pos : positive' -> Z'
-  | Z'neg : positive' -> Z'.
-
+(*
 Fixpoint pos'pred_double x :=
   match x with
   | x'I p => x'I (x'O p)
@@ -111,6 +102,7 @@ Definition Z'_of_nat n := Some (Z'_of_nat_loop n).
 
 Numeral Notation nat nat_of_Z' Z'_of_nat : nat_scope
   (warning after 5000).
+*)
 
 (** ** Constants *)
 

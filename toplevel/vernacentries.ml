@@ -32,6 +32,8 @@ open Redexpr
 open Lemmas
 open Misctypes
 open Locality
+open Lib
+open Libobject
 open Sigma.Notations
 
 let debug = false
@@ -2252,7 +2254,7 @@ let qualid_of_reference_or_by_notation = function
   | AN r -> qualid_of_reference r
   | ByNotation (loc, s, so) -> failwith "qualid_of_reference_or_by_notation ByNotation"
 
-let vernac_numeral_notation loc ty f g sc patl waft =
+let load_numeral_notation _ (_, (loc, ty, f, g, sc, patl, waft)) =
   let thr = Bigint.of_int waft in
   let lqid = qualid_of_reference_or_by_notation ty in
   let crq = CRef (Qualid lqid, None) in
@@ -2355,6 +2357,21 @@ let vernac_numeral_notation loc ty f g sc patl waft =
         (loc, "_",
          str "type " ++ str (string_of_reference_or_by_notation ty) ++
 	 str " not found")
+
+let cache_numeral_notation o = load_numeral_notation 1 o
+
+type numeral_notation_obj =
+  Loc.t * Libnames.reference Misctypes.or_by_notation *
+  Constrexpr.constr_expr * Constrexpr.constr_expr *
+  Notation_term.scope_name * Libnames.reference list * int
+
+let inNumeralNotation : numeral_notation_obj -> obj =
+  declare_object { (default_object "NUMERAL NOTATION") with
+    cache_function = cache_numeral_notation;
+    load_function = load_numeral_notation }
+
+let vernac_numeral_notation loc ty f g sc patl waft =
+  add_anonymous_leaf (inNumeralNotation (loc, ty, f, g, sc, patl, waft))
 
 (* "locality" is the prefix "Local" attribute, while the "local" component
  * is the outdated/deprecated "Local" attribute of some vernacular commands
@@ -2550,7 +2567,7 @@ let check_vernac_supports_locality c l =
     | VernacSetOption _ | VernacUnsetOption _
     | VernacDeclareReduction _
     | VernacExtend _ 
-    | VernacInductive _ | VernacNumeralNotation _) -> ()
+    | VernacInductive _) -> ()
   | Some _, _ -> Errors.error "This command does not support Locality"
 
 (* Vernaculars that take a polymorphism flag *)

@@ -1,6 +1,4 @@
-(*
 Load common_syntax.
-*)
 
 Definition nat_of_Z' x :=
   match x with
@@ -45,4 +43,4 @@ Fixpoint Z'_of_nat_loop n :=
 Definition Z'_of_nat n := Some (Z'_of_nat_loop n).
 Definition Z'_of_nat_noprint (n : nat) : option Z' := None.
 
-Number Notation nat nat_of_Z' Z'_of_nat : nat_scope (warning after 5000).
+Numeral Notation nat nat_of_Z' Z'_of_nat : nat_scope (warning after 5000).
