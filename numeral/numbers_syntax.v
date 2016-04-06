@@ -27,7 +27,7 @@ Number Notation BigN.t' bigN_of_Z' Z'_of_bigN : bigN_scope.
 bbb.
 *)
 
-(*
+(**)
 Definition bigN_of_Z' z' := Some (BigN.N_of_Z (Z_of_Z' z')).
 Ltac Z'_of_bigN n := constr: (Z'_of_Z (BigN.to_Z n)).
 
@@ -37,7 +37,7 @@ Number Notation BigN.t bigN_of_Z' Z'_of_bigN : bigN_scope
      BigN.Nn).
 
 bbb.
-*)
+(**)
 
 (*
 Definition Z'_of_int31 n :=

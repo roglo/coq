@@ -2120,13 +2120,20 @@ and num_interp vl = function
   | t -> failwith (Printf.sprintf "num_interp %s" (obj_string t))
 and num_interp_arg vl = function
   | Tacexpr.ConstrMayEval me ->
+let _ = Printf.eprintf "42\n%!" in
+let r =
       begin match me with
       | Genredexpr.ConstrTerm (gc, None) ->
+let _ = Printf.eprintf "42.2\n%!" in
           let ce = vernac_get_eval (constr_expr_of_glob_constr vl gc) in
+let _ = Printf.eprintf "42.5\n%!" in
+let r =
 	  glob_constr_of_constr Loc.ghost ce
+in let _ = Printf.eprintf "42.8\n%!" in r
       | me ->
           failwith (Printf.sprintf "ConstrMayEval may_eval %s" (obj_string me))
       end
+in let _ = Printf.eprintf "43\n%!" in r
   | Tacexpr.Reference (ArgVar (loc, id)) -> List.assoc id vl
   | Tacexpr.TacCall (loc, ArgArg (loc1, tac), tal) ->
       let tal = List.map (num_interp_arg vl) tal in
@@ -2230,10 +2237,14 @@ let uninterp_big_int2 (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr) 
   let (v, _, _, _) = Ftactic.apply (Global.env ()) t pf in
   v
 *)
+let _ = Printf.eprintf "0\n%!" in
   match try Some (num_interp_call [] tac [c]) with Not_found -> None with
   | Some gr ->
+let _ = Printf.eprintf "1\n%!" in
+let r =
       begin try Some (bigint_of_z' (constr_of_glob_constr gr))
       with Not_found -> None end
+in let _ = Printf.eprintf "2\n%!" in r
   | None -> None
 (**)
 
