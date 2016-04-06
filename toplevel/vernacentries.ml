@@ -2028,10 +2028,16 @@ let string_of_prim_token = function
   | String s -> "\"" ^ s ^ "\""
 
 let interp_big_int ty thr f loc bi =
+(*
+  let fc = vernac_get_eval f in
+  let ac = vernac_get_eval (z'_of_bigint loc ty thr bi) in
+  let t = mkApp (fc, [| ac |]) in
+*)
   let t =
     vernac_get_eval
       (CApp (loc, (None, f), [(z'_of_bigint loc ty thr bi, None)]))
   in
+(**)
   match Constr.kind t with
   | App (_, [| _; c |]) -> glob_constr_of_constr loc c
   | App (_, [| _ |]) ->
