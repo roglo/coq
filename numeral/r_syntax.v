@@ -55,4 +55,4 @@ Ltac Z'_of_R r :=
       Z'_of_posR r
   end.
 
-Number Notation R R_of_Z' Z'_of_R : R_scope (printing Ropp R0 Rplus Rmult R1).
+Numeral Notation R R_of_Z' Z'_of_R : R_scope (printing Ropp R0 Rplus Rmult R1).

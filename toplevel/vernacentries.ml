@@ -2130,20 +2130,13 @@ and num_interp vl = function
   | t -> failwith (Printf.sprintf "num_interp %s" (obj_string t))
 and num_interp_arg vl = function
   | Tacexpr.ConstrMayEval me ->
-let _ = Printf.eprintf "42\n%!" in
-let r =
       begin match me with
       | Genredexpr.ConstrTerm (gc, None) ->
-let _ = Printf.eprintf "42.2\n%!" in
           let ce = vernac_get_eval (constr_expr_of_glob_constr vl gc) in
-let _ = Printf.eprintf "42.5\n%!" in
-let r =
 	  glob_constr_of_constr Loc.ghost ce
-in let _ = Printf.eprintf "42.8\n%!" in r
       | me ->
           failwith (Printf.sprintf "ConstrMayEval may_eval %s" (obj_string me))
       end
-in let _ = Printf.eprintf "43\n%!" in r
   | Tacexpr.Reference (ArgVar (loc, id)) -> List.assoc id vl
   | Tacexpr.TacCall (loc, ArgArg (loc1, tac), tal) ->
       let tal = List.map (num_interp_arg vl) tal in
@@ -2238,6 +2231,7 @@ let glop (tac : Nametab.ltac_constant) : Value.t list =
 
 let uninterp_big_int2 tac c =
 (*
+  let c = (c, None) in
   let loc = Loc.ghost in
   let c = Tacexpr.ConstrMayEval (Genredexpr.ConstrTerm c) in
   let t = Tacexpr.TacCall (loc, ArgArg (loc, tac), [c]) in
@@ -2245,16 +2239,20 @@ let uninterp_big_int2 tac c =
   let t = Tacinterp.interp_ftactic (default_ist ()) t in
   let (_, pf) = Proofview.init Evd.empty [] in
   let (v, _, _, _) = Ftactic.apply (Global.env ()) t pf in
-  v
+  match v with
+  | [v] ->
+      begin match Tacinterp.Value.to_constr v with
+      | Some v -> Some (bigint_of_z' v)
+      | None -> None
+      end
+  | _ -> failwith (Printf.sprintf "unintep_big_int2 len %d" (List.length v))
+
+.... but Check 24%R returns above error with len 0: the return list is empty!!!
 *)
-let _ = Printf.eprintf "0\n%!" in
   match try Some (num_interp_call [] tac [c]) with Not_found -> None with
   | Some gr ->
-let _ = Printf.eprintf "1\n%!" in
-let r =
       begin try Some (bigint_of_z' (constr_of_glob_constr gr))
       with Not_found -> None end
-in let _ = Printf.eprintf "2\n%!" in r
   | None -> None
 (**)
 
