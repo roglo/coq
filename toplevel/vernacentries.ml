@@ -1524,7 +1524,11 @@ let get_current_context_of_args = function
 (* duplication of vernac_check_may_eval below to get the result instead
    of printing it *)
 let vernac_get_eval rc =
+(**)
+  let (sigma, env) = (Evd.empty, Global.env ()) in
+(*
   let (sigma, env) = get_current_context () in
+*)
   let sigma', c = interp_open_constr env sigma rc in
   let sigma' = Evarconv.consider_remaining_unif_problems env sigma' in
   Evarconv.check_problems_are_solved env sigma';
@@ -2272,7 +2276,7 @@ let inNumeralNotation : numeral_notation_obj -> obj =
     cache_function = cache_numeral_notation;
     load_function = load_numeral_notation }
 
-let vernac_numeral_notation loc ty (f : Libnames.reference) (g : Libnames.reference) sc patl waft =
+let vernac_numeral_notation loc ty f g sc patl waft =
   let tyc =
     let (loc, tyq) = qualid_of_reference_or_by_notation ty in
     try Nametab.locate tyq with Not_found ->
