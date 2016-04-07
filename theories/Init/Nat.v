@@ -50,7 +50,6 @@ where "n * m" := (mul n m) : nat_scope.
 
 (** ** Parsing and Printing digit strings as type nat *)
 
-(**)
 Fixpoint pos'pred_double x :=
   match x with
   | x'I p => x'I (x'O p)
@@ -100,10 +99,8 @@ Fixpoint Z'_of_nat_loop n :=
 
 Definition Z'_of_nat n := Some (Z'_of_nat_loop n).
 
-(**)
 Numeral Notation nat nat_of_Z' Z'_of_nat : nat_scope
   (warning after 5000).
-(**)
 
 (** ** Constants *)
 

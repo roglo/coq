@@ -2021,7 +2021,7 @@ let bigint_of_z' z' = match Constr.kind z' with
       | x -> failwith (Printf.sprintf "bigint_of_z' App c de %s" (obj_string x))
       end
   | Construct ((_, 1), _) -> (* Z'0 *) Bigint.zero
-  | x -> failwith (Printf.sprintf "bigint_of_z' %s" (obj_string x))
+  | _ -> raise Not_found
 
 let string_of_prim_token = function
   | Numeral bi -> Bigint.to_string bi
