@@ -2269,18 +2269,6 @@ let load_numeral_notation _ (_, (loc, ty, f, g, sc, patl, waft)) =
   in
   let cref loc s = CRef (Ident (identref loc s), None) in
   let app loc x y = CApp (loc, (None, x), [(y, None)]) in
-  let _ =
-    (* checking "f" is of type "Z' -> option ty" *)
-    let c =
-      CCast
-        (loc, f,
-         CastConv
-           (arrow loc (cref loc "Z'")
-              (app loc (cref loc "option") crq)))
-    in
-    let (sigma, env) = get_current_context () in
-    interp_open_constr env sigma c
-  in
   match try Some (Nametab.locate (snd lqid)) with Not_found -> None with
   | Some gr ->
       let path = Nametab.path_of_global gr in
@@ -2377,6 +2365,25 @@ let inNumeralNotation : numeral_notation_obj -> obj =
     load_function = load_numeral_notation }
 
 let vernac_numeral_notation loc ty f g sc patl waft =
+  let lqid = qualid_of_reference_or_by_notation ty in
+  let crq = CRef (Qualid lqid, None) in
+  let app loc x y = CApp (loc, (None, x), [(y, None)]) in
+  let cref loc s = CRef (Ident (identref loc s), None) in
+  let arrow loc x y =
+    CProdN (loc, [([(loc, Anonymous)], Default Explicit, x)], y)
+  in
+  let _ =
+    (* checking "f" is of type "Z' -> option ty" *)
+    let c =
+      CCast
+        (loc, f,
+         CastConv
+           (arrow loc (cref loc "Z'")
+              (app loc (cref loc "option") crq)))
+    in
+    let (sigma, env) = get_current_context () in
+    interp_open_constr env sigma c
+  in
   add_anonymous_leaf (inNumeralNotation (loc, ty, f, g, sc, patl, waft))
 
 (* "locality" is the prefix "Local" attribute, while the "local" component
