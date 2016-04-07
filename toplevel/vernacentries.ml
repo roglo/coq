@@ -2027,27 +2027,6 @@ let string_of_prim_token = function
   | Numeral bi -> Bigint.to_string bi
   | String s -> "\"" ^ s ^ "\""
 
-let interp_big_int ty thr f loc bi =
-(*
-  let fc = vernac_get_eval f in
-  let ac = vernac_get_eval (z'_of_bigint loc ty thr bi) in
-  let t = mkApp (fc, [| ac |]) in
-*)
-  let t =
-    vernac_get_eval
-      (CApp (loc, (None, f), [(z'_of_bigint loc ty thr bi, None)]))
-  in
-(**)
-  match Constr.kind t with
-  | App (_, [| _; c |]) -> glob_constr_of_constr loc c
-  | App (_, [| _ |]) ->
-      user_err_loc
-        (loc, "_",
-         str "Cannot interpret this number as a value of type " ++
-         str (string_of_reference_or_by_notation ty))
-  | x ->
-      failwith (Printf.sprintf "interp_big_int %s" (obj_string x))
-
 let qualid_of_constructref env sp i =
   let mc =
     let mib = Environ.lookup_mind sp env in
@@ -2087,12 +2066,35 @@ let rec constr_expr_of_glob_constr vl = function
   | x ->
       failwith (Printf.sprintf "1 glob_constr %s" (obj_string x))
 
-let uninterp_big_int g c =
+let interp_big_int ty thr f loc bi =
+(*
+  let fc = vernac_get_eval f in
+  let ac = vernac_get_eval (z'_of_bigint loc ty thr bi) in
+  let t = mkApp (fc, [| ac |]) in
+*)
+  let f = constr_expr_of_glob_constr [] (Glob_term.GRef (loc, f, None)) in
+  let t =
+    vernac_get_eval
+      (CApp (loc, (None, f), [(z'_of_bigint loc ty thr bi, None)]))
+  in
+(**)
+  match Constr.kind t with
+  | App (_, [| _; c |]) -> glob_constr_of_constr loc c
+  | App (_, [| _ |]) ->
+      user_err_loc
+        (loc, "_",
+         str "Cannot interpret this number as a value of type " ++
+         str (string_of_reference_or_by_notation ty))
+  | x ->
+      failwith (Printf.sprintf "interp_big_int %s" (obj_string x))
+
+let uninterp_big_int g loc c =
   match try Some (constr_expr_of_glob_constr [] c) with Not_found -> None with
   | Some ce ->
+      let g = constr_expr_of_glob_constr [] (Glob_term.GRef (loc, g, None)) in
       let t =
         vernac_get_eval
-          (CApp (Glob_ops.loc_of_glob_constr c, (None, g), [(ce, None)]))
+          (CApp (loc, (None, g), [(ce, None)]))
       in
       begin match Constr.kind t with
       | App (c, [| _; x |]) -> Some (bigint_of_z' x)
@@ -2234,7 +2236,7 @@ let glop (tac : Nametab.ltac_constant) : Value.t list =
   let (v, _, _, _) = Ftactic.apply (Global.env ()) tac pf in
   v
 
-let uninterp_big_int2 (tac : Nametab.ltac_constant) (c : Glob_term.glob_constr) =
+let uninterp_big_int2 tac c =
 (*
   let loc = Loc.ghost in
   let c = Tacexpr.ConstrMayEval (Genredexpr.ConstrTerm c) in
@@ -2260,11 +2262,11 @@ let qualid_of_reference_or_by_notation = function
   | AN r -> qualid_of_reference r
   | ByNotation (loc, s, so) -> failwith "qualid_of_reference_or_by_notation ByNotation"
 
-let load_numeral_notation _ (_, (ty, f, g, sc, patl, thr, path)) =
+let load_numeral_notation _ (_, (loc, ty, f, g, sc, patl, thr, path)) =
   match g with
   | Inl g ->
       Notation.declare_numeral_interpreter sc (path, [])
-        (interp_big_int ty thr f) (patl, uninterp_big_int g, true)
+        (interp_big_int ty thr f) (patl, uninterp_big_int g loc, true)
   | Inr g ->
       Notation.declare_numeral_interpreter sc (path, [])
         (interp_big_int ty thr f) (patl, uninterp_big_int2 g, false)
@@ -2272,8 +2274,8 @@ let load_numeral_notation _ (_, (ty, f, g, sc, patl, thr, path)) =
 let cache_numeral_notation o = load_numeral_notation 1 o
 
 type numeral_notation_obj =
-  Libnames.reference Misctypes.or_by_notation * Constrexpr.constr_expr *
-  (Constrexpr.constr_expr, Nametab.ltac_constant) union *
+  Loc.t * Libnames.reference Misctypes.or_by_notation * global_reference *
+  (global_reference, Nametab.ltac_constant) union *
   Notation_term.scope_name * Glob_term.glob_constr list *
   Bigint.bigint * Libnames.full_path
 
@@ -2282,15 +2284,18 @@ let inNumeralNotation : numeral_notation_obj -> obj =
     cache_function = cache_numeral_notation;
     load_function = load_numeral_notation }
 
-let vernac_numeral_notation loc ty f g sc patl waft =
-  let lqid = qualid_of_reference_or_by_notation ty in
-  let gr =
-    try Nametab.locate (snd lqid) with Not_found ->
-      user_err_loc
-        (loc, "_",
-         str "type " ++ str (string_of_reference_or_by_notation ty) ++
-	 str " not found")
+let vernac_numeral_notation loc ty (f : Libnames.reference) (g : Libnames.reference) sc patl waft =
+  let tyc =
+    let (loc, tyq) = qualid_of_reference_or_by_notation ty in
+    try Nametab.locate tyq with Not_found ->
+      Nametab.error_global_not_found_loc loc tyq
   in
+  let fc =
+    let (loc, fq) = qualid_of_reference f in
+    try Nametab.locate fq with Not_found ->
+      Nametab.error_global_not_found_loc loc fq
+  in
+  let lqid = qualid_of_reference_or_by_notation ty in
   let crq = CRef (Qualid lqid, None) in
   let app loc x y = CApp (loc, (None, x), [(y, None)]) in
   let cref loc s = CRef (Ident (identref loc s), None) in
@@ -2301,23 +2306,27 @@ let vernac_numeral_notation loc ty f g sc patl waft =
     (* checking "f" is of type "Z' -> option ty" *)
     let c =
       CCast
-        (loc, f,
+        (loc, CRef (f, None),
          CastConv
-           (arrow loc (cref loc "Z'")
-              (app loc (cref loc "option") crq)))
+           (arrow loc (cref loc "Z'") (app loc (cref loc "option") crq)))
     in
     let (sigma, env) = get_current_context () in
     interp_open_constr env sigma c
   in
   let thr = Bigint.of_int waft in
-  let path = Nametab.path_of_global gr in
-  match (gr, patl) with
+  let path = Nametab.path_of_global tyc in
+  match (tyc, patl) with
   | (IndRef (sp, spi), []) ->
+      let gc =
+        let (loc, gq) = qualid_of_reference g in
+        try Nametab.locate gq with Not_found ->
+          Nametab.error_global_not_found_loc loc gq
+      in
       let _ =
         (* checking "g" is of type "ty -> option Z'" *)
         let c =
           CCast
-            (loc, g,
+            (loc, CRef (g, None),
              CastConv
                (arrow loc crq (app loc (cref loc "option") (cref loc "Z'"))))
         in
@@ -2347,27 +2356,14 @@ let vernac_numeral_notation loc ty f g sc patl waft =
                  mc)
       in
       add_anonymous_leaf
-        (inNumeralNotation (ty, f, Inl g, sc, patl, thr, path))
+        (inNumeralNotation (loc, ty, fc, Inl gc, sc, patl, thr, path))
   | ((IndRef _ | ConstRef _), _) ->
-      let g =
-        match g with
-        | CRef (r, _) ->
-            let qid = snd (qualid_of_reference r) in
-            begin match
-              try Some (Nametab.locate_tactic qid) with Not_found -> None
-            with
-            | Some t -> t
-            | None ->
-                user_err_loc
-                  (loc_of_reference r, "_",
-                   str "tactic " ++ str (string_of_reference r) ++
-                   str " not found")
-            end
-        | _ ->
-            user_err_loc
-              (loc, "_",
-        	   str (string_of_reference_or_by_notation ty) ++
-        	   str " is not a type")
+      let gc =
+        let (loc, gq) = qualid_of_reference g in
+        try Nametab.locate_tactic gq with Not_found ->
+          user_err_loc
+            (loc, "_",
+             str "tactic " ++ str (string_of_qualid gq) ++ str " not found")
       in
       let patl =
         match patl with
@@ -2378,7 +2374,7 @@ let vernac_numeral_notation loc ty f g sc patl waft =
         | [] -> []
       in
       add_anonymous_leaf
-        (inNumeralNotation (ty, f, Inr g, sc, patl, thr, path))
+        (inNumeralNotation (loc, ty, fc, Inr gc, sc, patl, thr, path))
   | (VarRef _, _) | (ConstructRef _, _) ->
       user_err_loc
         (loc, "_",
