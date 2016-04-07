@@ -2260,104 +2260,79 @@ let qualid_of_reference_or_by_notation = function
   | AN r -> qualid_of_reference r
   | ByNotation (loc, s, so) -> failwith "qualid_of_reference_or_by_notation ByNotation"
 
-let load_numeral_notation _ (_, (loc, ty, f, g, sc, patl, waft)) =
-  let thr = Bigint.of_int waft in
-  let lqid = qualid_of_reference_or_by_notation ty in
-  let crq = CRef (Qualid lqid, None) in
-  let arrow loc x y =
-    CProdN (loc, [([(loc, Anonymous)], Default Explicit, x)], y)
-  in
-  let cref loc s = CRef (Ident (identref loc s), None) in
-  let app loc x y = CApp (loc, (None, x), [(y, None)]) in
-  match try Some (Nametab.locate (snd lqid)) with Not_found -> None with
-  | Some gr ->
-      let path = Nametab.path_of_global gr in
-      begin match (gr, patl) with
-      | (IndRef (sp, spi), []) ->
-          let _ =
-            (* checking "g" is of type "ty -> option Z'" *)
-            let c =
-              CCast
-                (loc, g,
-                 CastConv
-                   (arrow loc crq (app loc (cref loc "option") (cref loc "Z'"))))
+let load_numeral_notation _ (_, (loc, ty, f, g, sc, patl, thr, gr)) =
+  let path = Nametab.path_of_global gr in
+  begin match (gr, patl) with
+  | (IndRef (sp, spi), []) ->
+      let env = Global.env () in
+      let patl =
+        match patl with
+        | _ :: _ -> failwith "patl not impl"
+        | [] ->
+            let mc =
+              let mib = Environ.lookup_mind sp env in
+              let inds =
+                List.init (Array.length mib.Declarations.mind_packets)
+                  (fun x -> (sp, x))
+              in
+              let ind = List.hd inds in
+              let mip = mib.Declarations.mind_packets.(snd ind) in
+              mip.Declarations.mind_consnames
             in
-            let (sigma, env) = get_current_context () in
-            interp_open_constr env sigma c
-          in
-          let env = Global.env () in
-          let patl =
-            match patl with
-            | _ :: _ -> failwith "patl not impl"
-            | [] ->
-                let mc =
-                  let mib = Environ.lookup_mind sp env in
-                  let inds =
-                    List.init (Array.length mib.Declarations.mind_packets)
-                      (fun x -> (sp, x))
-                  in
-                  let ind = List.hd inds in
-                  let mip = mib.Declarations.mind_packets.(snd ind) in
-                  mip.Declarations.mind_consnames
-                in
-                Array.to_list
-                  (Array.mapi
-                     (fun i c ->
-                        Glob_term.GRef
-                          (loc, ConstructRef ((sp, spi), i + 1), None))
-                     mc)
-          in
-          Notation.declare_numeral_interpreter sc (path, [])
-            (interp_big_int ty thr f) (patl, uninterp_big_int g, true)
-      | ((IndRef _ | ConstRef _), _) ->
-          let tac =
-            match g with
-            | CRef (r, _) ->
-                let qid = snd (qualid_of_reference r) in
-                begin match
-                  try Some (Nametab.locate_tactic qid) with Not_found -> None
-                with
-                | Some t -> t
-                | None ->
-                    user_err_loc
-                      (loc_of_reference r, "_",
-                       str "tactic " ++ str (string_of_reference r) ++
-                       str " not found")
-                end
-            | _ ->
+            Array.to_list
+              (Array.mapi
+                 (fun i c ->
+                    Glob_term.GRef
+                      (loc, ConstructRef ((sp, spi), i + 1), None))
+                 mc)
+      in
+      Notation.declare_numeral_interpreter sc (path, [])
+        (interp_big_int ty thr f) (patl, uninterp_big_int g, true)
+  | ((IndRef _ | ConstRef _), _) ->
+      let tac =
+        match g with
+        | CRef (r, _) ->
+            let qid = snd (qualid_of_reference r) in
+            begin match
+              try Some (Nametab.locate_tactic qid) with Not_found -> None
+            with
+            | Some t -> t
+            | None ->
                 user_err_loc
-                  (loc, "_",
-		   str (string_of_reference_or_by_notation ty) ++
-		   str " is not a type")
-          in
-          let patl =
-            match patl with
-            | _ :: _ ->
-                List.map
-                  (fun r -> Glob_term.GRef (loc, intern_reference r, None))
-                  patl
-            | [] -> []
-          in
-          Notation.declare_numeral_interpreter sc (path, [])
-            (interp_big_int ty thr f) (patl, uninterp_big_int2 tac, false)
-      | (VarRef _, _) | (ConstructRef _, _) ->
-          user_err_loc
-	    (loc, "_",
-	     str (string_of_reference_or_by_notation ty) ++
-	     str " is not a type")
-      end
-  | None ->
+                  (loc_of_reference r, "_",
+                   str "tactic " ++ str (string_of_reference r) ++
+                   str " not found")
+            end
+        | _ ->
+            user_err_loc
+              (loc, "_",
+  		   str (string_of_reference_or_by_notation ty) ++
+  		   str " is not a type")
+      in
+      let patl =
+        match patl with
+        | _ :: _ ->
+            List.map
+              (fun r -> Glob_term.GRef (loc, intern_reference r, None))
+              patl
+        | [] -> []
+      in
+      Notation.declare_numeral_interpreter sc (path, [])
+        (interp_big_int ty thr f) (patl, uninterp_big_int2 tac, false)
+  | (VarRef _, _) | (ConstructRef _, _) ->
       user_err_loc
         (loc, "_",
-         str "type " ++ str (string_of_reference_or_by_notation ty) ++
-	 str " not found")
+         str (string_of_reference_or_by_notation ty) ++
+         str " is not a type")
+  end
 
 let cache_numeral_notation o = load_numeral_notation 1 o
 
 type numeral_notation_obj =
   Loc.t * Libnames.reference Misctypes.or_by_notation *
   Constrexpr.constr_expr * Constrexpr.constr_expr *
-  Notation_term.scope_name * Libnames.reference list * int
+  Notation_term.scope_name * Libnames.reference list * Bigint.bigint *
+  Globnames.global_reference
 
 let inNumeralNotation : numeral_notation_obj -> obj =
   declare_object { (default_object "NUMERAL NOTATION") with
@@ -2384,7 +2359,30 @@ let vernac_numeral_notation loc ty f g sc patl waft =
     let (sigma, env) = get_current_context () in
     interp_open_constr env sigma c
   in
-  add_anonymous_leaf (inNumeralNotation (loc, ty, f, g, sc, patl, waft))
+  let thr = Bigint.of_int waft in
+  match try Some (Nametab.locate (snd lqid)) with Not_found -> None with
+  | Some gr ->
+      begin match (gr, patl) with
+      | (IndRef _, []) ->
+          (* checking "g" is of type "ty -> option Z'" *)
+          let c =
+            CCast
+              (loc, g,
+               CastConv
+                 (arrow loc crq (app loc (cref loc "option") (cref loc "Z'"))))
+          in
+          let (sigma, env) = get_current_context () in
+          let _ = interp_open_constr env sigma c in
+          ()
+      | _ -> ()
+      end;
+      add_anonymous_leaf
+        (inNumeralNotation (loc, ty, f, g, sc, patl, thr, gr))
+  | None ->
+      user_err_loc
+        (loc, "_",
+         str "type " ++ str (string_of_reference_or_by_notation ty) ++
+	 str " not found")
 
 (* "locality" is the prefix "Local" attribute, while the "local" component
  * is the outdated/deprecated "Local" attribute of some vernacular commands
