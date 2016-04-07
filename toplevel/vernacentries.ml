@@ -2067,17 +2067,11 @@ let rec constr_expr_of_glob_constr vl = function
       failwith (Printf.sprintf "1 glob_constr %s" (obj_string x))
 
 let interp_big_int ty thr f loc bi =
-(*
-  let fc = vernac_get_eval f in
-  let ac = vernac_get_eval (z'_of_bigint loc ty thr bi) in
-  let t = mkApp (fc, [| ac |]) in
-*)
   let f = constr_expr_of_glob_constr [] (Glob_term.GRef (loc, f, None)) in
   let t =
     vernac_get_eval
       (CApp (loc, (None, f), [(z'_of_bigint loc ty thr bi, None)]))
   in
-(**)
   match Constr.kind t with
   | App (_, [| _; c |]) -> glob_constr_of_constr loc c
   | App (_, [| _ |]) ->
@@ -2098,10 +2092,6 @@ let uninterp_big_int g loc c =
       in
       begin match Constr.kind t with
       | App (c, [| _; x |]) -> Some (bigint_of_z' x)
-(*
-      | CApp (_, _, [(ce, _)]) -> Some (bigint_of_z' ce)
-      | CRef _ -> None
-*)
       | x -> failwith (Printf.sprintf "2 constr %s" (obj_string x))
       end
   | None ->
