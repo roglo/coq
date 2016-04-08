@@ -2162,6 +2162,8 @@ and num_interp_match_constr_pattern vl s = function
           if eq_gr gr gr1 then Some vl else None
       | Glob_term.GApp (loc, gc1, gcl) ->
           None
+      | GVar (loc, id) ->
+          None
       | _ ->
           failwith (Printf.sprintf "2 glob_constr %s" (obj_string s))
       end
@@ -2171,15 +2173,7 @@ and num_interp_match_constr_pattern vl s = function
       | Glob_term.GApp (loc, gc, gcl) ->
           begin match num_interp_match_constr_pattern vl gc cp with
           | Some vl ->
-             if Array.length cpa <> List.length gcl then
-None
-(*
-let _ = Printf.eprintf "PApp %s\n%!" (string_of_constr_pattern (Pattern.PApp (cp, cpa))) in
-let _ = Printf.eprintf "GApp %s\n%!" (string_of_glob_constr (Glob_term.GApp (loc, gc, gcl))) in
-               failwith
-                 (Printf.sprintf "patt #parm %d <> #arg %d not impl"
-                    (Array.length cpa) (List.length gcl))
-*)
+             if Array.length cpa <> List.length gcl then None
              else
 	       List.fold_left2
 		 (fun vlo cp gc ->

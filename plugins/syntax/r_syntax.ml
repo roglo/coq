@@ -111,7 +111,7 @@ let uninterp_r p =
 
 let mkGRef gr = GRef (Loc.ghost,gr,None)
 
-(**)
+(*
 let _ = Notation.declare_numeral_interpreter "R_scope"
   (r_path,["Coq";"Reals";"Rdefinitions"])
   r_of_int
@@ -119,4 +119,4 @@ let _ = Notation.declare_numeral_interpreter "R_scope"
     [glob_Ropp;glob_R0;glob_Rplus;glob_Rmult;glob_R1],
     uninterp_r,
     false)
-(**)
+*)
