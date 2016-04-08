@@ -2039,25 +2039,25 @@ let rec constr_expr_of_glob_constr vl = function
   | x ->
       failwith (Printf.sprintf "1 glob_constr %s" (obj_string x))
 
-let vernac_get_eval rc =
-  let (sigma, env) = (Evd.empty, Global.env ()) in
-  let sigma', c = interp_open_constr env sigma rc in
-  let sigma',nf = Evarutil.nf_evars_and_universes sigma' in
+let eval_constr_expr ce =
+  let env = Global.env () in
+  let sigma, c = interp_open_constr env Evd.empty ce in
   let j = Arguments_renaming.rename_typing env c in
-  let r = Genredexpr.CbvVm None in
-  let (sigma',r_interp) = interp_redexp env sigma' r in
-  let redfun env evm c =
-    let (redfun, _) = reduction_of_red_expr env r_interp in
-    let evm = Sigma.Unsafe.of_evar_map evm in
-    let Sigma (c, _, _) = redfun.Reductionops.e_redfun env evm c in
-    c
-  in
-  redfun env sigma' j.Environ.uj_val
+  let (sigma, r_interp) = interp_redexp env sigma (Genredexpr.CbvVm None) in
+  let (redfun, _) = reduction_of_red_expr env r_interp in
+  let evm = Sigma.Unsafe.of_evar_map sigma in
+  match redfun.Reductionops.e_redfun env evm j.Environ.uj_val with
+  | Sigma (c, _, _) -> c
+
+(*
+let constr_expr_of_glob_constr vl ce =
+  Constrextern.extern_glob_type (Id.Set.of_list vl) ce
+*)
 
 let interp_big_int ty thr f loc bi =
   let f = constr_expr_of_glob_constr [] (Glob_term.GRef (loc, f, None)) in
   let t =
-    vernac_get_eval
+    eval_constr_expr
       (CApp (loc, (None, f), [(z'_of_bigint loc ty thr bi, None)]))
   in
   match Constr.kind t with
@@ -2075,7 +2075,7 @@ let uninterp_big_int g loc c =
   | Some ce ->
       let g = constr_expr_of_glob_constr [] (Glob_term.GRef (loc, g, None)) in
       let t =
-        vernac_get_eval
+        eval_constr_expr
           (CApp (loc, (None, g), [(ce, None)]))
       in
       begin match Constr.kind t with
@@ -2110,7 +2110,7 @@ and num_interp_arg vl = function
   | Tacexpr.ConstrMayEval me ->
       begin match me with
       | Genredexpr.ConstrTerm (gc, None) ->
-          let ce = vernac_get_eval (constr_expr_of_glob_constr vl gc) in
+          let ce = eval_constr_expr (constr_expr_of_glob_constr vl gc) in
 	  glob_constr_of_constr Loc.ghost ce
       | me ->
           failwith (Printf.sprintf "ConstrMayEval may_eval %s" (obj_string me))
