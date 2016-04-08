@@ -1911,6 +1911,7 @@ and string_of_constr_pattern_list sep = function
 
 let rec string_of_glob_constr = function
   | Glob_term.GRef (loc, gr, _) -> string_of_global_reference gr
+  | Glob_term.GVar (loc, id) -> Id.to_string id
   | Glob_term.GApp (loc, gc, gcl) ->
       Printf.sprintf "%s (%s)" (string_of_glob_constr gc)
         (string_of_glob_constr_list "" gcl)
@@ -2102,6 +2103,7 @@ let uninterp_big_int g loc c =
 let rec num_interp_call (vl : (_ * Glob_term.glob_constr) list) tac tal =
   match Tacenv.interp_ltac tac with
   | Tacexpr.TacFun (idol, e) ->
+let _ = Printf.eprintf "in TacFun\n%!" in
       let vl =
         if List.length idol <> List.length tal then failwith "#parm <> #arg not impl"
         else
@@ -2112,25 +2114,32 @@ let rec num_interp_call (vl : (_ * Glob_term.glob_constr) list) tac tal =
                | None -> vl)
             vl idol tal
       in
+let _ = Printf.eprintf "out TacFun\n%!" in
       num_interp vl e
   | t -> failwith (Printf.sprintf "num_interp_call tac %s" (obj_string t))
 and num_interp vl = function
-  | Tacexpr.TacFail _ -> raise Not_found
-  | Tacexpr.TacLetIn (rf, idltal, te) -> num_interp_let vl idltal te
-  | Tacexpr.TacMatch (lf, e, mrl) -> num_interp_match vl (num_interp vl e) mrl
-  | Tacexpr.TacArg (loc, ta) -> num_interp_arg vl ta
+  | Tacexpr.TacFail _ -> let _ = Printf.eprintf "TacFail\n%!" in raise Not_found
+  | Tacexpr.TacLetIn (rf, idltal, te) -> let _ = Printf.eprintf "TacLetIn\n%!" in num_interp_let vl idltal te
+  | Tacexpr.TacMatch (lf, e, mrl) ->  let _ = Printf.eprintf "TacMatch\n%!" in num_interp_match vl (num_interp vl e) mrl
+  | Tacexpr.TacArg (loc, ta) ->  let _ = Printf.eprintf "TacArg\n%!" in num_interp_arg vl ta
   | t -> failwith (Printf.sprintf "num_interp %s" (obj_string t))
 and num_interp_arg vl = function
   | Tacexpr.ConstrMayEval me ->
+let _ = Printf.eprintf "ConstrMayEval\n%!" in 
       begin match me with
       | Genredexpr.ConstrTerm (gc, None) ->
+let _ = Printf.eprintf "ConstrTerm before eval_constr_expr %s\n%!" (string_of_glob_constr gc) in
+let _ = constr_expr_of_glob_constr vl gc in
+let _ = Printf.eprintf "ConstrTerm after constr_expr_of_glob_constr\n%!" in
           let ce = eval_constr_expr (constr_expr_of_glob_constr vl gc) in
+let _ = Printf.eprintf "ConstrTerm after eval_constr_expr\n%!" in 
 	  glob_constr_of_constr Loc.ghost ce
       | me ->
           failwith (Printf.sprintf "ConstrMayEval may_eval %s" (obj_string me))
       end
-  | Tacexpr.Reference (ArgVar (loc, id)) -> List.assoc id vl
+  | Tacexpr.Reference (ArgVar (loc, id)) ->  let _ = Printf.eprintf "Reference\n%!" in List.assoc id vl
   | Tacexpr.TacCall (loc, ArgArg (loc1, tac), tal) ->
+let _ = Printf.eprintf "TacCall\n%!" in 
       let tal = List.map (num_interp_arg vl) tal in
       num_interp_call vl tac tal
   | a -> failwith (Printf.sprintf "num_interp_arg %s" (obj_string a))
@@ -2235,8 +2244,10 @@ let uninterp_big_int2 tac c =
 
 .... but Check 24%R returns above error with len 0: the return list is empty!!!
 *)
+let _ = Printf.eprintf "before num_interp_call\n%!" in
   match try Some (num_interp_call [] tac [c]) with Not_found -> None with
   | Some gr ->
+let _ = Printf.eprintf "after num_interp_call\n%!" in
       begin try Some (bigint_of_z' (constr_of_glob_constr gr))
       with Not_found -> None end
   | None -> None
