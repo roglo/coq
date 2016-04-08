@@ -2016,6 +2016,10 @@ let qualid_of_constructref env sp i =
   in
   qualid_of_string (Id.to_string qis)
 
+let map_option f = function
+  | Some x -> Some (f x)
+  | None -> None
+
 let rec constr_expr_of_glob_constr vl = function
   | Glob_term.GRef (loc, gr, None) ->
       begin match gr with
@@ -2024,6 +2028,9 @@ let rec constr_expr_of_glob_constr vl = function
           CRef (Qualid (loc, qi), None)
       | ConstructRef ((sp, spi), i) ->
           let qi = qualid_of_constructref (Global.env ()) sp i in
+          CRef (Qualid (loc, qi), None)
+      | VarRef v ->
+          let qi = Decls.variable_secpath v in
           CRef (Qualid (loc, qi), None)
       | gr ->
           failwith (Printf.sprintf "1 global_reference %s" (obj_string gr))
@@ -2036,6 +2043,17 @@ let rec constr_expr_of_glob_constr vl = function
       CApp (loc, (None, ce), ceel)
   | Glob_term.GHole (loc, evk, ipne, ggao) ->
       CHole (loc, Some evk, ipne, None)
+  | Glob_term.GIf (loc, gc1, (n, gco), gc2, gc3) ->
+      let ce1 = constr_expr_of_glob_constr vl gc1 in
+      let ce2 = constr_expr_of_glob_constr vl gc2 in
+      let ce3 = constr_expr_of_glob_constr vl gc3 in
+      let n = Some (loc, n) in
+      let ceo = map_option (constr_expr_of_glob_constr vl) gco in
+      CIf (loc, ce1, (n, ceo), ce2, ce3)
+(*
+of Loc.t * constr_expr * (Name.t located option * constr_expr option)
+      * constr_expr * constr_expr
+*)
   | x ->
       failwith (Printf.sprintf "1 glob_constr %s" (obj_string x))
 
