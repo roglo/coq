@@ -1,3 +1,5 @@
+(* moved into coq library Nat.v *)
+
 Load common_syntax.
 
 Definition nat_of_Z' x :=
