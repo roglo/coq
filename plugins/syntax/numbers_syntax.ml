@@ -125,14 +125,14 @@ let uninterp_int31 i =
     None
 
 (* Actually declares the interpreter for int31 *)
-(**)
+(*
 let _ = Notation.declare_numeral_interpreter int31_scope
   (int31_path, int31_module)
   interp_int31
   ([GRef (Loc.ghost, int31_construct, None)],
    uninterp_int31,
    true)
-(**)
+*)
 
 (*** Parsing for bigN in digital notation ***)
 (* the base for bigN (in Coq) that is 2^31 in our case *)
@@ -244,14 +244,14 @@ let bigN_list_of_constructors =
   build 0
 
 (* Actually declares the interpreter for bigN *)
-(**)
+(*
 let _ = Notation.declare_numeral_interpreter bigN_scope
   (bigN_path, bigN_module)
   interp_bigN
   (bigN_list_of_constructors,
    uninterp_bigN,
    true)
-(**)
+*)
 
 (*** Parsing for bigZ in digital notation ***)
 let interp_bigZ dloc n =
@@ -281,6 +281,7 @@ let uninterp_bigZ rc =
     None
 
 (* Actually declares the interpreter for bigZ *)
+(*
 let _ = Notation.declare_numeral_interpreter bigZ_scope
   (bigZ_path, bigZ_module)
   interp_bigZ
@@ -288,6 +289,7 @@ let _ = Notation.declare_numeral_interpreter bigZ_scope
     GRef (Loc.ghost, bigZ_neg, None)],
    uninterp_bigZ,
    true)
+*)
 
 (*** Parsing for bigQ in digital notation ***)
 let interp_bigQ dloc n =
@@ -302,8 +304,10 @@ let uninterp_bigQ rc =
   with Non_closed -> None
 
 (* Actually declares the interpreter for bigQ *)
+(*
 let _ = Notation.declare_numeral_interpreter bigQ_scope
   (bigQ_path, bigQ_module)
   interp_bigQ
   ([GRef (Loc.ghost, bigQ_z, None)], uninterp_bigQ,
    true)
+*)
