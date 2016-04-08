@@ -2162,7 +2162,7 @@ and num_interp_match_constr_pattern vl s = function
           if eq_gr gr gr1 then Some vl else None
       | Glob_term.GApp (loc, gc1, gcl) ->
           None
-      | GVar (loc, id) ->
+      | Glob_term.GVar (loc, id) ->
           None
       | _ ->
           failwith (Printf.sprintf "2 glob_constr %s" (obj_string s))
