@@ -6,7 +6,7 @@ Definition some_int31_of_Z' z' := Some (phi_inv (Z_of_Z' z')).
 Definition Z'_of_int31 n := Z'_of_Z (phi n).
 Definition some_Z'_of_int31 n := Some (Z'_of_int31 n).
 
-Number Notation int31 some_int31_of_Z' some_Z'_of_int31 : int31_scope.
+Numeral Notation int31 some_int31_of_Z' some_Z'_of_int31 : int31_scope.
 (**)
 
 (*
@@ -31,7 +31,7 @@ bbb.
 Definition bigN_of_Z' z' := Some (BigN.N_of_Z (Z_of_Z' z')).
 Ltac Z'_of_bigN n := constr: (Z'_of_Z (BigN.to_Z n)).
 
-Number Notation BigN.t bigN_of_Z' Z'_of_bigN : bigN_scope
+Numeral Notation BigN.t bigN_of_Z' Z'_of_bigN : bigN_scope
   (printing
      BigN.N0 BigN.N1 BigN.N2 BigN.N3 BigN.N4 BigN.N5 BigN.N6
      BigN.Nn).
