@@ -2050,10 +2050,6 @@ let rec constr_expr_of_glob_constr vl = function
       let n = Some (loc, n) in
       let ceo = map_option (constr_expr_of_glob_constr vl) gco in
       CIf (loc, ce1, (n, ceo), ce2, ce3)
-(*
-of Loc.t * constr_expr * (Name.t located option * constr_expr option)
-      * constr_expr * constr_expr
-*)
   | x ->
       failwith (Printf.sprintf "1 glob_constr %s" (obj_string x))
 
