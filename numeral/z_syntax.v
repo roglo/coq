@@ -13,5 +13,5 @@ Definition Z'_of_pos p := Some (Z'pos (pos'_of_pos p)).
 Definition some_Z_of_Z' z' := Some (Z_of_Z' z').
 Definition some_Z'_of_Z z := Some (Z'_of_Z z).
 
-Number Notation positive pos_of_Z' Z'_of_pos : positive_scope.
-Number Notation Z some_Z_of_Z' some_Z'_of_Z : Z_scope.
+Numeral Notation positive pos_of_Z' Z'_of_pos : positive_scope.
+Numeral Notation Z some_Z_of_Z' some_Z'_of_Z : Z_scope.

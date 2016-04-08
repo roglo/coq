@@ -1521,37 +1521,6 @@ let get_current_context_of_args = function
   | Some n -> get_goal_context n
   | None -> get_current_context ()
 
-(* duplication of vernac_check_may_eval below to get the result instead
-   of printing it *)
-let vernac_get_eval rc =
-(**)
-  let (sigma, env) = (Evd.empty, Global.env ()) in
-(*
-  let (sigma, env) = get_current_context () in
-*)
-  let sigma', c = interp_open_constr env sigma rc in
-  let sigma' = Evarconv.consider_remaining_unif_problems env sigma' in
-  Evarconv.check_problems_are_solved env sigma';
-  let sigma',nf = Evarutil.nf_evars_and_universes sigma' in
-  let pl, uctx = Evd.universe_context sigma' in
-  let env = Environ.push_context uctx (Evarutil.nf_env_evar sigma' env) in
-  let c = nf c in
-  let j =
-    if Evarutil.has_undefined_evars sigma' c then
-      Evarutil.j_nf_evar sigma' (Retyping.get_judgment_of env sigma' c)
-    else
-      Arguments_renaming.rename_typing env c in
-  let r = Genredexpr.CbvVm None in
-  Tacintern.dump_glob_red_expr r;
-  let (sigma',r_interp) = interp_redexp env sigma' r in
-  let redfun env evm c =
-    let (redfun, _) = reduction_of_red_expr env r_interp in
-    let evm = Sigma.Unsafe.of_evar_map evm in
-    let Sigma (c, _, _) = redfun.Reductionops.e_redfun env evm c in
-    c
-  in
-  redfun env sigma' j.Environ.uj_val
-
 let vernac_check_may_eval redexp glopt rc =
   let (sigma, env) = get_current_context_of_args glopt in
   let sigma', c = interp_open_constr env sigma rc in
@@ -2069,6 +2038,21 @@ let rec constr_expr_of_glob_constr vl = function
       CHole (loc, Some evk, ipne, None)
   | x ->
       failwith (Printf.sprintf "1 glob_constr %s" (obj_string x))
+
+let vernac_get_eval rc =
+  let (sigma, env) = (Evd.empty, Global.env ()) in
+  let sigma', c = interp_open_constr env sigma rc in
+  let sigma',nf = Evarutil.nf_evars_and_universes sigma' in
+  let j = Arguments_renaming.rename_typing env c in
+  let r = Genredexpr.CbvVm None in
+  let (sigma',r_interp) = interp_redexp env sigma' r in
+  let redfun env evm c =
+    let (redfun, _) = reduction_of_red_expr env r_interp in
+    let evm = Sigma.Unsafe.of_evar_map evm in
+    let Sigma (c, _, _) = redfun.Reductionops.e_redfun env evm c in
+    c
+  in
+  redfun env sigma' j.Environ.uj_val
 
 let interp_big_int ty thr f loc bi =
   let f = constr_expr_of_glob_constr [] (Glob_term.GRef (loc, f, None)) in
