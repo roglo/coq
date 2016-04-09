@@ -2081,6 +2081,7 @@ let constr_expr_of_constr =
 let interp_big_int ty thr f loc bi =
   let t =
     let z' = constr_expr_of_constr (z'_of_bigint loc ty thr bi) in
+let f = ConstRef f in
     let f =
       let qi = qualid_of_global_reference f in
       CRef (Qualid (loc, qi), None)
@@ -2101,6 +2102,7 @@ let interp_big_int ty thr f loc bi =
       failwith (Printf.sprintf "interp_big_int %s" (obj_string x))
 
 let uninterp_big_int g loc c =
+let g = ConstRef g in
   match try Some (constr_expr_of_glob_constr [] c) with Not_found -> None with
   | Some ce ->
       let g = constr_expr_of_glob_constr [] (Glob_term.GRef (loc, g, None)) in
@@ -2274,8 +2276,8 @@ let load_numeral_notation _ (_, (loc, ty, f, g, sc, patl, thr, path)) =
 let cache_numeral_notation o = load_numeral_notation 1 o
 
 type numeral_notation_obj =
-  Loc.t * Libnames.reference Misctypes.or_by_notation * global_reference *
-  (global_reference, Nametab.ltac_constant) union *
+  Loc.t * Libnames.reference Misctypes.or_by_notation * Names.constant *
+  (Names.constant, Nametab.ltac_constant) union *
   Notation_term.scope_name * Glob_term.glob_constr list *
   Bigint.bigint * Libnames.full_path
 
@@ -2292,7 +2294,7 @@ let vernac_numeral_notation loc ty f g sc patl waft =
   in
   let fc =
     let (loc, fq) = qualid_of_reference f in
-    try Nametab.locate fq with Not_found ->
+    try Nametab.locate_constant fq with Not_found ->
       Nametab.error_global_not_found_loc loc fq
   in
   let lqid = qualid_of_reference_or_by_notation ty in
@@ -2320,7 +2322,7 @@ let vernac_numeral_notation loc ty f g sc patl waft =
   | (IndRef (sp, spi), []) ->
       let gc =
         let (loc, gq) = qualid_of_reference g in
-        try Nametab.locate gq with Not_found ->
+        try Nametab.locate_constant gq with Not_found ->
           Nametab.error_global_not_found_loc loc gq
       in
       let _ =
