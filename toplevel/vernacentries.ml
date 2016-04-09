@@ -2112,21 +2112,16 @@ let interp_big_int ty thr f loc bi =
 let uninterp_big_int g loc c =
   match try Some (constr_expr_of_glob_constr [] c) with Not_found -> None with
   | Some ce ->
-(*
       let t =
 	let c = constr_of_glob_constr c in
         let c = mkApp (mkConst g, [| c |]) in
         let env = Global.env () in
-        let ce = Constrextern.extern_constr false env Evd.empty c in
-        let (_, c) = Constrintern.interp_open_constr env Evd.empty ce in
-        eval_constr c
-      in
+(*
+        let ce1 = Constrextern.extern_constr false env Evd.empty c in
 *)
-      let t =
         let qi = qualid_of_string (Constant.to_string g) in
         let g = CRef (Qualid (loc, qi), None) in
         let ce = CApp (loc, (None, g), [(ce, None)]) in
-        let env = Global.env () in
 	let (_, c) = Constrintern.interp_open_constr env Evd.empty ce in
 	eval_constr c
       in
