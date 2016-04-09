@@ -1851,16 +1851,16 @@ let obj_string x =
     "tag = " ^ string_of_int (Obj.tag (Obj.repr x))
   else "int_val = " ^ string_of_int (Obj.magic x)
 
-let rec pos'_of_bigint n =
+let rec pos'_of_bigint pos'ty n =
   match Bigint.div2_with_rest n with
   | (q, false) ->
-      let c = mkVar (Id.of_string "x'O") in
-      mkApp (c, [| pos'_of_bigint q |])
+      let c = mkConstruct (pos'ty, 2) in (* x'O *)
+      mkApp (c, [| pos'_of_bigint pos'ty q |])
   | (q, true) when not (Bigint.equal q Bigint.zero) ->
-      let c = mkVar (Id.of_string "x'I") in
-      mkApp (c, [| pos'_of_bigint q |])
+      let c = mkConstruct (pos'ty, 1) in (* x'I *)
+      mkApp (c, [| pos'_of_bigint pos'ty q |])
   | (q, true) ->
-      mkVar (Id.of_string "x'H")
+      mkConstruct (pos'ty, 3) (* xH' *)
 
 let shorted s =
   try let i = String.rindex s '.' in
@@ -1940,7 +1940,7 @@ let rec glob_constr_of_constr loc c = match Constr.kind c with
 let string_of_constr c =
   string_of_glob_constr (glob_constr_of_constr Loc.ghost c)
 
-let z'_of_bigint ty thr n =
+let z'_of_bigint (z'ty, pos'ty) ty thr n =
   if Bigint.is_pos_or_zero n && not (Bigint.equal thr Bigint.zero) &&
      Bigint.less_than thr n
   then
@@ -1957,7 +1957,7 @@ let z'_of_bigint ty thr n =
       else ("Z'neg", Bigint.neg n)
     in
     let c = mkVar (Id.of_string s) in
-    mkApp (c, [| pos'_of_bigint n |])
+    mkApp (c, [| pos'_of_bigint pos'ty n |])
   else
 (*
     mkConstruct (MutInd.make1 (KerName.make1 "Z'"), 1) (* Z'0 *)
@@ -2096,18 +2096,14 @@ let rec constr_of_glob_constr = function
       mkApp (c, Array.of_list cl)
   | gc -> failwith (Printf.sprintf "constr_of_glob_constr %s" (obj_string gc))
 
-let interp_big_int ty thr f loc bi =
+let interp_big_int zpos'ty ty thr f loc bi =
   let t =
-    let c = mkApp (mkConst f, [| z'_of_bigint ty thr bi |]) in
-(*
+    let c = mkApp (mkConst f, [| z'_of_bigint zpos'ty ty thr bi |]) in
 let _ = Printf.eprintf "c %s\n%!" (string_of_constr c) in
-*)
     let env = Global.env () in
     let ce = Constrextern.extern_constr false env Evd.empty c in
     let (_, c) = Constrintern.interp_open_constr env Evd.empty ce in
-(*
 let _ = Printf.eprintf "d %s\n%!" (string_of_constr c) in
-*)
     eval_constr c
   in
   match Constr.kind t with
@@ -2277,19 +2273,20 @@ let qualid_of_reference_or_by_notation = function
   | AN r -> qualid_of_reference r
   | ByNotation (loc, s, so) -> failwith "qualid_of_reference_or_by_notation ByNotation"
 
-let load_numeral_notation _ (_, (loc, ty, f, g, sc, patl, thr, path)) =
+let load_numeral_notation _ (_, (loc, zpos'ty, ty, f, g, sc, patl, thr, path)) =
   match g with
   | Inl g ->
       Notation.declare_numeral_interpreter sc (path, [])
-        (interp_big_int ty thr f) (patl, uninterp_big_int g loc, true)
+        (interp_big_int zpos'ty ty thr f) (patl, uninterp_big_int g loc, true)
   | Inr g ->
       Notation.declare_numeral_interpreter sc (path, [])
-        (interp_big_int ty thr f) (patl, uninterp_big_int2 g, false)
+        (interp_big_int zpos'ty ty thr f) (patl, uninterp_big_int2 g, false)
 
 let cache_numeral_notation o = load_numeral_notation 1 o
 
 type numeral_notation_obj =
-  Loc.t * Libnames.reference Misctypes.or_by_notation * Names.constant *
+  Loc.t * (Names.inductive * Names.inductive) *
+  Libnames.reference Misctypes.or_by_notation * Names.constant *
   (Names.constant, Nametab.ltac_constant) union *
   Notation_term.scope_name * Glob_term.glob_constr list *
   Bigint.bigint * Libnames.full_path
@@ -2300,6 +2297,19 @@ let inNumeralNotation : numeral_notation_obj -> obj =
     load_function = load_numeral_notation }
 
 let vernac_numeral_notation loc ty f g sc patl waft =
+  let zpos'ty =
+    let z'ty =
+      let c = qualid_of_ident (Id.of_string "Z'") in
+      try match Nametab.locate c with IndRef i -> i | _ -> raise Not_found
+      with Not_found -> Nametab.error_global_not_found c
+    in
+    let positive'ty =
+      let c = qualid_of_ident (Id.of_string "positive'") in
+      try match Nametab.locate c with IndRef i -> i | _ -> raise Not_found
+      with Not_found -> Nametab.error_global_not_found c
+    in
+    (z'ty, positive'ty)
+  in
   let tyc =
     let (loc, tyq) = qualid_of_reference_or_by_notation ty in
     try Nametab.locate tyq with Not_found ->
@@ -2372,7 +2382,7 @@ let vernac_numeral_notation loc ty f g sc patl waft =
                  mc)
       in
       add_anonymous_leaf
-        (inNumeralNotation (loc, ty, fc, Inl gc, sc, patl, thr, path))
+        (inNumeralNotation (loc, zpos'ty, ty, fc, Inl gc, sc, patl, thr, path))
   | ((IndRef _ | ConstRef _), _) ->
       let gc =
         let (loc, gq) = qualid_of_reference g in
@@ -2390,7 +2400,7 @@ let vernac_numeral_notation loc ty f g sc patl waft =
         | [] -> []
       in
       add_anonymous_leaf
-        (inNumeralNotation (loc, ty, fc, Inr gc, sc, patl, thr, path))
+        (inNumeralNotation (loc, zpos'ty, ty, fc, Inr gc, sc, patl, thr, path))
   | (VarRef _, _) | (ConstructRef _, _) ->
       user_err_loc
         (loc, "_",
