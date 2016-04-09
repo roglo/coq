@@ -2078,6 +2078,19 @@ let constr_expr_of_glob_constr vl ce =
 let constr_expr_of_constr =
   Constrextern.extern_constr false (Global.env ()) Evd.empty
 
+let rec constr_of_glob_constr = function
+  | Glob_term.GRef (_, ConstructRef c, None) ->
+      mkConstruct c
+  | Glob_term.GRef (_, IndRef ind, None) ->
+      mkInd ind
+  | Glob_term.GRef (_, c, None) ->
+      failwith (Printf.sprintf "tagada %s" (obj_string c))
+  | Glob_term.GApp (_, gc, gcl) ->
+      let c = constr_of_glob_constr gc in
+      let cl = List.map constr_of_glob_constr gcl in
+      mkApp (c, Array.of_list cl)
+  | gc -> failwith (Printf.sprintf "constr_of_glob_constr %s" (obj_string gc))
+
 let interp_big_int ty thr f loc bi =
   let t =
     let c = mkApp (mkConst f, [| z'_of_bigint ty thr bi |]) in
@@ -2102,18 +2115,20 @@ let uninterp_big_int g loc c =
 (*
       let t =
 	let c = constr_of_glob_constr c in
-        let c = mkApp (mkConst g, [| ce |]) in
+        let c = mkApp (mkConst g, [| c |]) in
         let env = Global.env () in
         let ce = Constrextern.extern_constr false env Evd.empty c in
         let (_, c) = Constrintern.interp_open_constr env Evd.empty ce in
         eval_constr c
       in
 *)
-      let g = ConstRef g in
-      let g = constr_expr_of_glob_constr [] (Glob_term.GRef (loc, g, None)) in
       let t =
-        eval_constr_expr
-          (CApp (loc, (None, g), [(ce, None)]))
+        let qi = qualid_of_string (Constant.to_string g) in
+        let g = CRef (Qualid (loc, qi), None) in
+        let ce = CApp (loc, (None, g), [(ce, None)]) in
+        let env = Global.env () in
+	let (_, c) = Constrintern.interp_open_constr env Evd.empty ce in
+	eval_constr c
       in
 (**)
       begin match Constr.kind t with
@@ -2215,19 +2230,6 @@ and num_interp_match_constr_pattern vl s = function
       | None -> Some vl
       end
   | mp -> failwith (Printf.sprintf "num_interp_match_constr_pattern %s" (obj_string mp))
-
-let rec constr_of_glob_constr = function
-  | Glob_term.GRef (_, ConstructRef c, None) ->
-      mkConstruct c
-  | Glob_term.GRef (_, IndRef ind, None) ->
-      mkInd ind
-  | Glob_term.GRef (_, c, None) ->
-      failwith (Printf.sprintf "tagada %s" (obj_string c))
-  | Glob_term.GApp (_, gc, gcl) ->
-      let c = constr_of_glob_constr gc in
-      let cl = List.map constr_of_glob_constr gcl in
-      mkApp (c, Array.of_list cl)
-  | gc -> failwith (Printf.sprintf "constr_of_glob_constr %s" (obj_string gc))
 
 let run_ftactic (tac : 'a Ftactic.t) : 'a =
   let (_, pf) = Proofview.init Evd.empty [] in
