@@ -1853,16 +1853,22 @@ let obj_string x =
 
 let identref loc s = (loc, Names.Id.of_string s)
 
+let constr_expr_of_constr =
+  Constrextern.extern_constr false (Global.env ()) Evd.empty
+
 let rec pos'_of_bigint dloc n =
   match Bigint.div2_with_rest n with
   | (q, false) ->
-      let c = CRef (Ident (identref dloc "x'O"), None) in
-      CApp (dloc, (None, c), [(pos'_of_bigint dloc q, None)])
+      let c = mkVar (Id.of_string "x'O") in
+      mkApp (c, [| pos'_of_bigint dloc q |])
   | (q, true) when not (Bigint.equal q Bigint.zero) ->
-      let c = CRef (Ident (identref dloc "x'I"), None) in
-      CApp (dloc, (None, c), [(pos'_of_bigint dloc q, None)])
+      let c = mkVar (Id.of_string "x'I") in
+      mkApp (c, [| pos'_of_bigint dloc q |])
   | (q, true) ->
-      CRef (Ident (identref dloc "x'H"), None)
+      mkVar (Id.of_string "x'H")
+
+let constr_expr_pos'_of_bigint dloc n =
+  constr_expr_of_constr (pos'_of_bigint dloc n)
 
 let shorted s =
   try let i = String.rindex s '.' in
@@ -1957,9 +1963,14 @@ let z'_of_bigint dloc ty thr n =
       else ("Z'neg", Bigint.neg n)
     in
     let sgn = CRef (Ident (identref dloc s), None) in
-    CApp (dloc, (None, sgn), [(pos'_of_bigint dloc n, None)])
+    CApp (dloc, (None, sgn), [(constr_expr_pos'_of_bigint dloc n, None)])
   else
     CRef (Ident (identref dloc "Z'0"), None)
+
+(*
+let constr_expr_z'_of_bigint dloc ty thr n =
+  constr_expr_of_constr (z'_of_bigint dloc ty thr n)
+*)
 
 let rec bigint_of_pos' c = match Constr.kind c with
   | App (c, [| d |]) ->
@@ -2054,9 +2065,9 @@ let rec constr_expr_of_glob_constr vl = function
   | x ->
       failwith (Printf.sprintf "1 glob_constr %s" (obj_string x))
 
-let eval_constr_expr ce =
+let eval_constr (c : constr) =
   let env = Global.env () in
-  let sigma, c = interp_open_constr env Evd.empty ce in
+  let sigma = Evd.empty in
   let j = Arguments_renaming.rename_typing env c in
   let (sigma, r_interp) = interp_redexp env sigma (Genredexpr.CbvVm None) in
   let (redfun, _) = reduction_of_red_expr env r_interp in
@@ -2064,16 +2075,32 @@ let eval_constr_expr ce =
   match redfun.Reductionops.e_redfun env evm j.Environ.uj_val with
   | Sigma (c, _, _) -> c
 
+let eval_constr_expr ce =
+  let env = Global.env () in
+  let sigma, c = interp_open_constr env Evd.empty ce in
+  eval_constr c
+(*
+  let j = Arguments_renaming.rename_typing env c in
+  let (sigma, r_interp) = interp_redexp env sigma (Genredexpr.CbvVm None) in
+  let (redfun, _) = reduction_of_red_expr env r_interp in
+  let evm = Sigma.Unsafe.of_evar_map sigma in
+  match redfun.Reductionops.e_redfun env evm j.Environ.uj_val with
+  | Sigma (c, _, _) -> c
+*)
+
 (*
 let constr_expr_of_glob_constr vl ce =
   Constrextern.extern_glob_type (Id.Set.of_list vl) ce
 *)
 
 let interp_big_int ty thr f loc bi =
-  let f = constr_expr_of_glob_constr [] (Glob_term.GRef (loc, f, None)) in
   let t =
-    eval_constr_expr
-      (CApp (loc, (None, f), [(z'_of_bigint loc ty thr bi, None)]))
+    let env = Global.env () in
+    let z' = z'_of_bigint loc ty thr bi in
+    let f = constr_expr_of_glob_constr [] (Glob_term.GRef (loc, f, None)) in
+    let ce = CApp (loc, (None, f), [(z', None)]) in
+    let (_, c) = interp_open_constr env Evd.empty ce in
+    eval_constr c
   in
   match Constr.kind t with
   | App (_, [| _; c |]) -> glob_constr_of_constr loc c
@@ -2103,7 +2130,6 @@ let uninterp_big_int g loc c =
 let rec num_interp_call (vl : (_ * Glob_term.glob_constr) list) tac tal =
   match Tacenv.interp_ltac tac with
   | Tacexpr.TacFun (idol, e) ->
-let _ = Printf.eprintf "in TacFun\n%!" in
       let vl =
         if List.length idol <> List.length tal then failwith "#parm <> #arg not impl"
         else
@@ -2114,32 +2140,25 @@ let _ = Printf.eprintf "in TacFun\n%!" in
                | None -> vl)
             vl idol tal
       in
-let _ = Printf.eprintf "out TacFun\n%!" in
       num_interp vl e
   | t -> failwith (Printf.sprintf "num_interp_call tac %s" (obj_string t))
 and num_interp vl = function
-  | Tacexpr.TacFail _ -> let _ = Printf.eprintf "TacFail\n%!" in raise Not_found
-  | Tacexpr.TacLetIn (rf, idltal, te) -> let _ = Printf.eprintf "TacLetIn\n%!" in num_interp_let vl idltal te
-  | Tacexpr.TacMatch (lf, e, mrl) ->  let _ = Printf.eprintf "TacMatch\n%!" in num_interp_match vl (num_interp vl e) mrl
-  | Tacexpr.TacArg (loc, ta) ->  let _ = Printf.eprintf "TacArg\n%!" in num_interp_arg vl ta
+  | Tacexpr.TacFail _ -> raise Not_found
+  | Tacexpr.TacLetIn (rf, idltal, te) -> num_interp_let vl idltal te
+  | Tacexpr.TacMatch (lf, e, mrl) -> num_interp_match vl (num_interp vl e) mrl
+  | Tacexpr.TacArg (loc, ta) -> num_interp_arg vl ta
   | t -> failwith (Printf.sprintf "num_interp %s" (obj_string t))
 and num_interp_arg vl = function
   | Tacexpr.ConstrMayEval me ->
-let _ = Printf.eprintf "ConstrMayEval\n%!" in 
       begin match me with
       | Genredexpr.ConstrTerm (gc, None) ->
-let _ = Printf.eprintf "ConstrTerm before eval_constr_expr %s\n%!" (string_of_glob_constr gc) in
-let _ = constr_expr_of_glob_constr vl gc in
-let _ = Printf.eprintf "ConstrTerm after constr_expr_of_glob_constr\n%!" in
           let ce = eval_constr_expr (constr_expr_of_glob_constr vl gc) in
-let _ = Printf.eprintf "ConstrTerm after eval_constr_expr\n%!" in 
 	  glob_constr_of_constr Loc.ghost ce
       | me ->
           failwith (Printf.sprintf "ConstrMayEval may_eval %s" (obj_string me))
       end
-  | Tacexpr.Reference (ArgVar (loc, id)) ->  let _ = Printf.eprintf "Reference\n%!" in List.assoc id vl
+  | Tacexpr.Reference (ArgVar (loc, id)) -> List.assoc id vl
   | Tacexpr.TacCall (loc, ArgArg (loc1, tac), tal) ->
-let _ = Printf.eprintf "TacCall\n%!" in 
       let tal = List.map (num_interp_arg vl) tal in
       num_interp_call vl tac tal
   | a -> failwith (Printf.sprintf "num_interp_arg %s" (obj_string a))
@@ -2244,10 +2263,8 @@ let uninterp_big_int2 tac c =
 
 .... but Check 24%R returns above error with len 0: the return list is empty!!!
 *)
-let _ = Printf.eprintf "before num_interp_call\n%!" in
   match try Some (num_interp_call [] tac [c]) with Not_found -> None with
   | Some gr ->
-let _ = Printf.eprintf "after num_interp_call\n%!" in
       begin try Some (bigint_of_z' (constr_of_glob_constr gr))
       with Not_found -> None end
   | None -> None
