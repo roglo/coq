@@ -2081,7 +2081,10 @@ let constr_expr_of_constr =
 let interp_big_int ty thr f loc bi =
   let t =
     let z' = constr_expr_of_constr (z'_of_bigint loc ty thr bi) in
-    let f = constr_expr_of_glob_constr [] (Glob_term.GRef (loc, f, None)) in
+    let f =
+      let qi = qualid_of_global_reference f in
+      CRef (Qualid (loc, qi), None)
+    in
     let ce = CApp (loc, (None, f), [(z', None)]) in
     let env = Global.env () in
     let (_, c) = interp_open_constr env Evd.empty ce in
