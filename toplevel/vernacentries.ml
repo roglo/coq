@@ -2081,9 +2081,8 @@ let constr_expr_of_constr =
 let interp_big_int ty thr f loc bi =
   let t =
     let z' = constr_expr_of_constr (z'_of_bigint loc ty thr bi) in
-let f = ConstRef f in
     let f =
-      let qi = qualid_of_global_reference f in
+      let qi = qualid_of_string (Constant.to_string f) in
       CRef (Qualid (loc, qi), None)
     in
     let ce = CApp (loc, (None, f), [(z', None)]) in
