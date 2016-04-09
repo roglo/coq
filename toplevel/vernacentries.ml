@@ -1922,6 +1922,8 @@ and string_of_glob_constr_list sep = function
   | [] -> ""
 
 let rec glob_constr_of_constr loc c = match Constr.kind c with
+  | Var id ->
+      Glob_term.GRef (loc, VarRef id, None)
   | App (c, ca) ->
       let c = glob_constr_of_constr loc c in
       let cel = List.map (glob_constr_of_constr loc) (Array.to_list ca) in
@@ -1957,6 +1959,9 @@ let z'_of_bigint ty thr n =
     let c = mkVar (Id.of_string s) in
     mkApp (c, [| pos'_of_bigint n |])
   else
+(*
+    mkConstruct (MutInd.make1 (KerName.make1 "Z'"), 1) (* Z'0 *)
+*)
     mkVar (Id.of_string "Z'0")
 
 let rec bigint_of_pos' c = match Constr.kind c with
@@ -2094,9 +2099,15 @@ let rec constr_of_glob_constr = function
 let interp_big_int ty thr f loc bi =
   let t =
     let c = mkApp (mkConst f, [| z'_of_bigint ty thr bi |]) in
+(*
+let _ = Printf.eprintf "c %s\n%!" (string_of_constr c) in
+*)
     let env = Global.env () in
     let ce = Constrextern.extern_constr false env Evd.empty c in
     let (_, c) = Constrintern.interp_open_constr env Evd.empty ce in
+(*
+let _ = Printf.eprintf "d %s\n%!" (string_of_constr c) in
+*)
     eval_constr c
   in
   match Constr.kind t with
@@ -2113,10 +2124,10 @@ let uninterp_big_int g loc c =
   match try Some (constr_expr_of_glob_constr [] c) with Not_found -> None with
   | Some ce ->
       let t =
-	let c = constr_of_glob_constr c in
-        let c = mkApp (mkConst g, [| c |]) in
         let env = Global.env () in
 (*
+	let c = constr_of_glob_constr c in
+        let c = mkApp (mkConst g, [| c |]) in
         let ce1 = Constrextern.extern_constr false env Evd.empty c in
 *)
         let qi = qualid_of_string (Constant.to_string g) in
@@ -2125,7 +2136,6 @@ let uninterp_big_int g loc c =
 	let (_, c) = Constrintern.interp_open_constr env Evd.empty ce in
 	eval_constr c
       in
-(**)
       begin match Constr.kind t with
       | App (c, [| _; x |]) -> Some (bigint_of_z' x)
       | x -> failwith (Printf.sprintf "2 constr %s" (obj_string x))
