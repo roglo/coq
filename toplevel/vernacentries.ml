@@ -2019,21 +2019,16 @@ let map_option f = function
   | Some x -> Some (f x)
   | None -> None
 
+let qualid_of_global_reference = function
+  | ConstRef cst -> qualid_of_string (Constant.to_string cst)
+  | ConstructRef ((sp, spi), i) -> qualid_of_constructref (Global.env ()) sp i
+  | VarRef v -> Decls.variable_secpath v
+  | gr -> failwith (Printf.sprintf "1 global_reference %s" (obj_string gr))
+
 let rec constr_expr_of_glob_constr vl = function
   | Glob_term.GRef (loc, gr, None) ->
-      begin match gr with
-      | ConstRef cst ->
-          let qi = qualid_of_string (Constant.to_string cst) in
-          CRef (Qualid (loc, qi), None)
-      | ConstructRef ((sp, spi), i) ->
-          let qi = qualid_of_constructref (Global.env ()) sp i in
-          CRef (Qualid (loc, qi), None)
-      | VarRef v ->
-          let qi = Decls.variable_secpath v in
-          CRef (Qualid (loc, qi), None)
-      | gr ->
-          failwith (Printf.sprintf "1 global_reference %s" (obj_string gr))
-      end
+      let qi = qualid_of_global_reference gr in
+      CRef (Qualid (loc, qi), None)
   | Glob_term.GVar (loc, id) ->
       constr_expr_of_glob_constr vl (List.assoc id vl)
   | Glob_term.GApp (loc, c1, cl) ->
