@@ -2081,9 +2081,9 @@ let constr_expr_of_constr =
 let interp_big_int ty thr f loc bi =
   let t =
     let c = mkApp (mkConst f, [| z'_of_bigint log ty thr bi |]) in
-    let ce = constr_expr_of_constr c in
     let env = Global.env () in
-    let (_, c) = interp_open_constr env Evd.empty ce in
+    let ce = Constrextern.extern_constr false env Evd.empty c in
+    let (_, c) = Constrintern.interp_open_constr env Evd.empty ce in
     eval_constr c
   in
   match Constr.kind t with
