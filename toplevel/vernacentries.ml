@@ -1851,14 +1851,14 @@ let obj_string x =
     "tag = " ^ string_of_int (Obj.tag (Obj.repr x))
   else "int_val = " ^ string_of_int (Obj.magic x)
 
-let rec pos'_of_bigint dloc n =
+let rec pos'_of_bigint n =
   match Bigint.div2_with_rest n with
   | (q, false) ->
       let c = mkVar (Id.of_string "x'O") in
-      mkApp (c, [| pos'_of_bigint dloc q |])
+      mkApp (c, [| pos'_of_bigint q |])
   | (q, true) when not (Bigint.equal q Bigint.zero) ->
       let c = mkVar (Id.of_string "x'I") in
-      mkApp (c, [| pos'_of_bigint dloc q |])
+      mkApp (c, [| pos'_of_bigint q |])
   | (q, true) ->
       mkVar (Id.of_string "x'H")
 
@@ -1938,7 +1938,7 @@ let rec glob_constr_of_constr loc c = match Constr.kind c with
 let string_of_constr c =
   string_of_glob_constr (glob_constr_of_constr Loc.ghost c)
 
-let z'_of_bigint dloc ty thr n =
+let z'_of_bigint ty thr n =
   if Bigint.is_pos_or_zero n && not (Bigint.equal thr Bigint.zero) &&
      Bigint.less_than thr n
   then
@@ -1955,7 +1955,7 @@ let z'_of_bigint dloc ty thr n =
       else ("Z'neg", Bigint.neg n)
     in
     let c = mkVar (Id.of_string s) in
-    mkApp (c, [| pos'_of_bigint dloc n |])
+    mkApp (c, [| pos'_of_bigint n |])
   else
     mkVar (Id.of_string "Z'0")
 
@@ -2080,7 +2080,7 @@ let constr_expr_of_constr =
 
 let interp_big_int ty thr f loc bi =
   let t =
-    let c = mkApp (mkConst f, [| z'_of_bigint log ty thr bi |]) in
+    let c = mkApp (mkConst f, [| z'_of_bigint ty thr bi |]) in
     let env = Global.env () in
     let ce = Constrextern.extern_constr false env Evd.empty c in
     let (_, c) = Constrintern.interp_open_constr env Evd.empty ce in
@@ -2097,14 +2097,25 @@ let interp_big_int ty thr f loc bi =
       failwith (Printf.sprintf "interp_big_int %s" (obj_string x))
 
 let uninterp_big_int g loc c =
-let g = ConstRef g in
   match try Some (constr_expr_of_glob_constr [] c) with Not_found -> None with
   | Some ce ->
+(*
+      let t =
+	let c = constr_of_glob_constr c in
+        let c = mkApp (mkConst g, [| ce |]) in
+        let env = Global.env () in
+        let ce = Constrextern.extern_constr false env Evd.empty c in
+        let (_, c) = Constrintern.interp_open_constr env Evd.empty ce in
+        eval_constr c
+      in
+*)
+      let g = ConstRef g in
       let g = constr_expr_of_glob_constr [] (Glob_term.GRef (loc, g, None)) in
       let t =
         eval_constr_expr
           (CApp (loc, (None, g), [(ce, None)]))
       in
+(**)
       begin match Constr.kind t with
       | App (c, [| _; x |]) -> Some (bigint_of_z' x)
       | x -> failwith (Printf.sprintf "2 constr %s" (obj_string x))
