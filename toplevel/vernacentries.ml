@@ -1956,13 +1956,13 @@ let z'_of_bigint (z'ty, pos'ty) ty thr n =
       if Bigint.is_pos_or_zero n then ("Z'pos", n)
       else ("Z'neg", Bigint.neg n)
     in
+(*
+    let c = mkConstruct (pos'ty, 1) in
+*)
     let c = mkVar (Id.of_string s) in
     mkApp (c, [| pos'_of_bigint pos'ty n |])
   else
-(*
-    mkConstruct (MutInd.make1 (KerName.make1 "Z'"), 1) (* Z'0 *)
-*)
-    mkVar (Id.of_string "Z'0")
+    mkConstruct (z'ty, 1) (* Z'0 *)
 
 let rec bigint_of_pos' c = match Constr.kind c with
   | App (c, [| d |]) ->
