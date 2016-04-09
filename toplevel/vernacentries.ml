@@ -2069,13 +2069,12 @@ let rec constr_of_glob_constr = function
       mkConstruct c
   | Glob_term.GRef (_, IndRef ind, None) ->
       mkInd ind
-  | Glob_term.GRef (_, c, None) ->
-      raise Not_found
   | Glob_term.GApp (_, gc, gcl) ->
       let c = constr_of_glob_constr gc in
       let cl = List.map constr_of_glob_constr gcl in
       mkApp (c, Array.of_list cl)
-  | gc -> failwith (Printf.sprintf "constr_of_glob_constr %s" (obj_string gc))
+  | _ ->
+      raise Not_found
 
 let interp_big_int zpos'ty ty thr f loc bi =
   let t =
@@ -2093,24 +2092,6 @@ let interp_big_int zpos'ty ty thr f loc bi =
       failwith (Printf.sprintf "interp_big_int %s" (obj_string x))
 
 let uninterp_big_int g loc c =
-(**)
-  match try Some (constr_expr_of_glob_constr [] c) with Not_found -> None with
-  | Some ce ->
-      let t =
-        let env = Global.env () in
-        let qi = qualid_of_string (Constant.to_string g) in
-        let g = CRef (Qualid (loc, qi), None) in
-        let ce = CApp (loc, (None, g), [(ce, None)]) in
-       let (_, c) = Constrintern.interp_open_constr env Evd.empty ce in
-       eval_constr c
-      in
-      begin match Constr.kind t with
-      | App (c, [| _; x |]) -> Some (bigint_of_z' x)
-      | x -> failwith (Printf.sprintf "2 constr %s" (obj_string x))
-      end
-  | None ->
-      None
-(*
   match try Some (constr_of_glob_constr c) with Not_found -> None with
   | Some c ->
       let t = eval_constr (mkApp (mkConst g, [| c |])) in
@@ -2120,7 +2101,6 @@ let uninterp_big_int g loc c =
       end
   | None ->
       None
-*)
 
 let rec num_interp_call (vl : (_ * Glob_term.glob_constr) list) tac tal =
   match Tacenv.interp_ltac tac with
