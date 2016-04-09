@@ -1953,13 +1953,10 @@ let z'_of_bigint (z'ty, pos'ty) ty thr n =
   else ();
   if not (Bigint.equal n Bigint.zero) then
     let (s, n) =
-      if Bigint.is_pos_or_zero n then ("Z'pos", n)
-      else ("Z'neg", Bigint.neg n)
+      if Bigint.is_pos_or_zero n then (2, n) (* Z'pos *)
+      else (3, Bigint.neg n) (* Z'neg *)
     in
-(*
-    let c = mkConstruct (pos'ty, 1) in
-*)
-    let c = mkVar (Id.of_string s) in
+    let c = mkConstruct (z'ty, s) in
     mkApp (c, [| pos'_of_bigint pos'ty n |])
   else
     mkConstruct (z'ty, 1) (* Z'0 *)
@@ -2099,11 +2096,6 @@ let rec constr_of_glob_constr = function
 let interp_big_int zpos'ty ty thr f loc bi =
   let t =
     let c = mkApp (mkConst f, [| z'_of_bigint zpos'ty ty thr bi |]) in
-let _ = Printf.eprintf "c %s\n%!" (string_of_constr c) in
-    let env = Global.env () in
-    let ce = Constrextern.extern_constr false env Evd.empty c in
-    let (_, c) = Constrintern.interp_open_constr env Evd.empty ce in
-let _ = Printf.eprintf "d %s\n%!" (string_of_constr c) in
     eval_constr c
   in
   match Constr.kind t with
