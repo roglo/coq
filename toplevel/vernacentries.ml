@@ -1851,11 +1851,6 @@ let obj_string x =
     "tag = " ^ string_of_int (Obj.tag (Obj.repr x))
   else "int_val = " ^ string_of_int (Obj.magic x)
 
-let identref loc s = (loc, Names.Id.of_string s)
-
-let constr_expr_of_constr =
-  Constrextern.extern_constr false (Global.env ()) Evd.empty
-
 let rec pos'_of_bigint dloc n =
   match Bigint.div2_with_rest n with
   | (q, false) ->
@@ -1866,9 +1861,6 @@ let rec pos'_of_bigint dloc n =
       mkApp (c, [| pos'_of_bigint dloc q |])
   | (q, true) ->
       mkVar (Id.of_string "x'H")
-
-let constr_expr_pos'_of_bigint dloc n =
-  constr_expr_of_constr (pos'_of_bigint dloc n)
 
 let shorted s =
   try let i = String.rindex s '.' in
@@ -1962,15 +1954,10 @@ let z'_of_bigint dloc ty thr n =
       if Bigint.is_pos_or_zero n then ("Z'pos", n)
       else ("Z'neg", Bigint.neg n)
     in
-    let sgn = CRef (Ident (identref dloc s), None) in
-    CApp (dloc, (None, sgn), [(constr_expr_pos'_of_bigint dloc n, None)])
+    let c = mkVar (Id.of_string s) in
+    mkApp (c, [| pos'_of_bigint dloc n |])
   else
-    CRef (Ident (identref dloc "Z'0"), None)
-
-(*
-let constr_expr_z'_of_bigint dloc ty thr n =
-  constr_expr_of_constr (z'_of_bigint dloc ty thr n)
-*)
+    mkVar (Id.of_string "Z'0")
 
 let rec bigint_of_pos' c = match Constr.kind c with
   | App (c, [| d |]) ->
@@ -2093,12 +2080,15 @@ let constr_expr_of_glob_constr vl ce =
   Constrextern.extern_glob_type (Id.Set.of_list vl) ce
 *)
 
+let constr_expr_of_constr =
+  Constrextern.extern_constr false (Global.env ()) Evd.empty
+
 let interp_big_int ty thr f loc bi =
   let t =
-    let env = Global.env () in
-    let z' = z'_of_bigint loc ty thr bi in
+    let z' = constr_expr_of_constr (z'_of_bigint loc ty thr bi) in
     let f = constr_expr_of_glob_constr [] (Glob_term.GRef (loc, f, None)) in
     let ce = CApp (loc, (None, f), [(z', None)]) in
+    let env = Global.env () in
     let (_, c) = interp_open_constr env Evd.empty ce in
     eval_constr c
   in
@@ -2309,6 +2299,7 @@ let vernac_numeral_notation loc ty f g sc patl waft =
   in
   let lqid = qualid_of_reference_or_by_notation ty in
   let crq = CRef (Qualid lqid, None) in
+  let identref loc s = (loc, Names.Id.of_string s) in
   let app loc x y = CApp (loc, (None, x), [(y, None)]) in
   let cref loc s = CRef (Ident (identref loc s), None) in
   let arrow loc x y =
