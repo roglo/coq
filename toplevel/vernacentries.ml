@@ -2027,28 +2027,6 @@ let qualid_of_global_reference = function
   | VarRef v -> Decls.variable_secpath v
   | gr -> failwith (Printf.sprintf "1 global_reference %s" (obj_string gr))
 
-let rec constr_expr_of_glob_constr vl = function
-  | Glob_term.GRef (loc, gr, None) ->
-      let qi = qualid_of_global_reference gr in
-      CRef (Qualid (loc, qi), None)
-  | Glob_term.GVar (loc, id) ->
-      constr_expr_of_glob_constr vl (List.assoc id vl)
-  | Glob_term.GApp (loc, c1, cl) ->
-      let ce = constr_expr_of_glob_constr vl c1 in
-      let ceel = List.map (fun c -> (constr_expr_of_glob_constr vl c, None)) cl in
-      CApp (loc, (None, ce), ceel)
-  | Glob_term.GHole (loc, evk, ipne, ggao) ->
-      CHole (loc, Some evk, ipne, None)
-  | Glob_term.GIf (loc, gc1, (n, gco), gc2, gc3) ->
-      let ce1 = constr_expr_of_glob_constr vl gc1 in
-      let ce2 = constr_expr_of_glob_constr vl gc2 in
-      let ce3 = constr_expr_of_glob_constr vl gc3 in
-      let n = Some (loc, n) in
-      let ceo = map_option (constr_expr_of_glob_constr vl) gco in
-      CIf (loc, ce1, (n, ceo), ce2, ce3)
-  | x ->
-      failwith (Printf.sprintf "1 glob_constr %s" (obj_string x))
-
 let eval_constr (c : constr) =
   let env = Global.env () in
   let sigma = Evd.empty in
@@ -2058,11 +2036,6 @@ let eval_constr (c : constr) =
   let evm = Sigma.Unsafe.of_evar_map sigma in
   match redfun.Reductionops.e_redfun env evm j.Environ.uj_val with
   | Sigma (c, _, _) -> c
-
-let eval_constr_expr ce =
-  let env = Global.env () in
-  let sigma, c = interp_open_constr env Evd.empty ce in
-  eval_constr c
 
 let constr_of_global_reference = function
   | VarRef v -> mkVar v
