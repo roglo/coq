@@ -21,3 +21,8 @@ Numeral Notation BigN.t bigN_of_Z' Z'_of_bigN : bigN_scope
   (printing
      BigN.N0 BigN.N1 BigN.N2 BigN.N3 BigN.N4 BigN.N5 BigN.N6
      BigN.Nn).
+
+Definition bigZ_of_Z' z' := Some (BigZ.of_Z (Z_of_Z' z')).
+Definition Z'_of_bigZ n := Some (Z'_of_Z (BigZ.to_Z n)).
+
+Numeral Notation BigZ.t_ bigZ_of_Z' Z'_of_bigZ : bigZ_scope.
