@@ -1899,26 +1899,25 @@ let rec string_of_constr_pattern = function
         (string_of_constr_pattern_list "" (Array.to_list cpa))
   | Pattern.PMeta (Some pv) -> Id.to_string pv
   | Pattern.PMeta None -> "_"
-  | x -> failwith (Printf.sprintf "constr_pattern %s" (obj_string x))
+  | x -> anomaly (str "constr_pattern %s" ++ str (obj_string x))
 
 and string_of_constr_pattern_list sep = function
   | cp :: cpl ->
-      Printf.sprintf "%s%s%s" sep (string_of_constr_pattern cp)
-        (string_of_constr_pattern_list "," cpl)
+      sep ^ string_of_constr_pattern cp ^
+      string_of_constr_pattern_list "," cpl
   | [] -> ""
 
 let rec string_of_glob_constr = function
   | Glob_term.GRef (loc, gr, _) -> string_of_global_reference gr
   | Glob_term.GVar (loc, id) -> Id.to_string id
   | Glob_term.GApp (loc, gc, gcl) ->
-      Printf.sprintf "%s (%s)" (string_of_glob_constr gc)
-        (string_of_glob_constr_list "" gcl)
-  | x -> failwith (Printf.sprintf "4 glob_constr %s" (obj_string x))
+      string_of_glob_constr gc ^ " (" ^
+      string_of_glob_constr_list "" gcl ^ ")"
+  | x -> anomaly (str "4 glob_constr " ++ str (obj_string x))
 
 and string_of_glob_constr_list sep = function
   | gc :: gcl ->
-      Printf.sprintf "%s%s%s" sep (string_of_glob_constr gc)
-        (string_of_glob_constr_list "," gcl)
+      sep ^ string_of_glob_constr gc ^ string_of_glob_constr_list "," gcl
   | [] -> ""
 
 let rec glob_constr_of_constr loc c = match Constr.kind c with
@@ -1935,7 +1934,7 @@ let rec glob_constr_of_constr loc c = match Constr.kind c with
   | Ind (ind, _) ->
       Glob_term.GRef (loc, IndRef ind, None)
   | x ->
-      failwith (Printf.sprintf "1 constr %s" (obj_string x))
+      anomaly (str "1 constr " ++ str (obj_string x))
 
 let string_of_constr c =
   string_of_glob_constr (glob_constr_of_constr Loc.ghost c)
@@ -1948,7 +1947,7 @@ let z'_of_bigint (z'ty, pos'ty) ty thr n =
       (strbrk "Stack overflow or segmentation fault happens when " ++
        strbrk "working with large numbers in " ++
        str (string_of_reference_or_by_notation ty) ++
-       strbrk " (observed threshold may vary from 5000 to 70000 depending" ++
+       strbrk " (observed threshold may vary depending" ++
        strbrk " on your system limits and on the command executed).")
   else ();
   if not (Bigint.equal n Bigint.zero) then
