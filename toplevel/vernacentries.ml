@@ -1874,7 +1874,7 @@ let short_mutind_to_string m = shorted (MutInd.to_string m)
 let short_constant_to_string c = shorted (Constant.to_string c)
 
 let string_of_inductive (mi, i) =
-  Printf.sprintf "%s/%d" (short_mutind_to_string mi) i
+  short_mutind_to_string mi ^ "/" ^ string_of_int i
 
 let string_of_global_reference = function
   | VarRef v -> "VarRef ..."
