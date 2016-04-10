@@ -2184,18 +2184,18 @@ let uninterp_big_int_ltac tac c =
   let c = (c, None) in
   let loc = Loc.ghost in
   let c = Tacexpr.ConstrMayEval (Genredexpr.ConstrTerm c) in
-  let t = Tacexpr.TacCall (loc, ArgArg (loc, tac), [c]) in
-  let t = Tacexpr.TacArg (loc, t) in
-  let t = Tacinterp.interp_ftactic (default_ist ()) t in
+  let ta = Tacexpr.TacCall (loc, ArgArg (loc, tac), [c]) in
+  let te = Tacexpr.TacArg (loc, ta) in
+  let vft = Tacinterp.interp_ftactic (default_ist ()) te in
   let (_, pf) = Proofview.init Evd.empty [] in
-  let (v, _, _, _) = Ftactic.apply (Global.env ()) t pf in
-  match v with
+  let (vl, _, _, _) = Ftactic.apply (Global.env ()) vft pf in
+  match vl with
   | [v] ->
       begin match Tacinterp.Value.to_constr v with
-      | Some v -> Some (bigint_of_z' v)
+      | Some c -> Some (bigint_of_z' c)
       | None -> None
       end
-  | _ -> anomaly (str "uninterp_big_int_ltac len " ++ int (List.length v))
+  | _ -> anomaly (str "uninterp_big_int_ltac len " ++ int (List.length vl))
 (*
 .... but Check 24%R returns above error with len 0: the return list is empty!!!
 *)
