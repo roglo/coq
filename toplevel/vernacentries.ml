@@ -2169,16 +2169,6 @@ and num_interp_match_constr_pattern vl s = function
   | mp ->
       anomaly (str "num_interp_match_constr_pattern " ++ str (obj_string mp))
 
-let run_ftactic (tac : 'a Ftactic.t) : 'a =
-  let (_, pf) = Proofview.init Evd.empty [] in
-  Proofview.apply (Global.env ()) tac pf
-
-let glop (tac : Nametab.ltac_constant) : Value.t list =
-  let tac = interp_ftactic (default_ist ()) (Tacenv.interp_ltac tac) in
-  let (_, pf) = Proofview.init Evd.empty [] in
-  let (v, _, _, _) = Ftactic.apply (Global.env ()) tac pf in
-  v
-
 let uninterp_big_int_ltac tac c =
 (*
   let c = (c, None) in
