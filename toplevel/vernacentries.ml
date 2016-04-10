@@ -2306,7 +2306,8 @@ let vernac_numeral_notation loc ty f g sc patl waft =
                  mc)
       in
       add_anonymous_leaf
-        (inNumeralNotation (loc, zpos'ty, ty, fc, Inl gc, sc, patl, thr, path))
+        (inNumeralNotation
+	   (loc, zpos'ty, ty, fc, Inl gc, sc, patl, thr, path))
   | ((IndRef _ | ConstRef _), _) ->
       let gc =
         let (loc, gq) = qualid_of_reference g in
@@ -2324,7 +2325,8 @@ let vernac_numeral_notation loc ty f g sc patl waft =
         | [] -> []
       in
       add_anonymous_leaf
-        (inNumeralNotation (loc, zpos'ty, ty, fc, Inr gc, sc, patl, thr, path))
+        (inNumeralNotation
+	   (loc, zpos'ty, ty, fc, Inr gc, sc, patl, thr, path))
   | (VarRef _, _) | (ConstructRef _, _) ->
       user_err_loc
         (loc, "_", str (string_of_reference ty) ++ str " is not a type")
