@@ -1888,10 +1888,6 @@ let string_of_global_reference = function
       | "DoubleType.zn2z/2" -> "WW"
       | s -> s
 
-let string_of_reference_or_by_notation = function
-  | AN r -> string_of_reference r
-  | ByNotation (loc, s, so) -> failwith "string_of_reference_or_by_notation ByNotation"
-
 let rec string_of_constr_pattern = function
   | Pattern.PRef gr -> string_of_global_reference gr
   | Pattern.PApp (cp, cpa) ->
@@ -1946,7 +1942,7 @@ let z'_of_bigint (z'ty, pos'ty) ty thr n =
     msg_warning
       (strbrk "Stack overflow or segmentation fault happens when " ++
        strbrk "working with large numbers in " ++
-       str (string_of_reference_or_by_notation ty) ++
+       str (string_of_reference ty) ++
        strbrk " (observed threshold may vary depending" ++
        strbrk " on your system limits and on the command executed).")
   else ();
@@ -1972,7 +1968,7 @@ let rec bigint_of_pos' c = match Constr.kind c with
       | x -> raise Not_found
       end
   | Construct ((_, 3), _) -> (* x'H *) Bigint.one
-  | x -> failwith (Printf.sprintf "bigint_of_pos' %s" (obj_string x))
+  | x -> anomaly (str "bigint_of_pos'" ++ str (obj_string x))
 
 let bigint_of_z' z' = match Constr.kind z' with
   | App (c, [| d |]) ->
@@ -1983,15 +1979,7 @@ let bigint_of_z' z' = match Constr.kind z' with
           | 3 -> (* Z'neg *) Bigint.neg (bigint_of_pos' d)
           | n -> assert false
           end
-      | x -> failwith (Printf.sprintf "bigint_of_z' App c %s" (obj_string x))
-      end
-  | App (c, [| d; e |]) ->
-      begin match Constr.kind c with
-      | Construct (((ty, _), n), _) ->
-          let _ = Printf.eprintf "ty/n %s/%d\n%!" (short_mutind_to_string ty) n in
-          let _ = Printf.eprintf "constr: %s\n%!" (string_of_constr z') in
-          failwith "ok"
-      | x -> failwith (Printf.sprintf "bigint_of_z' App c de %s" (obj_string x))
+      | x -> anomaly (str "bigint_of_z' App c " ++ str (obj_string x))
       end
   | Construct ((_, 1), _) -> (* Z'0 *) Bigint.zero
   | _ -> raise Not_found
@@ -2012,7 +2000,7 @@ let qualid_of_constructref env sp i =
   in
   let qis =
     if i >= 1 && i <= Array.length mc then mc.(i-1)
-    else failwith "qis not_found"
+    else anomaly (str "qis not_found")
   in
   qualid_of_string (Id.to_string qis)
 
@@ -2024,7 +2012,7 @@ let qualid_of_global_reference = function
   | ConstRef cst -> qualid_of_string (Constant.to_string cst)
   | ConstructRef ((sp, spi), i) -> qualid_of_constructref (Global.env ()) sp i
   | VarRef v -> Decls.variable_secpath v
-  | gr -> failwith (Printf.sprintf "1 global_reference %s" (obj_string gr))
+  | gr -> anomaly (str "1 global_reference " ++ str (obj_string gr))
 
 let eval_constr (c : constr) =
   let env = Global.env () in
@@ -2065,9 +2053,9 @@ let interp_big_int zpos'ty ty thr f loc bi =
       user_err_loc
         (loc, "_",
          str "Cannot interpret this number as a value of type " ++
-         str (string_of_reference_or_by_notation ty))
+         str (string_of_reference ty))
   | x ->
-      failwith (Printf.sprintf "interp_big_int %s" (obj_string x))
+      anomaly (str "interp_big_int " ++ str (obj_string x))
 
 let uninterp_big_int g loc c =
   match try Some (constr_of_glob_constr [] c) with Not_found -> None with
@@ -2075,7 +2063,7 @@ let uninterp_big_int g loc c =
       let t = eval_constr (mkApp (mkConst g, [| c |])) in
       begin match Constr.kind t with
       | App (c, [| _; x |]) -> Some (bigint_of_z' x)
-      | x -> failwith (Printf.sprintf "2 constr %s" (obj_string x))
+      | x -> None
       end
   | None ->
       None
@@ -2084,7 +2072,8 @@ let rec num_interp_call (vl : (_ * Glob_term.glob_constr) list) tac tal =
   match Tacenv.interp_ltac tac with
   | Tacexpr.TacFun (idol, e) ->
       let vl =
-        if List.length idol <> List.length tal then failwith "#parm <> #arg not impl"
+        if List.length idol <> List.length tal then
+	  anomaly (str "#parm <> #arg not impl")
         else
           List.fold_left2
             (fun vl ido ta ->
@@ -2094,13 +2083,13 @@ let rec num_interp_call (vl : (_ * Glob_term.glob_constr) list) tac tal =
             vl idol tal
       in
       num_interp vl e
-  | t -> failwith (Printf.sprintf "num_interp_call tac %s" (obj_string t))
+  | t -> anomaly (str "num_interp_call tac " ++ str (obj_string t))
 and num_interp vl = function
   | Tacexpr.TacFail _ -> raise Not_found
   | Tacexpr.TacLetIn (rf, idltal, te) -> num_interp_let vl idltal te
   | Tacexpr.TacMatch (lf, e, mrl) -> num_interp_match vl (num_interp vl e) mrl
   | Tacexpr.TacArg (loc, ta) -> num_interp_arg vl ta
-  | t -> failwith (Printf.sprintf "num_interp %s" (obj_string t))
+  | t -> anomaly (str "num_interp " ++ str (obj_string t))
 and num_interp_arg vl = function
   | Tacexpr.ConstrMayEval me ->
       begin match me with
@@ -2109,7 +2098,7 @@ and num_interp_arg vl = function
 	  let c = eval_constr c in
 	  glob_constr_of_constr Loc.ghost c
       | me ->
-          failwith (Printf.sprintf "ConstrMayEval may_eval %s" (obj_string me))
+          anomaly (str "ConstrMayEval may_eval " ++ str (obj_string me))
       end
   | Tacexpr.Reference (ArgVar (loc, id)) ->
       List.assoc id vl
@@ -2117,7 +2106,7 @@ and num_interp_arg vl = function
       let tal = List.map (num_interp_arg vl) tal in
       num_interp_call vl tac tal
   | a ->
-      failwith (Printf.sprintf "num_interp_arg %s" (obj_string a))
+      anomaly (str "num_interp_arg " ++ str (obj_string a))
 and num_interp_let vl idltal te =
   let vl =
     List.fold_left
@@ -2131,14 +2120,14 @@ and num_interp_match vl s = function
       | Some vl -> num_interp vl t
       | None -> num_interp_match vl s mrl
       end
-  | Tacexpr.Pat (_ :: _, mp, t) :: mrl -> failwith "Pat (_ :: _)"
+  | Tacexpr.Pat (_ :: _, mp, t) :: mrl -> anomaly (str "Pat (_ :: _)")
   | Tacexpr.All (t : _ Tacexpr.gen_tactic_expr) :: _ -> num_interp vl t
   | [] -> raise Not_found
 and num_interp_match_pattern vl s = function
   | Tacexpr.Term ((gc, None), cp) ->
       num_interp_match_constr_pattern vl s cp
   | mp ->
-      failwith (Printf.sprintf "num_interp_match_pattern %s" (obj_string mp))
+      anomaly (str "num_interp_match_pattern " ++ str (obj_string mp))
 and num_interp_match_constr_pattern vl s = function
   | Pattern.PRef gr ->
       begin match s with
@@ -2149,7 +2138,7 @@ and num_interp_match_constr_pattern vl s = function
       | Glob_term.GVar (loc, id) ->
           None
       | _ ->
-          failwith (Printf.sprintf "2 glob_constr %s" (obj_string s))
+          anomaly (str "2 glob_constr " ++ str (obj_string s))
       end
   | Pattern.PApp (cp, cpa)->
       begin match s with
@@ -2167,14 +2156,18 @@ and num_interp_match_constr_pattern vl s = function
     		 (Some vl) (Array.to_list cpa) gcl
           | None -> None
           end
-      | _ -> failwith (Printf.sprintf "num_interp_match_constr_pattern glob_constr %s" (obj_string s))
+      | _ ->
+	  anomaly
+	    (str "num_interp_match_constr_pattern glob_constr " ++
+	     str (obj_string s))
       end
   | Pattern.PMeta ido ->
       begin match ido with
       | Some id -> Some ((id, s) :: vl)
       | None -> Some vl
       end
-  | mp -> failwith (Printf.sprintf "num_interp_match_constr_pattern %s" (obj_string mp))
+  | mp ->
+      anomaly (str "num_interp_match_constr_pattern " ++ str (obj_string mp))
 
 let run_ftactic (tac : 'a Ftactic.t) : 'a =
   let (_, pf) = Proofview.init Evd.empty [] in
@@ -2202,7 +2195,7 @@ let uninterp_big_int2 tac c =
       | Some v -> Some (bigint_of_z' v)
       | None -> None
       end
-  | _ -> failwith (Printf.sprintf "unintep_big_int2 len %d" (List.length v))
+  | _ -> anomaly (str "unintep_big_int2 len %d" (List.length v))
 
 .... but Check 24%R returns above error with len 0: the return list is empty!!!
 *)
@@ -2212,10 +2205,6 @@ let uninterp_big_int2 tac c =
       with Not_found -> None end
   | None -> None
 (**)
-
-let qualid_of_reference_or_by_notation = function
-  | AN r -> qualid_of_reference r
-  | ByNotation (loc, s, so) -> failwith "qualid_of_reference_or_by_notation ByNotation"
 
 let load_numeral_notation _ (_, (loc, zpos'ty, ty, f, g, sc, patl, thr, path)) =
   match g with
@@ -2230,7 +2219,7 @@ let cache_numeral_notation o = load_numeral_notation 1 o
 
 type numeral_notation_obj =
   Loc.t * (Names.inductive * Names.inductive) *
-  Libnames.reference Misctypes.or_by_notation * Names.constant *
+  Libnames.reference * Names.constant *
   (Names.constant, Nametab.ltac_constant) union *
   Notation_term.scope_name * Glob_term.glob_constr list *
   Bigint.bigint * Libnames.full_path
@@ -2255,7 +2244,7 @@ let vernac_numeral_notation loc ty f g sc patl waft =
     (z'ty, positive'ty)
   in
   let tyc =
-    let (loc, tyq) = qualid_of_reference_or_by_notation ty in
+    let (loc, tyq) = qualid_of_reference ty in
     try Nametab.locate tyq with Not_found ->
       Nametab.error_global_not_found_loc loc tyq
   in
@@ -2264,7 +2253,7 @@ let vernac_numeral_notation loc ty f g sc patl waft =
     try Nametab.locate_constant fq with Not_found ->
       Nametab.error_global_not_found_loc loc fq
   in
-  let lqid = qualid_of_reference_or_by_notation ty in
+  let lqid = qualid_of_reference ty in
   let crq = CRef (Qualid lqid, None) in
   let identref loc s = (loc, Names.Id.of_string s) in
   let app loc x y = CApp (loc, (None, x), [(y, None)]) in
@@ -2306,7 +2295,7 @@ let vernac_numeral_notation loc ty f g sc patl waft =
       let env = Global.env () in
       let patl =
         match patl with
-        | _ :: _ -> failwith "patl not impl"
+        | _ :: _ -> anomaly (str "patl not impl")
         | [] ->
             let mc =
               let mib = Environ.lookup_mind sp env in
@@ -2347,9 +2336,7 @@ let vernac_numeral_notation loc ty f g sc patl waft =
         (inNumeralNotation (loc, zpos'ty, ty, fc, Inr gc, sc, patl, thr, path))
   | (VarRef _, _) | (ConstructRef _, _) ->
       user_err_loc
-        (loc, "_",
-         str (string_of_reference_or_by_notation ty) ++
-         str " is not a type")
+        (loc, "_", str (string_of_reference ty) ++ str " is not a type")
 
 (* "locality" is the prefix "Local" attribute, while the "local" component
  * is the outdated/deprecated "Local" attribute of some vernacular commands
