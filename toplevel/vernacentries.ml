@@ -2068,7 +2068,7 @@ let uninterp_big_int g loc c =
   | None ->
       None
 
-let rec num_interp_call (vl : (_ * Glob_term.glob_constr) list) tac tal =
+let rec num_interp_call vl tac tal =
   match Tacenv.interp_ltac tac with
   | Tacexpr.TacFun (idol, e) ->
       let vl =
@@ -2083,13 +2083,13 @@ let rec num_interp_call (vl : (_ * Glob_term.glob_constr) list) tac tal =
             vl idol tal
       in
       num_interp vl e
-  | t -> anomaly (str "num_interp_call tac " ++ str (obj_string t))
+  | t -> raise Not_found
 and num_interp vl = function
   | Tacexpr.TacFail _ -> raise Not_found
   | Tacexpr.TacLetIn (rf, idltal, te) -> num_interp_let vl idltal te
   | Tacexpr.TacMatch (lf, e, mrl) -> num_interp_match vl (num_interp vl e) mrl
   | Tacexpr.TacArg (loc, ta) -> num_interp_arg vl ta
-  | t -> anomaly (str "num_interp " ++ str (obj_string t))
+  | t -> raise Not_found
 and num_interp_arg vl = function
   | Tacexpr.ConstrMayEval me ->
       begin match me with
@@ -2098,7 +2098,7 @@ and num_interp_arg vl = function
 	  let c = eval_constr c in
 	  glob_constr_of_constr Loc.ghost c
       | me ->
-          anomaly (str "ConstrMayEval may_eval " ++ str (obj_string me))
+          raise Not_found
       end
   | Tacexpr.Reference (ArgVar (loc, id)) ->
       List.assoc id vl
@@ -2106,7 +2106,7 @@ and num_interp_arg vl = function
       let tal = List.map (num_interp_arg vl) tal in
       num_interp_call vl tac tal
   | a ->
-      anomaly (str "num_interp_arg " ++ str (obj_string a))
+      raise Not_found
 and num_interp_let vl idltal te =
   let vl =
     List.fold_left
@@ -2120,14 +2120,14 @@ and num_interp_match vl s = function
       | Some vl -> num_interp vl t
       | None -> num_interp_match vl s mrl
       end
-  | Tacexpr.Pat (_ :: _, mp, t) :: mrl -> anomaly (str "Pat (_ :: _)")
+  | Tacexpr.Pat (_ :: _, mp, t) :: mrl -> raise Not_found
   | Tacexpr.All (t : _ Tacexpr.gen_tactic_expr) :: _ -> num_interp vl t
   | [] -> raise Not_found
 and num_interp_match_pattern vl s = function
   | Tacexpr.Term ((gc, None), cp) ->
       num_interp_match_constr_pattern vl s cp
   | mp ->
-      anomaly (str "num_interp_match_pattern " ++ str (obj_string mp))
+      raise Not_found
 and num_interp_match_constr_pattern vl s = function
   | Pattern.PRef gr ->
       begin match s with
@@ -2138,7 +2138,7 @@ and num_interp_match_constr_pattern vl s = function
       | Glob_term.GVar (loc, id) ->
           None
       | _ ->
-          anomaly (str "2 glob_constr " ++ str (obj_string s))
+          raise Not_found
       end
   | Pattern.PApp (cp, cpa)->
       begin match s with
@@ -2157,9 +2157,7 @@ and num_interp_match_constr_pattern vl s = function
           | None -> None
           end
       | _ ->
-	  anomaly
-	    (str "num_interp_match_constr_pattern glob_constr " ++
-	     str (obj_string s))
+	  raise Not_found
       end
   | Pattern.PMeta ido ->
       begin match ido with
@@ -2167,7 +2165,7 @@ and num_interp_match_constr_pattern vl s = function
       | None -> Some vl
       end
   | mp ->
-      anomaly (str "num_interp_match_constr_pattern " ++ str (obj_string mp))
+      raise Not_found
 
 let uninterp_big_int_ltac tac c =
 (*
