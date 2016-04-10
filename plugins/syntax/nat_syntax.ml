@@ -6,6 +6,8 @@
 (*         *       GNU Lesser General Public License Version 2.1        *)
 (************************************************************************)
 
+(*
+
 (* This file defines the printer for natural numbers in [nat] *)
 
 (*i*)
@@ -63,10 +65,10 @@ let uninterp_nat p =
 (************************************************************************)
 (* Declare the primitive parsers and printers *)
 
-(*
 let _ =
   Notation.declare_numeral_interpreter "nat_scope"
     (nat_path,datatypes_module_name)
     nat_of_int
     ([GRef (Loc.ghost,glob_S,None); GRef (Loc.ghost,glob_O,None)], uninterp_nat, true)
+
 *)

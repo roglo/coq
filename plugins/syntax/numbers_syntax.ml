@@ -6,6 +6,8 @@
 (*         *       GNU Lesser General Public License Version 2.1        *)
 (************************************************************************)
 
+(*
+
 (* digit-based syntax for int31, bigN bigZ and bigQ *)
 
 open Bigint
@@ -304,10 +306,10 @@ let uninterp_bigQ rc =
   with Non_closed -> None
 
 (* Actually declares the interpreter for bigQ *)
-(*
 let _ = Notation.declare_numeral_interpreter bigQ_scope
   (bigQ_path, bigQ_module)
   interp_bigQ
   ([GRef (Loc.ghost, bigQ_z, None)], uninterp_bigQ,
    true)
+
 *)

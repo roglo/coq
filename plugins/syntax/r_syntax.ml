@@ -6,6 +6,8 @@
 (*         *       GNU Lesser General Public License Version 2.1        *)
 (************************************************************************)
 
+(*
+
 open Util
 open Names
 open Globnames
@@ -111,7 +113,6 @@ let uninterp_r p =
 
 let mkGRef gr = GRef (Loc.ghost,gr,None)
 
-(*
 let _ = Notation.declare_numeral_interpreter "R_scope"
   (r_path,["Coq";"Reals";"Rdefinitions"])
   r_of_int

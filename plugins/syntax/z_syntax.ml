@@ -6,6 +6,8 @@
 (*         *       GNU Lesser General Public License Version 2.1        *)
 (************************************************************************)
 
+(*
+
 open Pp
 open Errors
 open Util
@@ -183,7 +185,6 @@ let uninterp_z p =
 (************************************************************************)
 (* Declaring interpreters and uninterpreters for Z *)
 
-(*
 let _ = Notation.declare_numeral_interpreter "Z_scope"
   (z_path,binnums)
   z_of_int
