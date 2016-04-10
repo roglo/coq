@@ -2179,7 +2179,7 @@ let glop (tac : Nametab.ltac_constant) : Value.t list =
   let (v, _, _, _) = Ftactic.apply (Global.env ()) tac pf in
   v
 
-let uninterp_big_int2 tac c =
+let uninterp_big_int_ltac tac c =
 (*
   let c = (c, None) in
   let loc = Loc.ghost in
@@ -2195,9 +2195,10 @@ let uninterp_big_int2 tac c =
       | Some v -> Some (bigint_of_z' v)
       | None -> None
       end
-  | _ -> anomaly (str "unintep_big_int2 len %d" (List.length v))
-
+  | _ -> anomaly (str "uninterp_big_int_ltac len " ++ int (List.length v))
+(*
 .... but Check 24%R returns above error with len 0: the return list is empty!!!
+*)
 *)
   match try Some (num_interp_call [] tac [c]) with Not_found -> None with
   | Some gr ->
@@ -2210,10 +2211,12 @@ let load_numeral_notation _ (_, (loc, zpos'ty, ty, f, g, sc, patl, thr, path)) =
   match g with
   | Inl g ->
       Notation.declare_numeral_interpreter sc (path, [])
-        (interp_big_int zpos'ty ty thr f) (patl, uninterp_big_int g loc, true)
+        (interp_big_int zpos'ty ty thr f)
+	(patl, uninterp_big_int g loc, true)
   | Inr g ->
       Notation.declare_numeral_interpreter sc (path, [])
-        (interp_big_int zpos'ty ty thr f) (patl, uninterp_big_int2 g, false)
+        (interp_big_int zpos'ty ty thr f)
+	(patl, uninterp_big_int_ltac g, false)
 
 let cache_numeral_notation o = load_numeral_notation 1 o
 
