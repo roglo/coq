@@ -2261,7 +2261,11 @@ let vernac_numeral_notation loc ty f g sc patl waft =
            (arrow loc (cref loc "Z'") (app loc (cref loc "option") crq)))
     in
     let (sigma, env) = get_current_context () in
+(*
     interp_open_constr env sigma c
+*)
+    intern_constr env c
+(**)
   in
   let thr = Bigint.of_int waft in
   let path = Nametab.path_of_global tyc in
