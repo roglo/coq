@@ -1,12 +1,14 @@
 Load common_syntax.
 Load common_z_syntax.
 
-(**)
-Definition some_int31_of_Z' z' := Some (phi_inv (Z_of_Z' z')).
-Definition Z'_of_int31 n := Z'_of_Z (phi n).
-Definition some_Z'_of_int31 n := Some (Z'_of_int31 n).
+Definition int31_of_Z' z' :=
+  match z' with
+  | Z'0 | Z'pos _ => Some (phi_inv (Z_of_Z' z'))
+  | Z'neg _ => None
+  end.
+Definition Z'_of_int31 n := Some (Z'_of_Z (phi n)).
 
-Numeral Notation int31 some_int31_of_Z' some_Z'_of_int31 : int31_scope.
+Numeral Notation int31 int31_of_Z' Z'_of_int31 : int31_scope.
 
 Definition bigN_of_Z' z' :=
   match z' with
