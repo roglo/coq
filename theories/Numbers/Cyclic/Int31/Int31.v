@@ -212,7 +212,7 @@ Definition phi_inv2 n :=
 Definition phi2 nh nl :=
   ((phi nh)*base+(phi nl))%Z.
 
-(** * Parsing and Printing digit strings as type int31 *)
+(** Parsing and Printing digits strings as type int31 *)
 
 Definition int31_of_Z' z' :=
   match z' with

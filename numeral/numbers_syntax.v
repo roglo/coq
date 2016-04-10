@@ -15,12 +15,19 @@ Definition bigN_of_Z' z' :=
   | Z'0 | Z'pos _ => Some (BigN.N_of_Z (Z_of_Z' z'))
   | Z'neg _ => None
   end.
+
+(**)
+Definition Z'_of_bigN n := Some (Z'_of_Z (BigN.to_Z n)).
+
+Numeral Notation BigN.t' bigN_of_Z' Z'_of_bigN : bigN_scope.
+(*
 Ltac Z'_of_bigN n := constr: (Z'_of_Z (BigN.to_Z n)).
 
 Numeral Notation BigN.t bigN_of_Z' Z'_of_bigN : bigN_scope
   (printing
      BigN.N0 BigN.N1 BigN.N2 BigN.N3 BigN.N4 BigN.N5 BigN.N6
      BigN.Nn).
+*)
 
 Definition bigZ_of_Z' z' := Some (BigZ.of_Z (Z_of_Z' z')).
 Definition Z'_of_bigZ bz := Some (Z'_of_Z (BigZ.to_Z bz)).
