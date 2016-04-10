@@ -2064,14 +2064,20 @@ let eval_constr_expr ce =
   let sigma, c = interp_open_constr env Evd.empty ce in
   eval_constr c
 
-let rec constr_of_glob_constr = function
-  | Glob_term.GRef (_, ConstructRef c, None) ->
-      mkConstruct c
-  | Glob_term.GRef (_, IndRef ind, None) ->
-      mkInd ind
+let constr_of_global_reference = function
+  | VarRef v -> mkVar v
+  | ConstRef cr -> mkConst cr
+  | IndRef ind -> mkInd ind
+  | ConstructRef c -> mkConstruct c
+
+let rec constr_of_glob_constr vl = function
+  | Glob_term.GRef (loc, gr, gllo) ->
+      constr_of_global_reference gr
+  | Glob_term.GVar (loc, id) ->
+      constr_of_glob_constr vl (List.assoc id vl)
   | Glob_term.GApp (_, gc, gcl) ->
-      let c = constr_of_glob_constr gc in
-      let cl = List.map constr_of_glob_constr gcl in
+      let c = constr_of_glob_constr vl gc in
+      let cl = List.map (constr_of_glob_constr vl) gcl in
       mkApp (c, Array.of_list cl)
   | _ ->
       raise Not_found
@@ -2092,7 +2098,7 @@ let interp_big_int zpos'ty ty thr f loc bi =
       failwith (Printf.sprintf "interp_big_int %s" (obj_string x))
 
 let uninterp_big_int g loc c =
-  match try Some (constr_of_glob_constr c) with Not_found -> None with
+  match try Some (constr_of_glob_constr [] c) with Not_found -> None with
   | Some c ->
       let t = eval_constr (mkApp (mkConst g, [| c |])) in
       begin match Constr.kind t with
@@ -2127,16 +2133,19 @@ and num_interp_arg vl = function
   | Tacexpr.ConstrMayEval me ->
       begin match me with
       | Genredexpr.ConstrTerm (gc, None) ->
-          let ce = eval_constr_expr (constr_expr_of_glob_constr vl gc) in
-	  glob_constr_of_constr Loc.ghost ce
+	  let c = constr_of_glob_constr vl gc in
+	  let c = eval_constr c in
+	  glob_constr_of_constr Loc.ghost c
       | me ->
           failwith (Printf.sprintf "ConstrMayEval may_eval %s" (obj_string me))
       end
-  | Tacexpr.Reference (ArgVar (loc, id)) -> List.assoc id vl
+  | Tacexpr.Reference (ArgVar (loc, id)) ->
+      List.assoc id vl
   | Tacexpr.TacCall (loc, ArgArg (loc1, tac), tal) ->
       let tal = List.map (num_interp_arg vl) tal in
       num_interp_call vl tac tal
-  | a -> failwith (Printf.sprintf "num_interp_arg %s" (obj_string a))
+  | a ->
+      failwith (Printf.sprintf "num_interp_arg %s" (obj_string a))
 and num_interp_let vl idltal te =
   let vl =
     List.fold_left
@@ -2227,7 +2236,7 @@ let uninterp_big_int2 tac c =
 *)
   match try Some (num_interp_call [] tac [c]) with Not_found -> None with
   | Some gr ->
-      begin try Some (bigint_of_z' (constr_of_glob_constr gr))
+      begin try Some (bigint_of_z' (constr_of_glob_constr [] gr))
       with Not_found -> None end
   | None -> None
 (**)
