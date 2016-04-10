@@ -23,6 +23,15 @@ Numeral Notation BigN.t bigN_of_Z' Z'_of_bigN : bigN_scope
      BigN.Nn).
 
 Definition bigZ_of_Z' z' := Some (BigZ.of_Z (Z_of_Z' z')).
-Definition Z'_of_bigZ n := Some (Z'_of_Z (BigZ.to_Z n)).
+Definition Z'_of_bigZ bz := Some (Z'_of_Z (BigZ.to_Z bz)).
 
 Numeral Notation BigZ.t_ bigZ_of_Z' Z'_of_bigZ : bigZ_scope.
+
+Definition bigQ_of_Z' z' := Some (BigQ.Qz (BigZ.of_Z (Z_of_Z' z'))).
+Definition Z'_of_bigQ bq :=
+  match bq with
+  | BigQ.Qz bz => Some (Z'_of_Z (BigZ.to_Z bz))
+  | _ => None
+  end.
+
+Numeral Notation BigQ.t_ bigQ_of_Z' Z'_of_bigQ : bigQ_scope.
