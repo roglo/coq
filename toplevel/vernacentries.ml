@@ -1969,7 +1969,7 @@ let rec bigint_of_pos' c = match Constr.kind c with
           | 2 -> (* x'O *) Bigint.mult_2 (bigint_of_pos' d)
           | n -> assert false
           end
-      | x -> failwith (Printf.sprintf "bigint_of_pos' App c %s" (obj_string x))
+      | x -> raise Not_found
       end
   | Construct ((_, 3), _) -> (* x'H *) Bigint.one
   | x -> failwith (Printf.sprintf "bigint_of_pos' %s" (obj_string x))
