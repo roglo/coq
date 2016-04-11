@@ -1971,7 +1971,7 @@ let interp_big_int zpos'ty ty thr f loc bi =
   | x ->
       anomaly (str "interp_big_int " ++ str (obj_string x))
 
-let uninterp_big_int g loc c =
+let uninterp_big_int loc (patl : (Glob_term.glob_constr * int) list) g c =
   match try Some (constr_of_glob_constr [] c) with Not_found -> None with
   | Some c ->
       let t = eval_constr (mkApp (mkConst g, [| c |])) in
@@ -2122,11 +2122,11 @@ let load_numeral_notation _ (_, (loc, zpos'ty, ty, f, g, sc, patl, thr, path)) =
   | Inl g ->
       Notation.declare_numeral_interpreter sc (path, [])
         (interp_big_int zpos'ty ty thr f)
-	(patl, uninterp_big_int g loc, true)
+	(List.map fst patl, uninterp_big_int loc patl g, true)
   | Inr ltac ->
       Notation.declare_numeral_interpreter sc (path, [])
         (interp_big_int zpos'ty ty thr f)
-	(patl, uninterp_big_int_ltac ltac, false)
+	(List.map fst patl, uninterp_big_int_ltac ltac, false)
 
 let cache_numeral_notation o = load_numeral_notation 1 o
 
@@ -2134,7 +2134,7 @@ type numeral_notation_obj =
   Loc.t * (Names.inductive * Names.inductive) *
   Libnames.reference * Names.constant *
   (Names.constant, Nametab.ltac_constant) union *
-  Notation_term.scope_name * Glob_term.glob_constr list *
+  Notation_term.scope_name * (Glob_term.glob_constr * int) list *
   Bigint.bigint * Libnames.full_path
 
 let inNumeralNotation : numeral_notation_obj -> obj =
@@ -2183,11 +2183,7 @@ let vernac_numeral_notation loc ty f g sc patl waft =
            (arrow loc (cref loc "Z'") (app loc (cref loc "option") crq)))
     in
     let (sigma, env) = get_current_context () in
-(*
-    interp_open_constr env sigma c
-*)
     intern_constr env c
-(**)
   in
   let thr = Bigint.of_int waft in
   let path = Nametab.path_of_global tyc in
@@ -2227,8 +2223,9 @@ let vernac_numeral_notation loc ty f g sc patl waft =
             Array.to_list
               (Array.mapi
                  (fun i c ->
-                    Glob_term.GRef
-                      (loc, ConstructRef ((sp, spi), i + 1), None))
+                    (Glob_term.GRef
+                       (loc, ConstructRef ((sp, spi), i + 1), None),
+		     42))
                  mc)
       in
       add_anonymous_leaf
@@ -2246,7 +2243,7 @@ let vernac_numeral_notation loc ty f g sc patl waft =
         match patl with
         | _ :: _ ->
             List.map
-              (fun r -> Glob_term.GRef (loc, intern_reference r, None))
+              (fun r -> (Glob_term.GRef (loc, intern_reference r, None), 0))
               patl
         | [] -> []
       in
