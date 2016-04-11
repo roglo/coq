@@ -1981,7 +1981,7 @@ let uninterp_big_int g loc c =
   | None ->
       None
 
-let rec num_interp_call vl tac tal =
+let rec ltac_eval_call vl tac tal =
   match Tacenv.interp_ltac tac with
   | Tacexpr.TacFun (idol, e) ->
       let vl =
@@ -1995,15 +1995,15 @@ let rec num_interp_call vl tac tal =
                | None -> vl)
             vl idol tal
       in
-      num_interp vl e
+      ltac_eval vl e
   | t -> raise Not_found
-and num_interp vl = function
+and ltac_eval vl = function
   | Tacexpr.TacFail _ -> raise Not_found
-  | Tacexpr.TacLetIn (rf, idltal, te) -> num_interp_let vl idltal te
-  | Tacexpr.TacMatch (lf, e, mrl) -> num_interp_match vl (num_interp vl e) mrl
-  | Tacexpr.TacArg (loc, ta) -> num_interp_arg vl ta
+  | Tacexpr.TacLetIn (rf, idltal, te) -> ltac_eval_let vl idltal te
+  | Tacexpr.TacMatch (lf, e, mrl) -> ltac_eval_match vl (ltac_eval vl e) mrl
+  | Tacexpr.TacArg (loc, ta) -> ltac_eval_arg vl ta
   | t -> raise Not_found
-and num_interp_arg vl = function
+and ltac_eval_arg vl = function
   | Tacexpr.ConstrMayEval me ->
       begin match me with
       | Genredexpr.ConstrTerm (gc, None) ->
@@ -2016,32 +2016,32 @@ and num_interp_arg vl = function
   | Tacexpr.Reference (ArgVar (loc, id)) ->
       List.assoc id vl
   | Tacexpr.TacCall (loc, ArgArg (loc1, tac), tal) ->
-      let tal = List.map (num_interp_arg vl) tal in
-      num_interp_call vl tac tal
+      let tal = List.map (ltac_eval_arg vl) tal in
+      ltac_eval_call vl tac tal
   | a ->
       raise Not_found
-and num_interp_let vl idltal te =
+and ltac_eval_let vl idltal te =
   let vl =
     List.fold_left
-      (fun vl ((loc, id), ta) -> (id, num_interp_arg vl ta) :: vl)
+      (fun vl ((loc, id), ta) -> (id, ltac_eval_arg vl ta) :: vl)
 	    vl idltal
   in
-  num_interp vl te
-and num_interp_match vl s = function
+  ltac_eval vl te
+and ltac_eval_match vl s = function
   | Tacexpr.Pat ([], mp, t) :: mrl ->
-      begin match num_interp_match_pattern vl s mp with
-      | Some vl -> num_interp vl t
-      | None -> num_interp_match vl s mrl
+      begin match ltac_eval_match_pattern vl s mp with
+      | Some vl -> ltac_eval vl t
+      | None -> ltac_eval_match vl s mrl
       end
   | Tacexpr.Pat (_ :: _, mp, t) :: mrl -> raise Not_found
-  | Tacexpr.All (t : _ Tacexpr.gen_tactic_expr) :: _ -> num_interp vl t
+  | Tacexpr.All (t : _ Tacexpr.gen_tactic_expr) :: _ -> ltac_eval vl t
   | [] -> raise Not_found
-and num_interp_match_pattern vl s = function
+and ltac_eval_match_pattern vl s = function
   | Tacexpr.Term ((gc, None), cp) ->
-      num_interp_match_constr_pattern vl s cp
+      ltac_eval_match_constr_pattern vl s cp
   | mp ->
       raise Not_found
-and num_interp_match_constr_pattern vl s = function
+and ltac_eval_match_constr_pattern vl s = function
   | Pattern.PRef gr ->
       begin match s with
       | Glob_term.GRef (_, gr1, None) ->
@@ -2057,14 +2057,14 @@ and num_interp_match_constr_pattern vl s = function
       begin match s with
       | Glob_term.GRef _ -> None
       | Glob_term.GApp (loc, gc, gcl) ->
-          begin match num_interp_match_constr_pattern vl gc cp with
+          begin match ltac_eval_match_constr_pattern vl gc cp with
           | Some vl ->
              if Array.length cpa <> List.length gcl then None
              else
 	       List.fold_left2
 		 (fun vlo cp gc ->
 		  match vlo with
-		  | Some vl -> num_interp_match_constr_pattern vl gc cp
+		  | Some vl -> ltac_eval_match_constr_pattern vl gc cp
 		  | None -> None)
     		 (Some vl) (Array.to_list cpa) gcl
           | None -> None
@@ -2101,7 +2101,7 @@ let uninterp_big_int_ltac tac c =
 .... but Check 24%R returns above error with len 0: the return list is empty!!!
 *)
 *)
-  match try Some (num_interp_call [] tac [c]) with Not_found -> None with
+  match try Some (ltac_eval_call [] tac [c]) with Not_found -> None with
   | Some gr ->
       begin try Some (bigint_of_z' (constr_of_glob_constr [] gr))
       with Not_found -> None end
