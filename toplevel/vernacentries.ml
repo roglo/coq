@@ -1851,6 +1851,52 @@ let obj_string x =
     "tag = " ^ string_of_int (Obj.tag (Obj.repr x))
   else "int_val = " ^ string_of_int (Obj.magic x)
 
+let shorted s =
+  try let i = String.rindex s '.' in
+    try
+      let i = String.rindex_from s (i - 1) '.' in
+      String.sub s (i + 1) (String.length s - i - 1)
+    with Not_found -> String.sub s (i + 1) (String.length s - i - 1)
+  with Not_found -> s
+
+let short_mutind_to_string m = shorted (MutInd.to_string m)
+let short_constant_to_string c = shorted (Constant.to_string c)
+
+let string_of_inductive (mi, i) =
+  short_mutind_to_string mi ^ "/" ^ string_of_int i
+
+let string_of_global_reference = function
+  | VarRef v -> "VarRef ..."
+  | ConstRef c -> short_constant_to_string c
+  | IndRef i -> Printf.sprintf "Ind (%s)" (string_of_inductive i)
+  | ConstructRef ((ty, _), i) ->
+      match Printf.sprintf "%s/%d" (short_mutind_to_string ty) i with
+      | "Int31.digits/1" -> "0"
+      | "Int31.digits/2" -> "1"
+      | "Int31.int31/1" -> "I31"
+      | "DoubleType.zn2z/2" -> "WW"
+      | s -> s
+
+let string_of_name = function
+  | Anonymous -> "_"
+  | Name id -> Id.to_string id
+
+let rec string_of_glob_constr = function
+  | Glob_term.GRef (loc, gr, _) -> string_of_global_reference gr
+  | Glob_term.GVar (loc, id) -> Id.to_string id
+  | Glob_term.GProd (loc, name, _, t1, t2) ->
+      "∀ (" ^ string_of_name name ^ " : " ^ string_of_glob_constr t1 ^
+      "), " ^ string_of_glob_constr t2
+  | Glob_term.GApp (loc, gc, gcl) ->
+      string_of_glob_constr gc ^ " (" ^
+      string_of_glob_constr_list "" gcl ^ ")"
+  | x -> anomaly (str "4 glob_constr " ++ str (obj_string x))
+
+and string_of_glob_constr_list sep = function
+  | gc :: gcl ->
+      sep ^ string_of_glob_constr gc ^ string_of_glob_constr_list "," gcl
+  | [] -> ""
+
 let rec pos'_of_bigint pos'ty n =
   match Bigint.div2_with_rest n with
   | (q, false) ->
@@ -1863,8 +1909,14 @@ let rec pos'_of_bigint pos'ty n =
       mkConstruct (pos'ty, 3) (* xH' *)
 
 let rec glob_constr_of_constr loc c = match Constr.kind c with
+  | Rel i ->
+      Glob_term.GVar (loc, Id.of_string ("v" ^ string_of_int i))
   | Var id ->
       Glob_term.GRef (loc, VarRef id, None)
+  | Prod (name, t1, t2) ->
+      let gt1 = glob_constr_of_constr loc t1 in
+      let gt2 = glob_constr_of_constr loc t2 in
+      Glob_term.GProd (loc, name, Explicit, gt1, gt2)
   | App (c, ca) ->
       let c = glob_constr_of_constr loc c in
       let cel = List.map (glob_constr_of_constr loc) (Array.to_list ca) in
@@ -1877,6 +1929,9 @@ let rec glob_constr_of_constr loc c = match Constr.kind c with
       Glob_term.GRef (loc, IndRef ind, None)
   | x ->
       anomaly (str "1 constr " ++ str (obj_string x))
+
+let string_of_constr c =
+  string_of_glob_constr (glob_constr_of_constr Loc.ghost c)
 
 let z'_of_bigint (z'ty, pos'ty) ty thr n =
   if Bigint.is_pos_or_zero n && not (Bigint.equal thr Bigint.zero) &&
@@ -2210,7 +2265,7 @@ let vernac_numeral_notation loc ty f g sc patl waft =
         match patl with
         | _ :: _ -> anomaly (str "patl not impl")
         | [] ->
-            let mc =
+            let (mc, mt) =
               let mib = Environ.lookup_mind sp env in
               let inds =
                 List.init (Array.length mib.Declarations.mind_packets)
@@ -2218,11 +2273,13 @@ let vernac_numeral_notation loc ty f g sc patl waft =
               in
               let ind = List.hd inds in
               let mip = mib.Declarations.mind_packets.(snd ind) in
-              mip.Declarations.mind_consnames
+              (mip.Declarations.mind_consnames,
+	       mip.Declarations.mind_user_lc)
             in
             Array.to_list
               (Array.mapi
                  (fun i c ->
+let _ = Printf.eprintf "cons %s type %s\n%!" (Id.to_string mc.(i)) (string_of_constr mt.(i)) in
                     (Glob_term.GRef
                        (loc, ConstructRef ((sp, spi), i + 1), None),
 		     42))
