@@ -1,4 +1,6 @@
+(*
 Load common_syntax.
+*)
 
 Fixpoint R_of_pos' (p' : positive') : R :=
   match p' with
@@ -49,7 +51,7 @@ Ltac Z'_of_R r :=
   | Ropp ?s =>
       match Z'_of_posR s with
       | Z'0 => fail
-      | ?z => constr: (Z'opp z)
+      | ?z => constr: eval compute in (Z'opp z)
       end
   | _ =>
       Z'_of_posR r

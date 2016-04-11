@@ -122,11 +122,15 @@ Ltac Z'_of_posR2 r :=
   | Rplus R1 (Rplus R1 R1) => constr: (Z'pos (x'I x'H))
   | Rmult ?a ?b =>
       match Z'_of_posR2 a with
-      | Z'pos (x'O x'H) => let b' := Z'_of_posR2 b in constr: (Z'double b')
+      | Z'pos (x'O x'H) =>
+          let b' := Z'_of_posR2 b in
+          constr: (eval compute in Z'double b')
       end
   | Rplus R1 (Rmult ?a ?b) =>
       match Z'_of_posR2 a with
-      | Z'pos (x'O x'H) => let b' := Z'_of_posR2 b in constr: (Z'succ_double b')
+      | Z'pos (x'O x'H) =>
+           let b' := Z'_of_posR2 b in
+           constr: (eval compute in Z'succ_double b')
       end
   end.
 
@@ -142,7 +146,7 @@ Ltac Z'_of_R r :=
   | Ropp ?s =>
       match Z'_of_posR s with
       | Z'0 => fail
-      | ?z => constr: (Z'opp z)
+      | ?z => constr: (eval compute in Z'opp z)
       end
   | _ =>
       Z'_of_posR r

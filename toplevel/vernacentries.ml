@@ -2082,7 +2082,7 @@ and ltac_eval_match_constr_pattern vl s = function
 
 let uninterp_running = ref false
 let uninterp_big_int_ltac tac c =
-(*
+(**)
 if !uninterp_running then None else
 let _ = uninterp_running := true in try
 let r =
@@ -2092,7 +2092,7 @@ let r =
   let ta = Tacexpr.TacCall (loc, ArgArg (loc, tac), [c]) in
   let te = Tacexpr.TacArg (loc, ta) in
   let vft = Tacinterp.interp_ftactic (default_ist ()) te in
-  let (_, pf) = Proofview.init Evd.empty [] in
+  let (_, pf) = Proofview.init Evd.empty [(Global.env (), mkProp)] in
   let (vl, _, _, _) = Ftactic.apply (Global.env ()) vft pf in
   match vl with
   | [v] ->
@@ -2106,13 +2106,13 @@ with e -> uninterp_running := false; raise e
 (*
 .... but Check 24%R returns above error with len 0: the return list is empty!!!
 *)
-*)
+(*
   match try Some (ltac_eval_call [] tac [c]) with Not_found -> None with
   | Some gr ->
       begin try Some (bigint_of_z' (constr_of_glob_constr [] gr))
       with Not_found -> None end
   | None -> None
-(**)
+*)
 
 let load_numeral_notation _ (_, (loc, zpos'ty, ty, f, g, sc, patl, thr, path)) =
   match g with
