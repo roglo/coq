@@ -1886,7 +1886,7 @@ let z'_of_bigint (z'ty, pos'ty) ty thr n =
       (strbrk "Stack overflow or segmentation fault happens when " ++
        strbrk "working with large numbers in " ++
        str (string_of_reference ty) ++
-       strbrk " (observed threshold may vary depending" ++
+       strbrk " (threshold may vary depending" ++
        strbrk " on your system limits and on the command executed).")
   else ();
   if not (Bigint.equal n Bigint.zero) then
