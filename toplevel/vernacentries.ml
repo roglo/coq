@@ -2088,29 +2088,27 @@ and ltac_eval_match_constr_pattern vl s = function
 let uninterp_running = ref false
 let uninterp_big_int_ltac tac c =
 (*
-if !uninterp_running then None else
-let _ = uninterp_running := true in try
-let r =
-  let c = (c, None) in
-  let loc = Loc.ghost in
-  let c = Tacexpr.ConstrMayEval (Genredexpr.ConstrTerm c) in
-  let ta = Tacexpr.TacCall (loc, ArgArg (loc, tac), [c]) in
-  let te = Tacexpr.TacArg (loc, ta) in
-  let vft = Tacinterp.interp_ftactic (default_ist ()) te in
-  let (_, pf) = Proofview.init Evd.empty [(Global.env (), mkProp)] in
-  let (vl, _, _, _) = Ftactic.apply (Global.env ()) vft pf in
-  match vl with
-  | [v] ->
-      begin match Tacinterp.Value.to_constr v with
-      | Some c -> Some (bigint_of_z' c)
-      | None -> None
-      end
-  | _ -> anomaly (str "uninterp_big_int_ltac len " ++ int (List.length vl))
-in uninterp_running := false; r
-with e -> uninterp_running := false; raise e
-(*
-.... but Check 24%R returns above error with len 0: the return list is empty!!!
-*)
+  if !uninterp_running then None else
+  let _ = uninterp_running := true in
+  try
+    let r =
+      let c = (c, None) in
+      let loc = Loc.ghost in
+      let c = Tacexpr.ConstrMayEval (Genredexpr.ConstrTerm c) in
+      let ta = Tacexpr.TacCall (loc, ArgArg (loc, tac), [c]) in
+      let te = Tacexpr.TacArg (loc, ta) in
+      let vft = Tacinterp.interp_ftactic (default_ist ()) te in
+      let (_, pf) = Proofview.init Evd.empty [(Global.env (), mkProp)] in
+      let (vl, _, _, _) = Ftactic.apply (Global.env ()) vft pf in
+      match vl with
+      | [v] ->
+          begin match Tacinterp.Value.to_constr v with
+          | Some c -> Some (bigint_of_z' c)
+          | None -> None
+          end
+      | _ -> anomaly (str "uninterp_big_int_ltac len " ++ int (List.length vl))
+    in uninterp_running := false; r
+  with e -> uninterp_running := false raise e
 *)
   match try Some (ltac_eval_call [] tac [c]) with Not_found -> None with
   | Some gr ->
