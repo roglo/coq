@@ -2080,8 +2080,12 @@ and ltac_eval_match_constr_pattern vl s = function
   | mp ->
       raise Not_found
 
+let uninterp_running = ref false
 let uninterp_big_int_ltac tac c =
 (*
+if !uninterp_running then None else
+let _ = uninterp_running := true in try
+let r =
   let c = (c, None) in
   let loc = Loc.ghost in
   let c = Tacexpr.ConstrMayEval (Genredexpr.ConstrTerm c) in
@@ -2097,6 +2101,8 @@ let uninterp_big_int_ltac tac c =
       | None -> None
       end
   | _ -> anomaly (str "uninterp_big_int_ltac len " ++ int (List.length vl))
+in uninterp_running := false; r
+with e -> uninterp_running := false; raise e
 (*
 .... but Check 24%R returns above error with len 0: the return list is empty!!!
 *)
