@@ -1862,60 +1862,6 @@ let rec pos'_of_bigint pos'ty n =
   | (q, true) ->
       mkConstruct (pos'ty, 3) (* xH' *)
 
-let shorted s =
-  try let i = String.rindex s '.' in
-    try
-      let i = String.rindex_from s (i - 1) '.' in
-      String.sub s (i + 1) (String.length s - i - 1)
-    with Not_found -> String.sub s (i + 1) (String.length s - i - 1)
-  with Not_found -> s
-
-let short_mutind_to_string m = shorted (MutInd.to_string m)
-let short_constant_to_string c = shorted (Constant.to_string c)
-
-let string_of_inductive (mi, i) =
-  short_mutind_to_string mi ^ "/" ^ string_of_int i
-
-let string_of_global_reference = function
-  | VarRef v -> "VarRef ..."
-  | ConstRef c -> short_constant_to_string c
-  | IndRef i -> Printf.sprintf "Ind (%s)" (string_of_inductive i)
-  | ConstructRef ((ty, _), i) ->
-      match Printf.sprintf "%s/%d" (short_mutind_to_string ty) i with
-      | "Int31.digits/1" -> "0"
-      | "Int31.digits/2" -> "1"
-      | "Int31.int31/1" -> "I31"
-      | "DoubleType.zn2z/2" -> "WW"
-      | s -> s
-
-let rec string_of_constr_pattern = function
-  | Pattern.PRef gr -> string_of_global_reference gr
-  | Pattern.PApp (cp, cpa) ->
-      Printf.sprintf "%s (%s)" (string_of_constr_pattern cp)
-        (string_of_constr_pattern_list "" (Array.to_list cpa))
-  | Pattern.PMeta (Some pv) -> Id.to_string pv
-  | Pattern.PMeta None -> "_"
-  | x -> anomaly (str "constr_pattern %s" ++ str (obj_string x))
-
-and string_of_constr_pattern_list sep = function
-  | cp :: cpl ->
-      sep ^ string_of_constr_pattern cp ^
-      string_of_constr_pattern_list "," cpl
-  | [] -> ""
-
-let rec string_of_glob_constr = function
-  | Glob_term.GRef (loc, gr, _) -> string_of_global_reference gr
-  | Glob_term.GVar (loc, id) -> Id.to_string id
-  | Glob_term.GApp (loc, gc, gcl) ->
-      string_of_glob_constr gc ^ " (" ^
-      string_of_glob_constr_list "" gcl ^ ")"
-  | x -> anomaly (str "4 glob_constr " ++ str (obj_string x))
-
-and string_of_glob_constr_list sep = function
-  | gc :: gcl ->
-      sep ^ string_of_glob_constr gc ^ string_of_glob_constr_list "," gcl
-  | [] -> ""
-
 let rec glob_constr_of_constr loc c = match Constr.kind c with
   | Var id ->
       Glob_term.GRef (loc, VarRef id, None)
@@ -1931,9 +1877,6 @@ let rec glob_constr_of_constr loc c = match Constr.kind c with
       Glob_term.GRef (loc, IndRef ind, None)
   | x ->
       anomaly (str "1 constr " ++ str (obj_string x))
-
-let string_of_constr c =
-  string_of_glob_constr (glob_constr_of_constr Loc.ghost c)
 
 let z'_of_bigint (z'ty, pos'ty) ty thr n =
   if Bigint.is_pos_or_zero n && not (Bigint.equal thr Bigint.zero) &&
@@ -1983,36 +1926,6 @@ let bigint_of_z' z' = match Constr.kind z' with
       end
   | Construct ((_, 1), _) -> (* Z'0 *) Bigint.zero
   | _ -> raise Not_found
-
-let string_of_prim_token = function
-  | Numeral bi -> Bigint.to_string bi
-  | String s -> "\"" ^ s ^ "\""
-
-let qualid_of_constructref env sp i =
-  let mc =
-    let mib = Environ.lookup_mind sp env in
-    let inds =
-      List.init (Array.length mib.Declarations.mind_packets)
-        (fun x -> (sp, x))
-    in
-    let mip = mib.Declarations.mind_packets.(snd (List.hd inds)) in
-    mip.Declarations.mind_consnames
-  in
-  let qis =
-    if i >= 1 && i <= Array.length mc then mc.(i-1)
-    else anomaly (str "qis not_found")
-  in
-  qualid_of_string (Id.to_string qis)
-
-let map_option f = function
-  | Some x -> Some (f x)
-  | None -> None
-
-let qualid_of_global_reference = function
-  | ConstRef cst -> qualid_of_string (Constant.to_string cst)
-  | ConstructRef ((sp, spi), i) -> qualid_of_constructref (Global.env ()) sp i
-  | VarRef v -> Decls.variable_secpath v
-  | gr -> anomaly (str "1 global_reference " ++ str (obj_string gr))
 
 let eval_constr (c : constr) =
   let env = Global.env () in
