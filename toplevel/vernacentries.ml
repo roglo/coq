@@ -2201,10 +2201,10 @@ let load_numeral_notation _ (_, (loc, zpos'ty, ty, f, g, sc, patl, thr, path)) =
       Notation.declare_numeral_interpreter sc (path, [])
         (interp_big_int zpos'ty ty thr f)
 	(patl, uninterp_big_int g loc, true)
-  | Inr g ->
+  | Inr ltac ->
       Notation.declare_numeral_interpreter sc (path, [])
         (interp_big_int zpos'ty ty thr f)
-	(patl, uninterp_big_int_ltac g, false)
+	(patl, uninterp_big_int_ltac ltac, false)
 
 let cache_numeral_notation o = load_numeral_notation 1 o
 
