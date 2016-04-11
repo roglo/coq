@@ -1922,7 +1922,7 @@ let bigint_of_z' z' = match Constr.kind z' with
           | 3 -> (* Z'neg *) Bigint.neg (bigint_of_pos' d)
           | n -> assert false
           end
-      | Const (c, _) -> failwith "ouaissss"
+      | Const (c, _) -> anomaly (str "Const " ++ str (Constant.to_string c))
       | x -> anomaly (str "bigint_of_z' App c " ++ str (obj_string x))
       end
   | Construct ((_, 1), _) -> (* Z'0 *) Bigint.zero
@@ -2003,7 +2003,7 @@ and ltac_eval vl = function
   | Tacexpr.TacLetIn (rf, idltal, te) -> ltac_eval_let vl idltal te
   | Tacexpr.TacMatch (lf, e, mrl) -> ltac_eval_match vl (ltac_eval vl e) mrl
   | Tacexpr.TacArg (loc, ta) -> ltac_eval_arg vl ta
-  | t -> raise Not_found
+  | t -> anomaly (str "ltac_eval " ++ str (obj_string t))
 and ltac_eval_arg vl = function
   | Tacexpr.ConstrMayEval me ->
       begin match me with
@@ -2011,8 +2011,12 @@ and ltac_eval_arg vl = function
 	  let c = constr_of_glob_constr vl gc in
 	  let c = eval_constr c in
 	  glob_constr_of_constr Loc.ghost c
+      | Genredexpr.ConstrEval (re, (gc, None)) ->
+	  let c = constr_of_glob_constr vl gc in
+	  let c = eval_constr c in
+	  glob_constr_of_constr Loc.ghost c
       | me ->
-          raise Not_found
+          anomaly (str "ltac_eval_arg ConstrMayEval " ++ str (obj_string me))
       end
   | Tacexpr.Reference (ArgVar (loc, id)) ->
       List.assoc id vl
@@ -2020,7 +2024,7 @@ and ltac_eval_arg vl = function
       let tal = List.map (ltac_eval_arg vl) tal in
       ltac_eval_call vl tac tal
   | a ->
-      raise Not_found
+      anomaly (str "ltac_eval_arg " ++ str (obj_string a))
 and ltac_eval_let vl idltal te =
   let vl =
     List.fold_left
@@ -2083,7 +2087,7 @@ and ltac_eval_match_constr_pattern vl s = function
 
 let uninterp_running = ref false
 let uninterp_big_int_ltac tac c =
-(**)
+(*
 if !uninterp_running then None else
 let _ = uninterp_running := true in try
 let r =
@@ -2107,13 +2111,13 @@ with e -> uninterp_running := false; raise e
 (*
 .... but Check 24%R returns above error with len 0: the return list is empty!!!
 *)
-(*
+*)
   match try Some (ltac_eval_call [] tac [c]) with Not_found -> None with
   | Some gr ->
       begin try Some (bigint_of_z' (constr_of_glob_constr [] gr))
       with Not_found -> None end
   | None -> None
-*)
+(**)
 
 let load_numeral_notation _ (_, (loc, zpos'ty, ty, f, g, sc, patl, thr, path)) =
   match g with
