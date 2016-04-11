@@ -1882,14 +1882,22 @@ let string_of_name = function
   | Name id -> Id.to_string id
 
 let rec string_of_glob_constr = function
+  | Glob_term.GProd (loc, Anonymous, _, t1, t2) ->
+      string_of_glob_constr2 t1 ^ " -> " ^ string_of_glob_constr t2
+  | gc ->
+      string_of_glob_constr2 gc
+
+and string_of_glob_constr2 = function
   | Glob_term.GRef (loc, gr, _) -> string_of_global_reference gr
   | Glob_term.GVar (loc, id) -> Id.to_string id
-  | Glob_term.GProd (loc, name, _, t1, t2) ->
-      "∀ (" ^ string_of_name name ^ " : " ^ string_of_glob_constr t1 ^
+  | Glob_term.GProd (loc, Name id, _, t1, t2) ->
+      "∀ (" ^ Id.to_string id ^ " : " ^ string_of_glob_constr t1 ^
       "), " ^ string_of_glob_constr t2
   | Glob_term.GApp (loc, gc, gcl) ->
       string_of_glob_constr gc ^ " (" ^
       string_of_glob_constr_list "" gcl ^ ")"
+ | Glob_term.GProd (_, Anonymous, _, _, _) as x ->
+      "(" ^ string_of_glob_constr x ^ ")"
   | x -> anomaly (str "4 glob_constr " ++ str (obj_string x))
 
 and string_of_glob_constr_list sep = function
