@@ -1922,6 +1922,7 @@ let bigint_of_z' z' = match Constr.kind z' with
           | 3 -> (* Z'neg *) Bigint.neg (bigint_of_pos' d)
           | n -> assert false
           end
+      | Const (c, _) -> failwith "ouaissss"
       | x -> anomaly (str "bigint_of_z' App c " ++ str (obj_string x))
       end
   | Construct ((_, 1), _) -> (* Z'0 *) Bigint.zero
