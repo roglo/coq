@@ -2092,7 +2092,7 @@ and ltac_eval_match_constr_pattern vl s = function
   | mp ->
       raise Not_found
 
-let eval_tacexpr env ist te =
+let eval_tacexpr ist env te =
   let vft = Tacinterp.interp_ftactic ist te in
   let (_, pf) = Proofview.init Evd.empty [(env, mkProp)] in
   match
@@ -2101,7 +2101,7 @@ let eval_tacexpr env ist te =
   with
   | Some (vl, _, _, _) ->
       begin match vl with
-      | [v] -> Tacinterp.Value.to_constr v
+      | [v] -> Some v
       | _ -> None
       end
   | None -> None
@@ -2113,9 +2113,14 @@ let uninterp_big_int_ltac tac c =
   let c = Tacexpr.ConstrMayEval (Genredexpr.ConstrTerm c) in
   let ta = Tacexpr.TacCall (loc, ArgArg (loc, tac), [c]) in
   let te = Tacexpr.TacArg (loc, ta) in
-  match eval_tacexpr (Global.env ()) (default_ist ()) te with
-  | Some c -> Some (bigint_of_z' c)
-  | None -> None
+  match eval_tacexpr (default_ist ()) (Global.env ()) te with
+  | Some v ->
+      begin match Tacinterp.Value.to_constr v with
+      | Some c -> Some (bigint_of_z' c)
+      | None -> None
+      end
+  | None ->
+      None
 (*
   match try Some (ltac_eval_call [] tac [c]) with Not_found -> None with
   | Some gr ->
