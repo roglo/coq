@@ -2095,7 +2095,10 @@ and ltac_eval_match_constr_pattern vl s = function
 let eval_tacexpr env ist te =
   let vft = Tacinterp.interp_ftactic ist te in
   let (_, pf) = Proofview.init Evd.empty [(env, mkProp)] in
-  match try Some (Ftactic.apply env vft pf) with _ -> None with
+  match
+    try Some (Ftactic.apply env vft pf)
+    with Logic_monad.TacticFailure _ -> None
+  with
   | Some (vl, _, _, _) ->
       begin match vl with
       | [v] -> Tacinterp.Value.to_constr v
