@@ -1938,6 +1938,20 @@ let eval_constr (c : constr) =
   match redfun.Reductionops.e_redfun env evm j.Environ.uj_val with
   | Sigma (c, _, _) -> c
 
+let eval_tacexpr ist env (te : Tacexpr.glob_tactic_expr) =
+  let vft = Tacinterp.interp_ftactic ist te in
+  let (_, pf) = Proofview.init Evd.empty [(env, mkProp)] in
+  match
+    try Some (Ftactic.apply env vft pf)
+    with Logic_monad.TacticFailure _ -> None
+  with
+  | Some (vl, _, _, _) ->
+      begin match vl with
+      | [v] -> Some v
+      | _ -> None
+      end
+  | None -> None
+
 let constr_of_global_reference = function
   | VarRef v -> mkVar v
   | ConstRef cr -> mkConst cr
@@ -2091,20 +2105,6 @@ and ltac_eval_match_constr_pattern vl s = function
       end
   | mp ->
       raise Not_found
-
-let eval_tacexpr ist env te =
-  let vft = Tacinterp.interp_ftactic ist te in
-  let (_, pf) = Proofview.init Evd.empty [(env, mkProp)] in
-  match
-    try Some (Ftactic.apply env vft pf)
-    with Logic_monad.TacticFailure _ -> None
-  with
-  | Some (vl, _, _, _) ->
-      begin match vl with
-      | [v] -> Some v
-      | _ -> None
-      end
-  | None -> None
 
 let uninterp_big_int_ltac tac c =
 (**)
