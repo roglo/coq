@@ -1945,12 +1945,8 @@ let eval_tacexpr ist env (te : Tacexpr.glob_tactic_expr) =
     try Some (Ftactic.apply env vft pf)
     with Logic_monad.TacticFailure _ -> None
   with
-  | Some (vl, _, _, _) ->
-      begin match vl with
-      | [v] -> Some v
-      | _ -> None
-      end
-  | None -> None
+  | Some ([v], _, _, _) -> Some v
+  | Some _ | None -> None
 
 let constr_of_global_reference = function
   | VarRef v -> mkVar v
