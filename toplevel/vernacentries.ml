@@ -2092,37 +2092,34 @@ and ltac_eval_match_constr_pattern vl s = function
   | mp ->
       raise Not_found
 
-let uninterp_running = ref false
+let eval_tacexpr env ist te =
+  let vft = Tacinterp.interp_ftactic ist te in
+  let (_, pf) = Proofview.init Evd.empty [(env, mkProp)] in
+  match try Some (Ftactic.apply env vft pf) with _ -> None with
+  | Some (vl, _, _, _) ->
+      begin match vl with
+      | [v] -> Tacinterp.Value.to_constr v
+      | _ -> None
+      end
+  | None -> None
+
 let uninterp_big_int_ltac tac c =
+(**)
+  let c = (c, None) in
+  let loc = Loc.ghost in
+  let c = Tacexpr.ConstrMayEval (Genredexpr.ConstrTerm c) in
+  let ta = Tacexpr.TacCall (loc, ArgArg (loc, tac), [c]) in
+  let te = Tacexpr.TacArg (loc, ta) in
+  match eval_tacexpr (Global.env ()) (default_ist ()) te with
+  | Some c -> Some (bigint_of_z' c)
+  | None -> None
 (*
-  if !uninterp_running then None else
-  let _ = uninterp_running := true in
-  try
-    let r =
-      let c = (c, None) in
-      let loc = Loc.ghost in
-      let c = Tacexpr.ConstrMayEval (Genredexpr.ConstrTerm c) in
-      let ta = Tacexpr.TacCall (loc, ArgArg (loc, tac), [c]) in
-      let te = Tacexpr.TacArg (loc, ta) in
-      let vft = Tacinterp.interp_ftactic (default_ist ()) te in
-      let (_, pf) = Proofview.init Evd.empty [(Global.env (), mkProp)] in
-      let (vl, _, _, _) = Ftactic.apply (Global.env ()) vft pf in
-      match vl with
-      | [v] ->
-          begin match Tacinterp.Value.to_constr v with
-          | Some c -> Some (bigint_of_z' c)
-          | None -> None
-          end
-      | _ -> anomaly (str "uninterp_big_int_ltac len " ++ int (List.length vl))
-    in uninterp_running := false; r
-  with e -> uninterp_running := false raise e
-*)
   match try Some (ltac_eval_call [] tac [c]) with Not_found -> None with
   | Some gr ->
       begin try Some (bigint_of_z' (constr_of_glob_constr [] gr))
       with Not_found -> None end
   | None -> None
-(**)
+*)
 
 let load_numeral_notation _ (_, (loc, zpos'ty, ty, f, g, sc, patl, thr, path)) =
   match g with
