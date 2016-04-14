@@ -330,15 +330,14 @@ module Gram = Pcoq.Gram
 let num_pat_list_warning_after = Gram.Entry.create "num_pat_list_warning_after"
 let warning_after = Gram.Entry.create "warning_after"
 let num_pat_list = Gram.Entry.create "num_pat_list"
+let wit_num_pat_list_warning_after =
+  (Genarg.create_arg "num_pat_list_warning_after" : (reference list * int) Genarg.uniform_genarg_type)
 
 VERNAC COMMAND EXTEND NumeralNotation2 CLASSIFIED AS SIDEFF
-  | [ "Numeral" "Notation2" reference(ty) reference(f) reference(g) ":" ident(sc)
-(*
-      [ "(" "printing" reference_list(patl); ")" -> patl | _ -> [] ]
-*)
-  ] ->
-      [ let patl = [] and waft = 0 in
-        vernac_numeral_notation ty f g (Id.to_string sc) patl waft ]
+  | [ "Numeral" "Notation2" reference(ty) reference(f) reference(g) ":"
+      ident(sc) (*num_pat_list_warning_after(patl_waft)*) ] ->
+    [ let (patl, waft) = (*patl_waft*)([], 0) in
+      vernac_numeral_notation ty f g (Id.to_string sc) patl waft ]
 END
 
 GEXTEND Gram
