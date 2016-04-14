@@ -321,45 +321,24 @@ let vernac_numeral_notation ty f g sc patl waft =
       user_err_loc
         (loc, "_", str (string_of_reference ty) ++ str " is not a type")
 
-let () =
-  Hook.set Vernacentries.vernac_numeral_notation_hook vernac_numeral_notation
-
 open Constrarg
+open Stdarg
 
-module Gram = Pcoq.Gram
-let num_pat_list_warning_after = Gram.Entry.create "num_pat_list_warning_after"
-
-let wit_num_pat_list_warning_after =
-  (Genarg.create_arg "num_pat_list_warning_after" :
-   (reference list * int) Genarg.uniform_genarg_type)
-
-let _ = Printf.eprintf "1\n%!"
-
-VERNAC COMMAND EXTEND NumeralNotation2 CLASSIFIED AS QUERY
-  | [ "Numeral" "Notation2" reference(ty) reference(f) reference(g) ":"
-      ident(sc) num_pat_list_warning_after(patl_waft) ] ->
-    [ let (patl, waft) = patl_waft in
+VERNAC COMMAND EXTEND NumeralNotation CLASSIFIED AS QUERY
+  | [ "Numeral" "Notation" reference(ty) reference(f) reference(g) ":"
+      ident(sc) ] ->
+    [ let (patl, waft) = ([], 0) in
       vernac_numeral_notation ty f g (Id.to_string sc) patl waft ]
-END
-
-let _ = Printf.eprintf "2\n%!"
-
-GEXTEND Gram
-  GLOBAL: num_pat_list_warning_after;
-  num_pat_list_warning_after:
-    [ [ "("; patl = num_pat_list; ")";
-        (patl2, waft) = num_pat_list_warning_after ->
-          ((if patl2 = [] then patl else patl2), waft)
-      | "("; waft = warning_after; ")";
-        (patl, waft2) = num_pat_list_warning_after ->
-          (patl, max waft waft2)
-      | ->
-          ([], 0) ] ]
-  ;
-  num_pat_list:
-    [ [ IDENT "printing"; patl = LIST1 Pcoq.Prim.reference -> patl ] ]
-  ;
-  warning_after:
-    [ [ IDENT "warning"; IDENT "after"; m = INT -> int_of_string m ] ]
-  ;
+  | [ "Numeral" "Notation" reference(ty) reference(f) reference(g) ":"
+      ident(sc) "(" "printing" reference_list(patl) ")" ] ->
+    [ let waft = 0 in
+      vernac_numeral_notation ty f g (Id.to_string sc) patl waft ]
+  | [ "Numeral" "Notation" reference(ty) reference(f) reference(g) ":"
+      ident(sc) "(" "warning" "after" int(waft) ")" ] ->
+    [ let patl = [] in
+      vernac_numeral_notation ty f g (Id.to_string sc) patl waft ]
+  | [ "Numeral" "Notation" reference(ty) reference(f) reference(g) ":"
+      ident(sc) "(" "printing" reference_list(patl) ")"
+      "(" "warning" "after" int(waft) ")" ] ->
+    [ vernac_numeral_notation ty f g (Id.to_string sc) patl waft ]
 END
