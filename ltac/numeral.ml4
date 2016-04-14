@@ -323,14 +323,10 @@ let vernac_numeral_notation loc ty f g sc patl waft =
 let () =
   Hook.set Vernacentries.vernac_numeral_notation_hook vernac_numeral_notation
 
-VERNAC COMMAND EXTEND NumeralNotation CLASSIFIED AS SIDEFF
-  | [ "Numeral" "Notation" constr(a) constr(aeq) "reflexivity" "proved" "by" constr(lemma1)
-        "symmetry" "proved" "by" constr(lemma2) "as" ident(n) ] ->
-      [ declare_relation a aeq n (Some lemma1) (Some lemma2) None ]
+open Constrarg
 
-  | [ "Add" "Relation" constr(a) constr(aeq) "reflexivity" "proved" "by" constr(lemma1)
-        "as" ident(n) ] ->
-      [ declare_relation a aeq n (Some lemma1) None None ]
-  | [ "Add" "Relation" constr(a) constr(aeq)  "as" ident(n) ] ->
-      [ declare_relation a aeq n None None None ]
+VERNAC COMMAND EXTEND NumeralNotation2 CLASSIFIED AS SIDEFF
+  | [ "Numeral" "Notation2" reference(t) reference(f) reference(g) ":" ident(sc)
+        "symmetry" "proved" "by" constr(lemma2) "as" ident(n) ] ->
+      [ vernac_numeral_notation loc ty f g sc patl waft ]
 END
