@@ -210,7 +210,8 @@ let inNumeralNotation : numeral_notation_obj -> Libobject.obj =
     Libobject.cache_function = cache_numeral_notation;
     Libobject.load_function = load_numeral_notation }
 
-let vernac_numeral_notation loc ty f g sc patl waft =
+let vernac_numeral_notation ty f g sc patl waft =
+  let loc = Loc.ghost in
   let zpos'ty =
     let z'ty =
       let c = qualid_of_ident (Id.of_string "Z'") in
@@ -326,7 +327,7 @@ let () =
 open Constrarg
 
 VERNAC COMMAND EXTEND NumeralNotation2 CLASSIFIED AS SIDEFF
-  | [ "Numeral" "Notation2" reference(t) reference(f) reference(g) ":" ident(sc)
+  | [ "Numeral" "Notation2" reference(ty) reference(f) reference(g) ":" ident(sc)
         "symmetry" "proved" "by" constr(lemma2) "as" ident(n) ] ->
-      [ vernac_numeral_notation loc ty f g sc patl waft ]
+      [ vernac_numeral_notation ty f g (Id.to_string sc) patl waft ]
 END

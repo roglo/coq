@@ -1758,7 +1758,7 @@ let interp ?proof ~loc locality poly c =
   | VernacNotationAddFormat(n,k,v) ->
       Metasyntax.add_notation_extra_printing_rule n k v
   | VernacNumeralNotation (ty,f,g,sc,patl,waft) ->
-      Hook.get f_vernac_numeral_notation loc ty f g sc patl waft
+      Hook.get f_vernac_numeral_notation ty f g sc patl waft
 
   (* Gallina *)
   | VernacDefinition (k,lid,d) -> vernac_definition locality poly k lid d

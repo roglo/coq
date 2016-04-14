@@ -66,5 +66,5 @@ val interp_redexp_hook : (Environ.env -> Evd.evar_map -> Tacexpr.raw_red_expr ->
   Evd.evar_map * Redexpr.red_expr) Hook.t
 
 val vernac_numeral_notation_hook :
-  (Loc.t -> Libnames.reference -> Libnames.reference -> Libnames.reference ->
+  (Libnames.reference -> Libnames.reference -> Libnames.reference ->
     string -> Libnames.reference list -> int -> unit) Hook.t
