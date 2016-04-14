@@ -327,20 +327,26 @@ let () =
 open Constrarg
 
 module Gram = Pcoq.Gram
+let _ = Printf.eprintf "1\n%!"
 let num_pat_list_warning_after = Gram.Entry.create "num_pat_list_warning_after"
-let warning_after = Gram.Entry.create "warning_after"
-let num_pat_list = Gram.Entry.create "num_pat_list"
+let _ = Printf.eprintf "2\n%!"
+
 let wit_num_pat_list_warning_after =
-  (Genarg.create_arg "num_pat_list_warning_after" : (reference list * int) Genarg.uniform_genarg_type)
+  (Genarg.create_arg "num_pat_list_warning_after" :
+   (reference list * int) Genarg.uniform_genarg_type)
+
+let _ = Printf.eprintf "3\n%!"
 
 VERNAC COMMAND EXTEND NumeralNotation2 CLASSIFIED AS SIDEFF
   | [ "Numeral" "Notation2" reference(ty) reference(f) reference(g) ":"
-      ident(sc) (*num_pat_list_warning_after(patl_waft)*) ] ->
-    [ let (patl, waft) = (*patl_waft*)([], 0) in
+      ident(sc) num_pat_list_warning_after(patl_waft) ] ->
+    [ let (patl, waft) = patl_waft in
       vernac_numeral_notation ty f g (Id.to_string sc) patl waft ]
 END
+let _ = Printf.eprintf "4\n%!"
 
 GEXTEND Gram
+  GLOBAL: num_pat_list_warning_after;
   num_pat_list_warning_after:
     [ [ "("; patl = num_pat_list; ")";
         (patl2, waft) = num_pat_list_warning_after ->
@@ -358,3 +364,4 @@ GEXTEND Gram
     [ [ IDENT "warning"; IDENT "after"; m = INT -> int_of_string m ] ]
   ;
 END
+let _ = Printf.eprintf "5\n%!"
