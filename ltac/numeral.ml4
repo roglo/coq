@@ -326,8 +326,36 @@ let () =
 
 open Constrarg
 
+module Gram = Pcoq.Gram
+let num_pat_list_warning_after = Gram.Entry.create "num_pat_list_warning_after"
+let warning_after = Gram.Entry.create "warning_after"
+let num_pat_list = Gram.Entry.create "num_pat_list"
+
 VERNAC COMMAND EXTEND NumeralNotation2 CLASSIFIED AS SIDEFF
   | [ "Numeral" "Notation2" reference(ty) reference(f) reference(g) ":" ident(sc)
-        "symmetry" "proved" "by" constr(lemma2) "as" ident(n) ] ->
-      [ vernac_numeral_notation ty f g (Id.to_string sc) patl waft ]
+(*
+      [ "(" "printing" reference_list(patl); ")" -> patl | _ -> [] ]
+*)
+  ] ->
+      [ let patl = [] and waft = 0 in
+        vernac_numeral_notation ty f g (Id.to_string sc) patl waft ]
+END
+
+GEXTEND Gram
+  num_pat_list_warning_after:
+    [ [ "("; patl = num_pat_list; ")";
+        (patl2, waft) = num_pat_list_warning_after ->
+          ((if patl2 = [] then patl else patl2), waft)
+      | "("; waft = warning_after; ")";
+        (patl, waft2) = num_pat_list_warning_after ->
+          (patl, max waft waft2)
+      | ->
+          ([], 0) ] ]
+  ;
+  num_pat_list:
+    [ [ IDENT "printing"; patl = LIST1 Pcoq.Prim.reference -> patl ] ]
+  ;
+  warning_after:
+    [ [ IDENT "warning"; IDENT "after"; m = INT -> int_of_string m ] ]
+  ;
 END
