@@ -75,7 +75,7 @@ type 'a prim_token_uninterpreter =
     glob_constr list * (glob_constr -> 'a option) * cases_pattern_status
 
 val declare_numeral_interpreter : scope_name -> required_module ->
-  bigint prim_token_interpreter -> bigint prim_token_uninterpreter -> unit
+  (string * bigint) prim_token_interpreter -> (string * bigint) prim_token_uninterpreter -> unit
 
 val declare_string_interpreter : scope_name -> required_module ->
   string prim_token_interpreter -> string prim_token_uninterpreter -> unit

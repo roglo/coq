@@ -136,7 +136,8 @@ let rec glob_constr_of_constr loc c = match Constr.kind c with
   | x ->
       anomaly (str "1 constr " ++ str (obj_string x))
 
-let interp_big_int zpos'ty ty thr f loc bi =
+let interp_big_int zpos'ty ty thr f loc (sbi, bi) =
+let _ = Printf.eprintf "interp_big_int string \"%s\"\n%!" sbi in
   let t =
     let c = mkApp (mkConst f, [| z'_of_bigint zpos'ty ty thr bi |]) in
     eval_constr c
@@ -160,7 +161,7 @@ let uninterp_big_int loc g c =
       with
       | Some t ->
           begin match Constr.kind t with
-          | App (c, [| _; x |]) -> Some (bigint_of_z' x)
+          | App (c, [| _; x |]) -> Some ("", bigint_of_z' x)
 	  | x -> None
 	  end
       | None ->
@@ -178,7 +179,7 @@ let uninterp_big_int_ltac tac c =
   match eval_tacexpr (Tacinterp.default_ist ()) (Global.env ()) te with
   | Some v ->
       begin match Tacinterp.Value.to_constr v with
-      | Some c -> Some (bigint_of_z' c)
+      | Some c -> Some ("", bigint_of_z' c)
       | None -> None
       end
   | None ->
