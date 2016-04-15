@@ -311,7 +311,7 @@ let declare_prim_token_interpreter sc interp (patl,uninterp,b) =
         (glob_prim_constr_key pat) (sc,uninterp,b) !prim_token_key_table)
     patl
 
-let mkNumeral n = Numeral n
+let mkNumeral s n = Numeral (s, n)
 let mkString = function
 | None -> None
 | Some s -> if Unicode.is_utf8 s then Some (String s) else None
@@ -320,7 +320,7 @@ let delay dir int loc x = (dir, (fun () -> int loc x))
 
 let declare_numeral_interpreter sc dir interp (patl,uninterp,inpat) =
   declare_prim_token_interpreter sc
-    (fun cont loc -> function Numeral n-> delay dir interp loc n | p -> cont loc p)
+    (fun cont loc -> function Numeral (_, n)-> delay dir interp loc n | p -> cont loc p)
     (patl, (fun r -> Option.map mkNumeral (uninterp r)), inpat)
 
 let declare_string_interpreter sc dir interp (patl,uninterp,inpat) =

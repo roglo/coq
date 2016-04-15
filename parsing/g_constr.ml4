@@ -207,7 +207,7 @@ GEXTEND Gram
       | c=match_constr -> c
       | "("; c = operconstr LEVEL "200"; ")" ->
           (match c with
-              CPrim (_,Numeral z) when Bigint.is_pos_or_zero z ->
+              CPrim (_,Numeral (_, z)) when Bigint.is_pos_or_zero z ->
                 CNotation(!@loc,"( _ )",([c],[],[]))
             | _ -> c)
       | "{|"; c = record_declaration; "|}" -> c
@@ -283,7 +283,7 @@ GEXTEND Gram
   atomic_constr:
     [ [ g=global; i=instance -> CRef (g,i)
       | s=sort -> CSort (!@loc,s)
-      | n=INT -> CPrim (!@loc, Numeral (Bigint.of_string n))
+      | n=INT -> CPrim (!@loc, Numeral (n, Bigint.of_string n))
       | s=string -> CPrim (!@loc, String s)
       | "_" -> CHole (!@loc, None, IntroAnonymous, None)
       | "?"; "["; id=ident; "]"  -> CHole (!@loc, None, IntroIdentifier id, None)

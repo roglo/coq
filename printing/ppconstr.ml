@@ -67,7 +67,7 @@ end) = struct
         | Any -> true
 
   let prec_of_prim_token = function
-    | Numeral p -> if Bigint.is_pos_or_zero p then lposint else lnegint
+    | Numeral (_, p) -> if Bigint.is_pos_or_zero p then lposint else lnegint
     | String _ -> latom
 
   open Notation

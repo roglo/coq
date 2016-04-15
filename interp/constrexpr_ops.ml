@@ -46,7 +46,7 @@ let names_of_local_binders bl =
 (* Functions on constr_expr *)
 
 let prim_token_eq t1 t2 = match t1, t2 with
-| Numeral i1, Numeral i2 -> Bigint.equal i1 i2
+| Numeral (_, i1), Numeral (_, i2) -> Bigint.equal i1 i2
 | String s1, String s2 -> String.equal s1 s2
 | _ -> false
 

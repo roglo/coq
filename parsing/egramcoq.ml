@@ -82,7 +82,7 @@ let make_constr_action
 	  make (constr_expr_of_name na :: constrs, constrlists, binders) tl)
     | ETBigint ->
         Gram.action (fun (v:Bigint.bigint) ->
-	  make (CPrim(Loc.ghost,Numeral v) :: constrs, constrlists, binders) tl)
+	  make (CPrim(Loc.ghost,Numeral ("", v)) :: constrs, constrlists, binders) tl)
     | ETConstrList (_,n) ->
 	Gram.action (fun (v:constr_expr list) ->
 	  make (constrs, v::constrlists, binders) tl)

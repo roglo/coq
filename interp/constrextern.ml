@@ -235,15 +235,15 @@ let make_notation_gen loc ntn mknot mkprim destprim l =
   then expand_curly_brackets loc mknot ntn l
   else match ntn,List.map destprim l with
     (* Special case to avoid writing "- 3" for e.g. (Z.opp 3) *)
-    | "- _", [Some (Numeral p)] when Bigint.is_strictly_pos p ->
+    | "- _", [Some (Numeral (_, p))] when Bigint.is_strictly_pos p ->
         mknot (loc,ntn,([mknot (loc,"( _ )",l)]))
     | _ ->
 	match decompose_notation_key ntn, l with
 	| [Terminal "-"; Terminal x], [] ->
-	    (try mkprim (loc, Numeral (Bigint.neg (Bigint.of_string x)))
+	    (try mkprim (loc, Numeral ("", Bigint.neg (Bigint.of_string x)))
 	     with Failure _ -> mknot (loc,ntn,[]))
 	| [Terminal x], [] ->
-	    (try mkprim (loc, Numeral (Bigint.of_string x))
+	    (try mkprim (loc, Numeral (x, Bigint.of_string x))
 	     with Failure _ -> mknot (loc,ntn,[]))
 	| _ ->
 	    mknot (loc,ntn,l)

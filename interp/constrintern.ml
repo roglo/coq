@@ -1162,10 +1162,10 @@ let drop_notations_pattern looked_for =
         (* but not scopes in expl_pl *)
         let (argscs1,_) = find_remaining_scopes expl_pl pl g in
         RCPatCstr (loc, g, List.map2 (in_pat_sc env) argscs1 expl_pl @ List.map (in_pat false env) pl, [])
-    | CPatNotation (loc,"- _",([CPatPrim(_,Numeral p)],[]),[])
+    | CPatNotation (loc,"- _",([CPatPrim(_,Numeral (_, p))],[]),[])
 	when Bigint.is_strictly_pos p ->
-      fst (Notation.interp_prim_token_cases_pattern_expr loc (ensure_kind false loc) (Numeral (Bigint.neg p))
-	     (env.tmp_scope,env.scopes))
+      fst (Notation.interp_prim_token_cases_pattern_expr loc (ensure_kind false loc)
+             (Numeral ("", Bigint.neg p)) (env.tmp_scope,env.scopes))
     | CPatNotation (_,"( _ )",([a],[]),[]) ->
       in_pat top env a
     | CPatNotation (loc, ntn, fullargs,extrargs) ->
@@ -1448,9 +1448,9 @@ let internalize globalenv env allow_patvar lvar c =
 	let inc1 = intern (reset_tmp_scope env) c1 in
 	GLetIn (loc, snd na, inc1,
           intern (push_name_env lvar (impls_term_list inc1) env na) c2)
-    | CNotation (loc,"- _",([CPrim (_,Numeral p)],[],[]))
+    | CNotation (loc,"- _",([CPrim (_,Numeral (_, p))],[],[]))
 	when Bigint.is_strictly_pos p ->
-	intern env (CPrim (loc,Numeral (Bigint.neg p)))
+	intern env (CPrim (loc,Numeral ("", Bigint.neg p)))
     | CNotation (_,"( _ )",([a],[],[])) -> intern env a
     | CNotation (loc,ntn,args) ->
         intern_notation intern env lvar loc ntn args
