@@ -217,7 +217,7 @@ end) = struct
     | ArgVar (loc,s) -> pr_lident (loc,s)
 
   let pr_prim_token = function
-    | Numeral n -> str (Bigint.to_string n)
+    | Numeral (_, n) -> str (Bigint.to_string n)
     | String s -> qs s
 
   let pr_evar pr id l =

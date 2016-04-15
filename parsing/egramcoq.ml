@@ -133,7 +133,7 @@ let make_cases_pattern_action
 	  make (cases_pattern_expr_of_name na :: env, envlist, hasbinders) tl)
     | ETBigint ->
         Gram.action (fun (v:Bigint.bigint) ->
-	  make (CPatPrim (Loc.ghost,Numeral v) :: env, envlist, hasbinders) tl)
+	  make (CPatPrim (Loc.ghost,Numeral ("", v)) :: env, envlist, hasbinders) tl)
     | ETConstrList (_,_) ->
         Gram.action  (fun (vl:cases_pattern_expr list) ->
 	  make (env, vl :: envlist, hasbinders) tl)

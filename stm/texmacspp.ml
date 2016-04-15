@@ -377,7 +377,7 @@ and pp_token loc tok =
   let tokstr =
     match tok with
     | String s -> PCData s
-    | Numeral n -> PCData (to_string n) in
+    | Numeral (_, n) -> PCData (to_string n) in
   xmlToken loc [tokstr]
 and pp_local_binder_list lbl =
   let l = (List.map pp_local_binder lbl) in

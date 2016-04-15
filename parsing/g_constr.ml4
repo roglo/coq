@@ -398,10 +398,10 @@ GEXTEND Gram
       | "_" -> CPatAtom (!@loc,None)
       | "("; p = pattern LEVEL "200"; ")" ->
           (match p with
-              CPatPrim (_,Numeral z) when Bigint.is_pos_or_zero z ->
+              CPatPrim (_,Numeral (_, z)) when Bigint.is_pos_or_zero z ->
                 CPatNotation(!@loc,"( _ )",([p],[]),[])
             | _ -> p)
-      | n = INT -> CPatPrim (!@loc, Numeral (Bigint.of_string n))
+      | n = INT -> CPatPrim (!@loc, Numeral (n, Bigint.of_string n))
       | s = string -> CPatPrim (!@loc, String s) ] ]
   ;
   impl_ident_tail:

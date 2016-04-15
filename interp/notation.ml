@@ -311,7 +311,7 @@ let declare_prim_token_interpreter sc interp (patl,uninterp,b) =
         (glob_prim_constr_key pat) (sc,uninterp,b) !prim_token_key_table)
     patl
 
-let mkNumeral s n = Numeral (s, n)
+let mkNumeral n = Numeral ("", n)
 let mkString = function
 | None -> None
 | Some s -> if Unicode.is_utf8 s then Some (String s) else None
@@ -419,8 +419,8 @@ let find_notation ntn sc =
   String.Map.find ntn (find_scope sc).notations
 
 let notation_of_prim_token = function
-  | Numeral n when is_pos_or_zero n -> to_string n
-  | Numeral n -> "- "^(to_string (neg n))
+  | Numeral (_, n) when is_pos_or_zero n -> to_string n
+  | Numeral (_, n) -> "- "^(to_string (neg n))
   | String _ -> raise Not_found
 
 let find_prim_token g loc p sc =
@@ -441,7 +441,7 @@ let interp_prim_token_gen g loc p local_scopes =
   with Not_found ->
     user_err_loc (loc,"interp_prim_token",
     (match p with
-      | Numeral n -> str "No interpretation for numeral " ++ str (to_string n)
+      | Numeral (_, n) -> str "No interpretation for numeral " ++ str (to_string n)
       | String s -> str "No interpretation for string " ++ qs s) ++ str ".")
 
 let interp_prim_token =
