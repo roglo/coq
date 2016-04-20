@@ -711,6 +711,10 @@ let rec match_ inner u alp (tmetas,blmetas as metas) sigma a1 a2 =
 (**)
   | GProd (_,Name p,bk,t1,GCases (_,LetPatternStyle,None,[(GVar(_,e),_)],[(_,_,[cp],t)])),
     NBinderList (x,_,NProd (Name id2,_,b2),(NVar v as termin)) when p = e ->
+(* testing example...
+Require Import Utf8.        
+Check forall '(a,b), a /\ b.
+*)
 let _ = Printf.eprintf "notation_ops GProd p %s v %s id2 %s\n%!" (Id.to_string p) (Id.to_string v) (Id.to_string id2) in
 let _ = Printf.eprintf "notation_ops ∀ %s, let cp = %s in t.\n%!" (Id.to_string p) (Id.to_string e) in
 (* just for test... *)
