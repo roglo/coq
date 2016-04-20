@@ -711,10 +711,12 @@ let rec match_ inner u alp (tmetas,blmetas as metas) sigma a1 a2 =
 (**)
   | GProd (_,Name p,bk,t1,GCases (_,LetPatternStyle,None,[(GVar(_,e),_)],[(_,_,[cp],t)])),
     NBinderList (x,_,NProd (Name id2,_,b2),(NVar v as termin)) when p = e ->
-let _ = Printf.eprintf "notation_ops GProd v %s\n%!" (Id.to_string v) in
+let _ = Printf.eprintf "notation_ops GProd p %s v %s id2 %s\n%!" (Id.to_string p) (Id.to_string v) (Id.to_string id2) in
+let _ = Printf.eprintf "notation_ops ∀ %s, let cp = %s in t.\n%!" (Id.to_string p) (Id.to_string e) in
 (* just for test... *)
-let p = Id.of_string_soft ("'" ^ "(a, b)") in
-      match_in u alp metas (bind_binder sigma x [(Name p,bk,None,t1)]) t termin
+let p = Name (Id.of_string_soft ("'" ^ "(bidon, pouet)")) in
+      let (decls,b) = ([(p,bk,None,t1)],t) in
+      match_in u alp metas (bind_binder sigma x decls) b termin
 (**)
   | GProd (_,na1,bk,t1,b1), NBinderList (x,_,NProd (Name id2,_,b2),termin)
       when na1 != Anonymous ->
