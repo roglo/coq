@@ -757,7 +757,8 @@ let rec extern inctx scopes vars r =
 	 | GFix (nv,n) ->
 	     let listdecl =
 	       Array.mapi (fun i fi ->
-                 let (bl,ty,def) = blv.(i), tyv.(i), bv.(i) in
+		 let (bl,ty,def) = blv.(i), tyv.(i), bv.(i) in
+		 let bl = List.map (fun (p,bk,x,t) -> (Inl p,bk,x,t)) bl in
                  let (assums,ids,bl) = extern_local_binder scopes vars bl in
                  let vars0 = List.fold_right (name_fold Id.Set.add) ids vars in
                  let vars1 = List.fold_right (name_fold Id.Set.add) ids vars' in
@@ -774,7 +775,8 @@ let rec extern inctx scopes vars r =
 	 | GCoFix n ->
 	     let listdecl =
                Array.mapi (fun i fi ->
-                 let (_,ids,bl) = extern_local_binder scopes vars blv.(i) in
+		 let bl = List.map (fun (p,bk,x,t) -> (Inl p,bk,x,t)) blv.(i) in
+                 let (_,ids,bl) = extern_local_binder scopes vars bl in
                  let vars0 = List.fold_right (name_fold Id.Set.add) ids vars in
                  let vars1 = List.fold_right (name_fold Id.Set.add) ids vars' in
 		 ((Loc.ghost, fi),bl,extern_typ scopes vars0 tyv.(i),
@@ -817,13 +819,13 @@ and factorize_lambda inctx scopes vars na bk aty c =
 
 and extern_local_binder scopes vars = function
     [] -> ([],[],[])
-  | (na,bk,Some bd,ty)::l ->
+  | (Inl na,bk,Some bd,ty)::l ->
       let (assums,ids,l) =
         extern_local_binder scopes (name_fold Id.Set.add na vars) l in
       (assums,na::ids,
        LocalRawDef((Loc.ghost,na), extern false scopes vars bd) :: l)
 
-  | (na,bk,None,ty)::l ->
+  | (Inl na,bk,None,ty)::l ->
       let ty = extern_typ scopes vars ty in
       (match extern_local_binder scopes (name_fold Id.Set.add na vars) l with
           (assums,ids,LocalRawAssum(nal,k,ty')::l)
@@ -835,6 +837,7 @@ and extern_local_binder scopes vars = function
         | (assums,ids,l) ->
             (na::assums,na::ids,
              LocalRawAssum([(Loc.ghost,na)],Default bk,ty) :: l))
+  | _ -> assert false
 
 and extern_eqn inctx scopes vars (loc,ids,pl,c) =
   (loc,[loc,List.map (extern_cases_pattern_in_scope scopes vars) pl],
@@ -900,11 +903,6 @@ and extern_symbol (tmp_scope,scopes as allscopes) vars t = function
                       termlists in
 		  let bll =
 		    List.map (fun (bl,(scopt,scl)) ->
-                      let bl =
-                        List.map (fun (p,bk,x,t) ->
-                          let na =
-                            match p with Inl a -> a | Inr _ -> assert false in
-                          na,bk,x,t) bl in
 		      pi3 (extern_local_binder (scopt,scl@scopes') vars bl))
                       binders in
 	          insert_delimiters (make_notation loc ntn (l,ll,bll)) key)
@@ -1047,4 +1045,5 @@ let extern_constr_pattern env sigma pat =
 let extern_rel_context where env sigma sign =
   let a = detype_rel_context where [] (names_of_rel_context env,env) sigma sign in
   let vars = vars_of_env env in
+  let a = List.map (fun (p,bk,x,t) -> (Inl p,bk,x,t)) a in
   pi3 (extern_local_binder (None,[]) vars a)
