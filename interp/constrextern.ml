@@ -899,6 +899,16 @@ and extern_symbol (tmp_scope,scopes as allscopes) vars t = function
 		      List.map (extern true (scopt,scl@scopes') vars) c)
                       termlists in
 		  let bll =
+                    let binders =
+                      List.map (fun (bl,s) ->
+                        let bl =
+                          List.map (fun (p,bk,x,t) ->
+                            let na =
+                              match p with
+                              | Inl a -> a
+                              | Inr _ -> assert false in
+                            na,bk,x,t) bl in
+                        (bl,s)) binders in
 		    List.map (fun (bl,(scopt,scl)) ->
 		      pi3 (extern_local_binder (scopt,scl@scopes') vars bl))
                       binders in

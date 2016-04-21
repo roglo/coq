@@ -593,7 +593,7 @@ let bind_env alp (sigma,sigmalist,sigmabinders as fullsigma) var v =
         else raise No_match
   with Not_found -> add_env alp fullsigma var v
 
-let bind_binder (sigma,sigmalist,sigmabinders) x (bl : ((_, _) union * _ * _ * _) list) =
+let bind_binder (sigma,sigmalist,sigmabinders) x bl =
   (sigma,sigmalist,(x,List.rev bl)::sigmabinders)
 
 let match_fix_kind fk1 fk2 =
@@ -717,9 +717,11 @@ Check forall '(a,b), a /\ b.
 *)
 let _ = Printf.eprintf "notation_ops GProd p %s v %s id2 %s\n%!" (Id.to_string p) (Id.to_string v) (Id.to_string id2) in
 let _ = Printf.eprintf "notation_ops ∀ %s, let cp = %s in t.\n%!" (Id.to_string p) (Id.to_string e) in
-(* just for test... *)
+(*
 let p = Name (Id.of_string_soft ("'" ^ "(bidon, pouet)")) in
-      let (decls,b) = ([(Inl p,bk,None,t1)],t) in
+*)
+      let p = cp in
+      let (decls,b) = ([(Inr p,bk,None,t1)],t) in
       match_in u alp metas (bind_binder sigma x decls) b termin
 (**)
   | GProd (_,na1,bk,t1,b1), NBinderList (x,_,NProd (Name id2,_,b2),termin)
@@ -842,7 +844,9 @@ and match_equations u alp metas sigma (_,_,patl1,rhs1) (patl2,rhs2) =
       (alp,sigma) patl1 patl2 in
   match_in u alp metas sigma rhs1 rhs2
 
-type 'a glob_decl2 = (name, 'a) Util.union * Decl_kinds.binding_kind * glob_constr option * glob_constr
+type glob_decl2 =
+    (name, cases_pattern) Util.union * Decl_kinds.binding_kind *
+      glob_constr option * glob_constr
 
 let match_notation_constr u c (metas,pat) =
   let test (_, (_, x)) = match x with NtnTypeBinderList -> false | _ -> true in
