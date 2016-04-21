@@ -593,7 +593,7 @@ let bind_env alp (sigma,sigmalist,sigmabinders as fullsigma) var v =
         else raise No_match
   with Not_found -> add_env alp fullsigma var v
 
-let bind_binder (sigma,sigmalist,sigmabinders) x bl =
+let bind_binder (sigma,sigmalist,sigmabinders) x (bl : ((_, _) union * _ * _ * _) list) =
   (sigma,sigmalist,(x,List.rev bl)::sigmabinders)
 
 let match_fix_kind fk1 fk2 =
@@ -719,7 +719,7 @@ let _ = Printf.eprintf "notation_ops GProd p %s v %s id2 %s\n%!" (Id.to_string p
 let _ = Printf.eprintf "notation_ops ∀ %s, let cp = %s in t.\n%!" (Id.to_string p) (Id.to_string e) in
 (* just for test... *)
 let p = Name (Id.of_string_soft ("'" ^ "(bidon, pouet)")) in
-      let (decls,b) = ([(p,bk,None,t1)],t) in
+      let (decls,b) = ([(Inl p,bk,None,t1)],t) in
       match_in u alp metas (bind_binder sigma x decls) b termin
 (**)
   | GProd (_,na1,bk,t1,b1), NBinderList (x,_,NProd (Name id2,_,b2),termin)
