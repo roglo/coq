@@ -844,9 +844,7 @@ and extern_local_binder scopes vars = function
       let ty = extern_typ scopes vars ty in
       (match extern_local_binder scopes (name_fold Id.Set.add na vars) l with
           (assums,ids,LocalRawAssum(nal,k,ty')::l)
-            when constr_expr_eq ty ty' &&
-              match na with Name id -> not (occur_var_constr_expr id ty')
-                | _ -> true ->
+            when constr_expr_eq ty ty' ->
               (na::assums,na::ids,
                LocalRawAssum((Loc.ghost,na)::nal,k,ty')::l)
         | (assums,ids,l) ->
