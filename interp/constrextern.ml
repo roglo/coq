@@ -837,7 +837,21 @@ and extern_local_binder scopes vars = function
         | (assums,ids,l) ->
             (na::assums,na::ids,
              LocalRawAssum([(Loc.ghost,na)],Default bk,ty) :: l))
-  | _ -> assert false
+
+  | (Inr p,bk,Some bd,ty)::l -> assert false
+
+  | (Inr p,bk,None,ty)::l ->
+      let ty = extern_typ scopes vars ty in
+      (match extern_local_binder scopes (name_fold Id.Set.add na vars) l with
+          (assums,ids,LocalRawAssum(nal,k,ty')::l)
+            when constr_expr_eq ty ty' &&
+              match na with Name id -> not (occur_var_constr_expr id ty')
+                | _ -> true ->
+              (na::assums,na::ids,
+               LocalRawAssum((Loc.ghost,na)::nal,k,ty')::l)
+        | (assums,ids,l) ->
+            (na::assums,na::ids,
+             LocalRawAssum([(Loc.ghost,na)],Default bk,ty) :: l))
 
 and extern_eqn inctx scopes vars (loc,ids,pl,c) =
   (loc,[loc,List.map (extern_cases_pattern_in_scope scopes vars) pl],
