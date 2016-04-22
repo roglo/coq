@@ -711,10 +711,6 @@ let rec match_ inner u alp (tmetas,blmetas as metas) sigma a1 a2 =
 
   | GProd (_,Name p,bk,t1,GCases (_,LetPatternStyle,None,[(GVar(_,e),_)],[(_,_,[cp],t)])),
     NBinderList (x,_,NProd (Name id2,_,b2),(NVar v as termin)) when p = e ->
-(* testing example...
-Require Import Utf8.
-Check forall '(a,b), a /\ b.
-*)
       let (decls,b) = ([(Inr cp,bk,None,t1)],t) in
       match_in u alp metas (bind_binder sigma x decls) b termin
 
