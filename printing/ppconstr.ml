@@ -367,8 +367,8 @@ let obj_string x =
         pr_com_at n ++ kw() ++ pr_binder false pr_c (nal,k,t)
       | LocalRawAssum _ :: _ as bdl ->
         pr_com_at n ++ kw() ++ pr_undelimited_binders sep pr_c bdl
-      | LocalPattern _ :: _ ->
-        str "localpattern"
+      | LocalPattern (loc,p,tyo) :: _ ->
+        str "'" ++ pr_patt ltop p
       | _ -> assert false
 
   let pr_binders_gen pr_c sep is_open =
