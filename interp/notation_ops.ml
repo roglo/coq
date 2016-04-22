@@ -703,16 +703,23 @@ let rec match_ inner u alp (tmetas,blmetas as metas) sigma a1 a2 =
   | r1, NList (x,_,iter,termin,lassoc) ->
       match_alist (match_hd u alp) metas sigma r1 x iter termin lassoc
 
+  (* "λ p, let 'cp = p in t" -> "λ 'cp, t" *)
+  | GLambda (_,Name p,bk,t1,GCases (_,LetPatternStyle,None,[(GVar(_,e),_)],[(_,_,[cp],t)])),
+    NBinderList (x,_,NLambda (Name id2,_,b2),(NVar v as termin)) when p = e ->
+      let decls = [(Inr cp,bk,None,t1)] in
+      match_in u alp metas (bind_binder sigma x decls) t termin
+
   (* Matching recursive notations for binders: ad hoc cases supporting let-in *)
   | GLambda (_,na1,bk,t1,b1), NBinderList (x,_,NLambda (Name id2,_,b2),termin)->
       let (decls,b) = match_iterated_binders true [(Inl na1,bk,None,t1)] b1 in
       (* TODO: address the possibility that termin is a Lambda itself *)
       match_in u alp metas (bind_binder sigma x decls) b termin
 
+  (* "∀ p, let 'cp = p in t" -> "∀ 'cp, t" *)
   | GProd (_,Name p,bk,t1,GCases (_,LetPatternStyle,None,[(GVar(_,e),_)],[(_,_,[cp],t)])),
     NBinderList (x,_,NProd (Name id2,_,b2),(NVar v as termin)) when p = e ->
-      let (decls,b) = ([(Inr cp,bk,None,t1)],t) in
-      match_in u alp metas (bind_binder sigma x decls) b termin
+      let decls = [(Inr cp,bk,None,t1)] in
+      match_in u alp metas (bind_binder sigma x decls) t termin
 
   | GProd (_,na1,bk,t1,b1), NBinderList (x,_,NProd (Name id2,_,b2),termin)
       when na1 != Anonymous ->
