@@ -842,14 +842,11 @@ and extern_local_binder scopes vars = function
 
   | (Inr p,bk,None,ty)::l ->
       let ty = extern_typ scopes vars ty in
-      (match extern_local_binder scopes (name_fold Id.Set.add na vars) l with
-          (assums,ids,LocalRawAssum(nal,k,ty')::l)
-            when constr_expr_eq ty ty' ->
-              (na::assums,na::ids,
-               LocalRawAssum((Loc.ghost,na)::nal,k,ty')::l)
+      let p = extern_cases_pattern vars p in
+      (match extern_local_binder scopes vars l with
         | (assums,ids,l) ->
-            (na::assums,na::ids,
-             LocalRawAssum([(Loc.ghost,na)],Default bk,ty) :: l))
+            (assums,ids,
+             LocalPattern(Loc.ghost,p,Some ty) :: l))
 
 and extern_eqn inctx scopes vars (loc,ids,pl,c) =
   (loc,[loc,List.map (extern_cases_pattern_in_scope scopes vars) pl],
