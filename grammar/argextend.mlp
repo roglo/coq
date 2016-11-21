@@ -54,8 +54,8 @@ let is_ident x = function
 | <:expr< $lid:s$ >> -> (s : string) = x
 | _ -> false
 
-let make_extend loc s cl wit = match cl with
-| [[ExtNonTerminal (Uentry e, id)], act] when is_ident id act ->
+let make_extend loc s cll wit = match cll with
+| [[[ExtNonTerminal (Uentry e, id)], act]] when is_ident id act ->
   (** Special handling of identity arguments by not redeclaring an entry *)
   <:str_item<
     value $lid:s$ =
@@ -64,11 +64,17 @@ let make_extend loc s cl wit = match cl with
   >>
 | _ ->
   let se = mlexpr_of_string s in
-  let rules = mlexpr_of_list (make_rule loc) (List.rev cl) in
+  let ext =
+    mlexpr_of_list
+      (fun cl ->
+         let rules = mlexpr_of_list (make_rule loc) (List.rev cl) in
+         <:expr< (None, None, $rules$) >>)
+      cll
+  in
   <:str_item<
     value $lid:s$ =
       let $lid:s$ = Pcoq.create_generic_entry Pcoq.utactic $se$ (Genarg.rawwit $wit$) in
-      let () = Pcoq.grammar_extend $lid:s$ None (None, [(None, None, $rules$)]) in
+      let () = Pcoq.grammar_extend $lid:s$ None (None, $ext$) in
       $lid:s$ >>
 
 let warning_redundant prefix s =
@@ -191,15 +197,13 @@ EXTEND
   GLOBAL: str_item;
   str_item:
     [ [ "ARGUMENT"; "EXTEND"; s = entry_name;
-        header = argextend_header;
-        OPT "|"; l = LIST1 argrule SEP "|";
-        "END" ->
-         declare_tactic_argument loc s header l
+        header = argextend_header; ll = argextend_body; "END" ->
+         declare_tactic_argument loc s header ll
       | "VERNAC"; "ARGUMENT"; "EXTEND"; s = entry_name;
         pr = OPT ["PRINTED"; "BY"; pr = LIDENT -> pr];
         OPT "|"; l = LIST1 argrule SEP "|";
         "END" ->
-         declare_vernac_argument loc s pr l ] ]
+         declare_vernac_argument loc s pr [l] ] ]
   ;
   argextend_specialized:
   [ [ rawtyp = OPT [ "RAW_TYPED"; "AS"; rawtyp = argtype -> rawtyp ];
@@ -220,6 +224,13 @@ EXTEND
         | Some (rtyp, rpr, gtyp, gpr) -> `Specialized (rtyp, rpr, gtyp, gpr, typ, pr)
         in
         (repr, f, g, h) ] ]
+  ;
+  argextend_body:
+     [ [ "LEVELS"; "["; ll = LIST1 argextend_body_one_level SEP "|"; "]" -> ll
+       | OPT "|"; l = LIST1 argrule SEP "|" -> [l] ] ]
+  ;
+  argextend_body_one_level:
+    [ [ "["; l = LIST1 argrule SEP "|"; "]" -> l ] ]
   ;
   argtype:
     [ "2"
