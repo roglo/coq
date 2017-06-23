@@ -30,8 +30,9 @@ type production_level =
   | NumLevel of int
 
 type ('lev,'pos) constr_entry_key_gen =
-  | ETName | ETNameStr | ETReference | ETBigint
+  | ETName | ETReference | ETBigint
   | ETBinder of bool
+  | ETBinderStr
   | ETConstr of ('lev * 'pos)
   | ETPattern
   | ETOther of string * string

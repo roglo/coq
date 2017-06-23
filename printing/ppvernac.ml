@@ -79,7 +79,6 @@ open Decl_kinds
 
   let pr_set_entry_type = function
     | ETName -> str"ident"
-    | ETNameStr -> str"ident" ++ spc() ++ str"as" ++ spc() ++ str"string"
     | ETReference -> str"global"
     | ETPattern -> str"pattern"
     | ETConstr _ -> str"constr"

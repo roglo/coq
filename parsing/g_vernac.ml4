@@ -1195,11 +1195,11 @@ GEXTEND Gram
   ;
   syntax_extension_type:
     [ [ IDENT "ident" -> ETName
-      | IDENT "ident"; IDENT "as"; IDENT "string" -> ETNameStr
       | IDENT "global" -> ETReference
       | IDENT "bigint" -> ETBigint
       | IDENT "binder" -> ETBinder true
       | IDENT "closed"; IDENT "binder" -> ETBinder false
+      | IDENT "binder"; IDENT "as"; IDENT "string" -> ETBinderStr
     ] ]
   ;
 END

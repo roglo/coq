@@ -226,7 +226,6 @@ type prod_info = production_level * production_position
 
 type (_, _) entry =
 | TTName : ('self, Name.t Loc.located) entry
-| TTNameStr : ('self, Name.t Loc.located) entry
 | TTReference : ('self, reference) entry
 | TTBigint : ('self, Constrexpr.raw_natural_number) entry
 | TTBinder : ('self, local_binder_expr list) entry
@@ -290,7 +289,6 @@ let symbol_of_entry : type s r. _ -> _ -> (s, r) entry -> (s, r) symbol = fun as
 | TTBinderListF [] -> Alist1 (Aentry Constr.binder)
 | TTBinderListF tkl -> Alist1sep (Aentry Constr.binder, make_sep_rules tkl)
 | TTName -> Aentry Prim.name
-| TTNameStr -> failwith "symbol_of_entry: not impl TTNameStr"
 | TTBinder -> Aentry Constr.binder
 | TTBinderListT -> Aentry Constr.open_binders
 | TTBigint -> Aentry Prim.bigint
@@ -298,11 +296,11 @@ let symbol_of_entry : type s r. _ -> _ -> (s, r) entry -> (s, r) symbol = fun as
 
 let interp_entry forpat e = match e with
 | ETName -> TTAny TTName
-| ETNameStr -> TTAny TTNameStr
 | ETReference -> TTAny TTReference
 | ETBigint -> TTAny TTBigint
 | ETBinder true -> anomaly (Pp.str "Should occur only as part of BinderList.")
 | ETBinder false  -> TTAny TTBinder
+| ETBinderStr -> failwith "interp_entry: ETBinderStr not impl"
 | ETConstr p -> TTAny (TTConstr (p, forpat))
 | ETPattern -> assert false (** not used *)
 | ETOther _ -> assert false (** not used *)
@@ -335,7 +333,6 @@ match e with
   | ForConstr -> push_constr subst (constr_expr_of_name v)
   | ForPattern -> push_constr subst (cases_pattern_expr_of_name v)
   end
-| TTNameStr -> failwith "push_item: not impl TTNameStr"
 | TTBinder -> { subst with binders = (v, true) :: subst.binders }
 | TTBinderListT -> { subst with binders = (v, true) :: subst.binders }
 | TTBinderListF _ -> { subst with binders = (List.flatten v, false) :: subst.binders }

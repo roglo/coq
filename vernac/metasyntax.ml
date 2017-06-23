@@ -875,9 +875,10 @@ let set_entry_type etyps (x,typ) =
       | ETConstr (n,()), (_,BorderProd (left,_)) ->
           ETConstr (n,BorderProd (left,None))
       | ETConstr (n,()), (_,InternalProd) -> ETConstr (n,InternalProd)
-      | (ETPattern | ETName | ETNameStr | ETBigint | ETOther _ |
+      | (ETPattern | ETName | ETBigint | ETOther _ |
 	 ETReference | ETBinder _ as t), _ -> t
       | (ETBinderList _ |ETConstrList _), _ -> assert false
+      | ETBinderStr, _ -> failwith "set_entry_type: ETBinderStr not impl"
     with Not_found -> ETConstr typ
   in (x,typ)
 
@@ -901,7 +902,6 @@ let internalization_type_of_entry_type = function
   | ETBigint | ETReference -> NtnInternTypeConstr
   | ETBinder _ -> NtnInternTypeBinder
   | ETName -> NtnInternTypeIdent
-  | ETNameStr -> failwith "internalization_type_of_entry_type ETNameStr not impl"
   | ETPattern | ETOther _ -> user_err Pp.(str "Not supported.")
   | ETBinderList _ | ETConstrList _ -> assert false
 
@@ -982,7 +982,7 @@ let find_precedence lev etyps symbols =
       (try match List.assoc x etyps with
 	| ETConstr _ ->
 	    user_err Pp.(str "The level of the leftmost non-terminal cannot be changed.")
-	| ETName | ETNameStr | ETBigint | ETReference ->
+	| ETName | ETBigint | ETReference ->
             begin match lev with
             | None ->
 	      ([Feedback.msg_info ?loc:None ,strbrk "Setting notation at level 0."],0)
