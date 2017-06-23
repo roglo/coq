@@ -817,6 +817,8 @@ let interp_modifiers modl = let open NotationMods in
         interp { acc with only_parsing = true; } l
     | SetOnlyPrinting :: l ->
         interp { acc with only_printing = true; } l
+    | SetIdentAsString s :: l ->
+        failwith "SetIdentAsString not yet implemented"
     | SetCompatVersion v :: l ->
         interp { acc with compat = Some v; } l
     | SetFormat ("text",s) :: l ->
