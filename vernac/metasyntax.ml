@@ -767,6 +767,7 @@ type notation_modifier = {
   assoc         : gram_assoc option;
   level         : int option;
   etyps         : (Id.t * simple_constr_prod_entry_key) list;
+  id_as_str	: string list;
 
   (* common to syn_data below *)
   only_parsing  : bool;
@@ -780,6 +781,7 @@ let default = {
   assoc         = None;
   level         = None;
   etyps         = [];
+  id_as_str     = [];
   only_parsing  = false;
   only_printing = false;
   compat        = None;
@@ -818,7 +820,7 @@ let interp_modifiers modl = let open NotationMods in
     | SetOnlyPrinting :: l ->
         interp { acc with only_printing = true; } l
     | SetIdentAsString s :: l ->
-        failwith "SetIdentAsString not yet implemented"
+        interp { acc with id_as_str = s::acc.id_as_str } l
     | SetCompatVersion v :: l ->
         interp { acc with compat = Some v; } l
     | SetFormat ("text",s) :: l ->
