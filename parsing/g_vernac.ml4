@@ -1191,12 +1191,12 @@ GEXTEND Gram
         lev = level -> SetItemLevel (x::l,lev)
       | x = IDENT; "at"; lev = level -> SetItemLevel ([x],lev)
       | x = IDENT; typ = syntax_extension_type -> SetEntryType (x,typ)
-      | x = IDENT; IDENT "ident"; IDENT "as"; IDENT "string" ->
-          SetIdentAsString x
     ] ]
   ;
   syntax_extension_type:
-    [ [ IDENT "ident" -> ETName | IDENT "global" -> ETReference
+    [ [ IDENT "ident" -> ETName
+      | IDENT "ident"; IDENT "as"; IDENT "string" -> ETNameStr
+      | IDENT "global" -> ETReference
       | IDENT "bigint" -> ETBigint
       | IDENT "binder" -> ETBinder true
       | IDENT "closed"; IDENT "binder" -> ETBinder false

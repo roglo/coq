@@ -767,7 +767,6 @@ type notation_modifier = {
   assoc         : gram_assoc option;
   level         : int option;
   etyps         : (Id.t * simple_constr_prod_entry_key) list;
-  id_as_str	: string list;
 
   (* common to syn_data below *)
   only_parsing  : bool;
@@ -781,7 +780,6 @@ let default = {
   assoc         = None;
   level         = None;
   etyps         = [];
-  id_as_str     = [];
   only_parsing  = false;
   only_printing = false;
   compat        = None;
@@ -819,8 +817,6 @@ let interp_modifiers modl = let open NotationMods in
         interp { acc with only_parsing = true; } l
     | SetOnlyPrinting :: l ->
         interp { acc with only_printing = true; } l
-    | SetIdentAsString s :: l ->
-        interp { acc with id_as_str = s::acc.id_as_str } l
     | SetCompatVersion v :: l ->
         interp { acc with compat = Some v; } l
     | SetFormat ("text",s) :: l ->
@@ -879,7 +875,7 @@ let set_entry_type etyps (x,typ) =
       | ETConstr (n,()), (_,BorderProd (left,_)) ->
           ETConstr (n,BorderProd (left,None))
       | ETConstr (n,()), (_,InternalProd) -> ETConstr (n,InternalProd)
-      | (ETPattern | ETName | ETBigint | ETOther _ |
+      | (ETPattern | ETName | ETNameStr | ETBigint | ETOther _ |
 	 ETReference | ETBinder _ as t), _ -> t
       | (ETBinderList _ |ETConstrList _), _ -> assert false
     with Not_found -> ETConstr typ
@@ -905,6 +901,7 @@ let internalization_type_of_entry_type = function
   | ETBigint | ETReference -> NtnInternTypeConstr
   | ETBinder _ -> NtnInternTypeBinder
   | ETName -> NtnInternTypeIdent
+  | ETNameStr -> failwith "internalization_type_of_entry_type ETNameStr not impl"
   | ETPattern | ETOther _ -> user_err Pp.(str "Not supported.")
   | ETBinderList _ | ETConstrList _ -> assert false
 
@@ -985,7 +982,7 @@ let find_precedence lev etyps symbols =
       (try match List.assoc x etyps with
 	| ETConstr _ ->
 	    user_err Pp.(str "The level of the leftmost non-terminal cannot be changed.")
-	| ETName | ETBigint | ETReference ->
+	| ETName | ETNameStr | ETBigint | ETReference ->
             begin match lev with
             | None ->
 	      ([Feedback.msg_info ?loc:None ,strbrk "Setting notation at level 0."],0)
