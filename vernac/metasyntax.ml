@@ -876,9 +876,8 @@ let set_entry_type etyps (x,typ) =
           ETConstr (n,BorderProd (left,None))
       | ETConstr (n,()), (_,InternalProd) -> ETConstr (n,InternalProd)
       | (ETPattern | ETName | ETBigint | ETOther _ |
-	 ETReference | ETBinder _ as t), _ -> t
+	 ETReference | ETBinder _ | ETBinderStr as t), _ -> t
       | (ETBinderList _ |ETConstrList _), _ -> assert false
-      | ETBinderStr, _ -> failwith "set_entry_type: ETBinderStr not impl"
     with Not_found -> ETConstr typ
   in (x,typ)
 
