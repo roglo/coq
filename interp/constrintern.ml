@@ -291,7 +291,11 @@ let set_var_scope ?loc id istermvar env ntnvars =
     | NtnInternTypeBinder ->
 	if istermvar then error_expect_binder_notation_type ?loc id
     | NtnInternTypeBinderStr ->
-	if istermvar then error_expect_binder_notation_type ?loc id
+	if not istermvar then
+	 user_err ?loc
+	   (pr_id id ++
+	    str
+	      " is expected to occur in term position in the right-hand side.")
     | NtnInternTypeConstr ->
 	(* We need sometimes to parse idents at a constr level for
 	   factorization and we cannot enforce this constraint:
