@@ -412,6 +412,7 @@ let check_variables_and_reversibility nenv (found,foundrec,foundrecbinding) =
 	  try check_pair "binding" x (Id.Map.find x recvars) foundrecbinding
 	  with Not_found -> check_bound x
 	end
+    | NtnInternTypeBinderStr -> failwith "not impl NtnInternTypeBinderStr"
     | NtnInternTypeIdent -> check_bound x in
   Id.Map.iter check_type vars;
   !injective
