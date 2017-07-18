@@ -66,7 +66,8 @@ type notation_var_instance_type =
     in a recursive pattern x..y, both x and y carry the individual type
     of each element of the list x..y *)
 type notation_var_internalization_type =
-  | NtnInternTypeConstr | NtnInternTypeBinder | NtnInternTypeIdent
+  | NtnInternTypeConstr | NtnInternTypeBinder | NtnInternTypeBinderStr
+  | NtnInternTypeIdent
 
 (** This characterizes to what a notation is interpreted to *)
 type interpretation =

@@ -456,6 +456,9 @@ let make_hunks etyps symbols from =
 	  | ETBinder isopen ->
 	      check_open_binder isopen sl m;
 	      UnpBinderListMetaVar (i,isopen,sl')
+          | ETBinderStr ->
+	      check_open_binder true sl m;
+	      UnpBinderListMetaVar (i,true,sl')
 	  | _ -> assert false in
 	hunk :: make_with_space prods
 
@@ -649,6 +652,10 @@ let make_production etyps symbols =
 	    match List.assoc x etyps with
             | ETConstr typ -> expand_list_rule typ tkl x 1 0 [] ll
             | ETBinder o ->
+		distribute
+                  [GramConstrNonTerminal (ETBinderList (o,tkl), Some x)] ll
+            | ETBinderStr ->
+	        let o = true in
 		distribute
                   [GramConstrNonTerminal (ETBinderList (o,tkl), Some x)] ll
             | _ ->
@@ -900,6 +907,7 @@ let internalization_type_of_entry_type = function
   | ETConstr _ -> NtnInternTypeConstr
   | ETBigint | ETReference -> NtnInternTypeConstr
   | ETBinder _ -> NtnInternTypeBinder
+  | ETBinderStr -> NtnInternTypeBinderStr
   | ETName -> NtnInternTypeIdent
   | ETPattern | ETOther _ -> user_err Pp.(str "Not supported.")
   | ETBinderList _ | ETConstrList _ -> assert false
