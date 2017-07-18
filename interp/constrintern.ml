@@ -290,6 +290,8 @@ let set_var_scope ?loc id istermvar env ntnvars =
     match typ with
     | NtnInternTypeBinder ->
 	if istermvar then error_expect_binder_notation_type ?loc id
+    | NtnInternTypeBinderStr ->
+	if istermvar then error_expect_binder_notation_type ?loc id
     | NtnInternTypeConstr ->
 	(* We need sometimes to parse idents at a constr level for
 	   factorization and we cannot enforce this constraint:
