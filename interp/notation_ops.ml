@@ -402,7 +402,7 @@ let check_variables_and_reversibility nenv (found,foundrec,foundrecbinding) =
 	str " position as part of a recursive pattern.") in
   let check_type x typ =
     match typ with
-    | NtnInternTypeConstr | NtnInternTypeBinderStr ->
+    | NtnInternTypeConstr ->
 	begin
 	  try check_pair "term" x (Id.Map.find x recvars) foundrec
 	  with Not_found -> check_bound x
@@ -410,6 +410,11 @@ let check_variables_and_reversibility nenv (found,foundrec,foundrecbinding) =
     | NtnInternTypeBinder ->
 	begin
 	  try check_pair "binding" x (Id.Map.find x recvars) foundrecbinding
+	  with Not_found -> check_bound x
+	end
+    | NtnInternTypeBinderStr ->
+	begin
+	  try check_pair "term" x (Id.Map.find x recvars) foundrec
 	  with Not_found -> check_bound x
 	end
     | NtnInternTypeIdent -> check_bound x in
