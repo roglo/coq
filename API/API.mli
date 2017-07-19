@@ -3278,7 +3278,7 @@ module Notation_term :
 sig
   type scope_name = string
   type notation_var_instance_type = Notation_term.notation_var_instance_type =
-                                  | NtnTypeConstr | NtnTypeOnlyBinder | NtnTypeConstrList | NtnTypeBinderList
+                                  | NtnTypeConstr | NtnTypeOnlyBinder | NtnTypeConstrList | NtnTypeBinderList | NtnTypeBinderStrList
   type tmp_scope_name = Notation_term.tmp_scope_name
   type subscopes = tmp_scope_name option * scope_name list
   type notation_constr = Notation_term.notation_constr =

@@ -711,7 +711,7 @@ let split_by_type ids =
     match typ with
     | NtnTypeConstr | NtnTypeOnlyBinder -> ((x,scl)::l1,l2,l3)
     | NtnTypeConstrList -> (l1,(x,scl)::l2,l3)
-    | NtnTypeBinderList -> (l1,l2,(x,scl)::l3)) ids ([],[],[])
+    | NtnTypeBinderList | NtnTypeBinderStrList -> (l1,l2,(x,scl)::l3)) ids ([],[],[])
 
 let make_subst ids l =
   let fold accu (id, scl) a = Id.Map.add id (a, scl) accu in
